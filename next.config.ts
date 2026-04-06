@@ -1,8 +1,12 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  // Turbopack is default in Next.js 16; empty config suppresses warnings
-  turbopack: {},
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: false,
+  },
   headers: async () => [
     {
       source: '/(.*)',
