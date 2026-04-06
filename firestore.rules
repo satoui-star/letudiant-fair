@@ -1,0 +1,156 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ───────────────────────────────────────────────────
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+
+    function hasRole(role) {
+      return isSignedIn() && request.auth.token.role == role;
+    }
+
+    function isAdmin() {
+      return hasRole('admin');
+    }
+
+    function isExhibitor() {
+      return hasRole('exhibitor');
+    }
+
+    function isStudent() {
+      return hasRole('student') || hasRole('teacher');
+    }
+
+    // ── Users collection ──────────────────────────────────────────────────
+
+    match /users/{uid} {
+      // Users can read/write their own profile
+      allow read, write: if isOwner(uid);
+      // Admins can read all profiles
+      allow read: if isAdmin();
+      // Schools cannot access raw user documents (only exported leads)
+      allow read, write: if false;
+    }
+
+    // ── Events collection ─────────────────────────────────────────────────
+
+    match /events/{eventId} {
+      // Anyone signed in can read fair events
+      allow read: if isSignedIn();
+      // Only admins can write events
+      allow write: if isAdmin();
+    }
+
+    // ── Schools collection ────────────────────────────────────────────────
+
+    match /schools/{schoolId} {
+      // Anyone can read school profiles (for swipe/discovery)
+      allow read: if true;
+      // Exhibitors can update their own school profile
+      allow update: if isExhibitor() &&
+        request.auth.token.schoolId == schoolId;
+      // Only admins can create/delete
+      allow create, delete: if isAdmin();
+    }
+
+    // ── Scans collection ─────────────────────────────────────────────────
+
+    match /scans/{scanId} {
+      // Students can create their own scans
+      allow create: if isSignedIn() &&
+        request.resource.data.userId == request.auth.uid;
+      // Students can read their own scans
+      allow read: if isSignedIn() &&
+        resource.data.userId == request.auth.uid;
+      // Admins can read all
+      allow read: if isAdmin();
+      // No one can update/delete scan events (immutable audit trail)
+      allow update, delete: if false;
+    }
+
+    // ── Leads collection ─────────────────────────────────────────────────
+
+    match /leads/{leadId} {
+      // Exhibitors can read leads for their school
+      allow read: if isExhibitor() &&
+        resource.data.schoolId == request.auth.token.schoolId;
+      // Students cannot read leads (privacy)
+      allow read: if false;
+      // Admins can read all
+      allow read: if isAdmin();
+      // Only Cloud Functions write leads (via admin SDK)
+      allow write: if false;
+    }
+
+    // ── Matches collection ────────────────────────────────────────────────
+
+    match /matches/{matchId} {
+      // Students can read their own matches
+      allow read: if isSignedIn() &&
+        resource.data.studentId == request.auth.uid;
+      // Students can create/update their swipe direction
+      allow create: if isSignedIn() &&
+        request.resource.data.studentId == request.auth.uid;
+      allow update: if isSignedIn() &&
+        resource.data.studentId == request.auth.uid &&
+        request.resource.data.studentId == request.auth.uid;
+      // Exhibitors can update schoolInterest field only
+      allow update: if isExhibitor() &&
+        resource.data.schoolId == request.auth.token.schoolId &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['schoolInterest']);
+      allow read: if isAdmin();
+    }
+
+    // ── Groups collection ─────────────────────────────────────────────────
+
+    match /groups/{groupId} {
+      // Teachers can manage their groups
+      allow read, write: if isSignedIn() &&
+        resource.data.teacherId == request.auth.uid;
+      allow create: if hasRole('teacher');
+      allow read: if isAdmin();
+    }
+
+    // ── Consent audit log (immutable) ─────────────────────────────────────
+
+    match /consentAudit/{recordId} {
+      allow create: if isSignedIn() &&
+        request.resource.data.uid == request.auth.uid;
+      allow read: if isAdmin() ||
+        (isSignedIn() && resource.data.uid == request.auth.uid);
+      // No updates or deletes — audit trail must be immutable
+      allow update, delete: if false;
+    }
+
+    // ── WAX queue (internal) ──────────────────────────────────────────────
+
+    match /wax_queue/{docId} {
+      // Only Cloud Functions and admins
+      allow read, write: if false;
+    }
+
+    // ── Config (admin only) ───────────────────────────────────────────────
+
+    match /config/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ── Pending parental consent ──────────────────────────────────────────
+
+    match /pendingParentalConsent/{docId} {
+      // Only the child who initiated can read their own pending consent
+      allow read: if isSignedIn() &&
+        resource.data.childUid == request.auth.uid;
+      allow write: if false; // Cloud Functions only
+    }
+  }
+}

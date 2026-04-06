@@ -9,9 +9,17 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@react-spring/web": "^10.0.3",
+    "@types/qrcode": "^1.5.6",
+    "firebase": "^12.11.0",
+    "html5-qrcode": "^2.3.8",
     "next": "16.2.2",
+    "next-auth": "^4.24.13",
+    "next-pwa": "^5.6.0",
+    "qrcode": "^1.5.4",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-tinder-card": "^1.6.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
