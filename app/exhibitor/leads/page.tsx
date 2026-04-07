@@ -1,536 +1,208 @@
-"use client";
+'use client'
+import { useEffect, useState } from 'react'
+import { getSupabase } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/useAuth'
+import { useToast } from '@/components/ui/Toaster'
+import { Skeleton, SkeletonTable } from '@/components/ui/Skeleton'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Modal } from '@/components/ui/Modal'
+import ExhibitorSideNav from '@/components/layouts/ExhibitorSideNav'
+import type { LeadRow } from '@/lib/supabase/types'
 
-import { useState } from "react";
-import SectionLabel from "@/components/ui/SectionLabel";
-import Tag from "@/components/ui/Tag";
-import OrientationBadge from "@/components/ui/OrientationBadge";
-import Button from "@/components/ui/Button";
+type LeadWithUser = LeadRow & { users: { name: string; email: string; education_level: string; postal_code: string | null } | null }
 
-type Tier = "all" | "deciding" | "comparing" | "exploring";
-
-interface Lead {
-  id: number;
-  score: number;
-  level: string;
-  visitedStand: boolean;
-  conference: boolean;
-  swiped: boolean;
-  dwellMinutes: number;
+const TIER_COLORS: Record<string, { bg: string; color: string; label: string }> = {
+  deciding:   { bg: '#DCFCE7', color: '#15803d', label: '🟢 Décideur' },
+  comparing:  { bg: '#FEF9C3', color: '#92400e', label: '🟡 Comparateur' },
+  exploring:  { bg: '#EFF6FF', color: '#1d4ed8', label: '🔵 Explorateur' },
 }
 
-const MOCK_LEADS: Lead[] = [
-  {
-    id: 1,
-    score: 88,
-    level: "Terminale",
-    visitedStand: true,
-    conference: true,
-    swiped: true,
-    dwellMinutes: 12,
-  },
-  {
-    id: 2,
-    score: 79,
-    level: "Première",
-    visitedStand: true,
-    conference: false,
-    swiped: true,
-    dwellMinutes: 8,
-  },
-  {
-    id: 3,
-    score: 72,
-    level: "Terminale",
-    visitedStand: true,
-    conference: true,
-    swiped: false,
-    dwellMinutes: 6,
-  },
-  {
-    id: 4,
-    score: 65,
-    level: "Post-bac",
-    visitedStand: false,
-    conference: true,
-    swiped: true,
-    dwellMinutes: 4,
-  },
-  {
-    id: 5,
-    score: 58,
-    level: "Terminale",
-    visitedStand: true,
-    conference: false,
-    swiped: false,
-    dwellMinutes: 7,
-  },
-  {
-    id: 6,
-    score: 45,
-    level: "Première",
-    visitedStand: true,
-    conference: false,
-    swiped: true,
-    dwellMinutes: 3,
-  },
-  {
-    id: 7,
-    score: 38,
-    level: "Seconde",
-    visitedStand: false,
-    conference: false,
-    swiped: true,
-    dwellMinutes: 2,
-  },
-  {
-    id: 8,
-    score: 30,
-    level: "Terminale",
-    visitedStand: true,
-    conference: false,
-    swiped: false,
-    dwellMinutes: 5,
-  },
-  {
-    id: 9,
-    score: 20,
-    level: "Première",
-    visitedStand: false,
-    conference: false,
-    swiped: false,
-    dwellMinutes: 1,
-  },
-  {
-    id: 10,
-    score: 10,
-    level: "Seconde",
-    visitedStand: false,
-    conference: false,
-    swiped: false,
-    dwellMinutes: 1,
-  },
-];
+export default function ExhibitorLeadsPage() {
+  const { profile } = useAuth()
+  const { toast } = useToast()
+  const [leads, setLeads] = useState<LeadWithUser[]>([])
+  const [filtered, setFiltered] = useState<LeadWithUser[]>([])
+  const [loading, setLoading] = useState(true)
+  const [tierFilter, setTierFilter] = useState<string>('all')
+  const [selectedLead, setSelectedLead] = useState<LeadWithUser | null>(null)
+  const [exporting, setExporting] = useState(false)
+  const [schoolId, setSchoolId] = useState<string | null>(null)
 
-function getTier(score: number): "deciding" | "comparing" | "exploring" {
-  if (score > 65) return "deciding";
-  if (score > 40) return "comparing";
-  return "exploring";
-}
+  useEffect(() => {
+    async function load() {
+      const supabase = getSupabase()
+      // Find school linked to this exhibitor user
+      const { data: userData } = await supabase
+        .from('users').select('id').eq('id', profile?.id ?? '').single()
 
-function ScoreRing({ score }: { score: number }) {
-  const tier = getTier(score);
-  const r = 22;
-  const circ = 2 * Math.PI * r;
-  const offset = circ - (score / 100) * circ;
-  const color =
-    tier === "deciding" ? "#E3001B" : tier === "comparing" ? "#003C8F" : "#FFD100";
+      // For MVP: fetch leads where exported_by matches or just get all leads for first school
+      const { data: schoolData } = await supabase.from('schools').select('id').limit(1).single()
+      const sid = schoolData?.id ?? null
+      setSchoolId(sid)
+
+      if (!sid) { setLoading(false); return }
+
+      const { data } = await supabase
+        .from('leads')
+        .select('*, users(name, email, education_level, postal_code)')
+        .eq('school_id', sid)
+        .order('score_value', { ascending: false })
+
+      const rows = (data ?? []) as LeadWithUser[]
+      setLeads(rows)
+      setFiltered(rows)
+      setLoading(false)
+    }
+    load()
+  }, [profile])
+
+  useEffect(() => {
+    setFiltered(tierFilter === 'all' ? leads : leads.filter(l => l.score_tier === tierFilter))
+  }, [tierFilter, leads])
+
+  async function exportCSV() {
+    if (!schoolId) return
+    setExporting(true)
+    try {
+      const url = `/api/leads/export-csv?schoolId=${schoolId}&tier=${tierFilter !== 'all' ? tierFilter : ''}`
+      const res = await fetch(url)
+      if (!res.ok) throw new Error('Export failed')
+      const blob = await res.blob()
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = `leads_letudiant_${new Date().toISOString().slice(0,10)}.csv`
+      a.click()
+      toast('✓ Export CSV téléchargé', 'success')
+    } catch {
+      toast('Erreur lors de l\'export', 'error')
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const deciding = leads.filter(l => l.score_tier === 'deciding').length
+  const comparing = leads.filter(l => l.score_tier === 'comparing').length
+  const exploring = leads.filter(l => l.score_tier === 'exploring').length
 
   return (
-    <div className={`score-ring score-${tier}`} style={{ width: 56, height: 56 }}>
-      <svg width={56} height={56} viewBox="0 0 56 56" aria-label={`Score ${score}`}>
-        <circle
-          className="track"
-          cx={28}
-          cy={28}
-          r={r}
-          strokeWidth={5}
-          fill="none"
-          stroke="#E8E8E8"
-        />
-        <circle
-          className="progress"
-          cx={28}
-          cy={28}
-          r={r}
-          strokeWidth={5}
-          fill="none"
-          stroke={color}
-          strokeDasharray={circ}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-        />
-      </svg>
-      <span
-        style={{
-          position: "absolute",
-          fontSize: "13px",
-          fontWeight: 700,
-          color: "#1A1A1A",
-        }}
-      >
-        {score}
-      </span>
-    </div>
-  );
-}
-
-function SignalIcons({
-  stand,
-  conf,
-  swipe,
-}: {
-  stand: boolean;
-  conf: boolean;
-  swipe: boolean;
-}) {
-  return (
-    <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-      <span
-        title="Visite stand"
-        style={{ opacity: stand ? 1 : 0.25, fontSize: "16px" }}
-      >
-        📍
-      </span>
-      <span
-        title="Conférence"
-        style={{ opacity: conf ? 1 : 0.25, fontSize: "16px" }}
-      >
-        🎓
-      </span>
-      <span
-        title="Swipe"
-        style={{ opacity: swipe ? 1 : 0.25, fontSize: "16px" }}
-      >
-        ❤️
-      </span>
-    </div>
-  );
-}
-
-interface ModalProps {
-  lead: Lead;
-  onClose: () => void;
-}
-
-function ExportModal({ lead, onClose }: ModalProps) {
-  return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(26,26,26,0.5)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 100,
-        padding: "24px",
-      }}
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div
-        style={{
-          background: "#ffffff",
-          borderRadius: "12px",
-          width: "100%",
-          maxWidth: "420px",
-          overflow: "hidden",
-          boxShadow: "0 20px 60px rgba(26,26,26,0.2)",
-        }}
-      >
-        {/* Modal header */}
-        <div
-          style={{
-            padding: "20px 24px",
-            borderBottom: "1px solid #E8E8E8",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <span style={{ fontWeight: 700, color: "#1A1A1A" }}>
-            Détails du lead
-          </span>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              fontSize: "20px",
-              color: "#6B6B6B",
-              lineHeight: 1,
-            }}
-            aria-label="Fermer"
-          >
-            ×
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#F7F7F7', fontFamily: 'system-ui, sans-serif' }}>
+      <ExhibitorSideNav />
+      <main style={{ flex: 1, padding: '32px 28px', marginLeft: 220 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+          <div>
+            <h1 style={{ margin: '0 0 4px', fontSize: '1.5rem', fontWeight: 800 }}>Mes Leads</h1>
+            <p style={{ margin: 0, color: '#6B6B6B', fontSize: '0.9rem' }}>{leads.length} contacts qualifiés</p>
+          </div>
+          <button onClick={exportCSV} disabled={exporting || leads.length === 0} style={{ background: '#E3001B', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 20px', fontWeight: 600, cursor: 'pointer', fontSize: '0.875rem', opacity: leads.length === 0 ? 0.5 : 1 }}>
+            {exporting ? 'Export…' : '⬇ Exporter CSV'}
           </button>
         </div>
 
-        {/* Modal body */}
-        <div style={{ padding: "24px" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "16px",
-              marginBottom: "24px",
-            }}
-          >
-            <div
-              style={{
-                width: "48px",
-                height: "48px",
-                borderRadius: "50%",
-                background: "#F4F4F4",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "20px",
-              }}
-            >
-              👤
+        {/* KPI strip */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 24 }}>
+          {[
+            { label: 'Décideurs', value: deciding, color: '#15803d', bg: '#DCFCE7' },
+            { label: 'Comparateurs', value: comparing, color: '#92400e', bg: '#FEF9C3' },
+            { label: 'Explorateurs', value: exploring, color: '#1d4ed8', bg: '#EFF6FF' },
+          ].map(k => (
+            <div key={k.label} style={{ background: '#fff', borderRadius: 14, padding: '16px 18px', boxShadow: '0 1px 6px rgba(0,0,0,0.05)' }}>
+              <div style={{ fontSize: '1.75rem', fontWeight: 800, color: k.color }}>{loading ? '—' : k.value}</div>
+              <div style={{ fontSize: '0.8125rem', color: '#6B6B6B', marginTop: 4 }}>{k.label}</div>
             </div>
-            <div>
-              <p style={{ fontWeight: 700, color: "#1A1A1A" }}>
-                Étudiant Anonyme #{lead.id}
-              </p>
-              <p style={{ fontSize: "13px", color: "#6B6B6B" }}>{lead.level}</p>
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "12px",
-              marginBottom: "20px",
-            }}
-          >
-            {[
-              { label: "Score", value: `${lead.score}/100` },
-              { label: "Niveau", value: lead.level },
-              {
-                label: "Visite stand",
-                value: lead.visitedStand ? "Oui" : "Non",
-              },
-              {
-                label: "Conférence",
-                value: lead.conference ? "Oui" : "Non",
-              },
-              {
-                label: "Swipe",
-                value: lead.swiped ? "Oui" : "Non",
-              },
-              { label: "Durée moyenne", value: `${lead.dwellMinutes} min` },
-            ].map((row) => (
-              <div key={row.label}>
-                <p
-                  style={{
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    color: "#6B6B6B",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                    marginBottom: "4px",
-                  }}
-                >
-                  {row.label}
-                </p>
-                <p style={{ fontWeight: 600, color: "#1A1A1A", fontSize: "14px" }}>
-                  {row.value}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <div
-            style={{
-              background: "#FFFBE6",
-              border: "1px solid #FFD100",
-              borderRadius: "6px",
-              padding: "10px 14px",
-              fontSize: "12px",
-              color: "#7A6200",
-              marginBottom: "20px",
-              lineHeight: 1.5,
-            }}
-          >
-            Les coordonnées réelles ne sont visibles qu&apos;après opt-in de
-            l&apos;étudiant. Seules les données agrégées sont disponibles pour
-            le moment.
-          </div>
-
-          <div style={{ display: "flex", gap: "10px" }}>
-            <Button variant="primary" onClick={onClose}>
-              Exporter le contact
-            </Button>
-            <Button variant="ghost" onClick={onClose}>
-              Annuler
-            </Button>
-          </div>
+          ))}
         </div>
-      </div>
-    </div>
-  );
-}
 
-const FILTER_TABS: { id: Tier; label: string }[] = [
-  { id: "all", label: "Tous" },
-  { id: "deciding", label: "Décision" },
-  { id: "comparing", label: "Comparaison" },
-  { id: "exploring", label: "Exploration" },
-];
-
-export default function LeadsPage() {
-  const [filter, setFilter] = useState<Tier>("all");
-  const [modalLead, setModalLead] = useState<Lead | null>(null);
-
-  const filtered =
-    filter === "all"
-      ? MOCK_LEADS
-      : MOCK_LEADS.filter((l) => getTier(l.score) === filter);
-
-  return (
-    <div style={{ maxWidth: "900px", margin: "0 auto" }}>
-      {/* Header */}
-      <div style={{ marginBottom: "28px" }}>
-        <SectionLabel>Leads</SectionLabel>
-        <h1 className="le-h1" style={{ marginTop: "10px", marginBottom: "4px" }}>
-          Vos leads
-        </h1>
-        <p className="le-body">
-          HEC Paris &mdash; Salon de Paris, 15 avril 2026 &mdash;{" "}
-          {MOCK_LEADS.length} leads
-        </p>
-      </div>
-
-      {/* Filter bar */}
-      <div
-        style={{
-          display: "flex",
-          gap: "8px",
-          marginBottom: "24px",
-          flexWrap: "wrap",
-        }}
-      >
-        {FILTER_TABS.map((tab) => {
-          const active = filter === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setFilter(tab.id)}
-              style={{
-                padding: "8px 18px",
-                borderRadius: "20px",
-                border: active ? "1.5px solid #E3001B" : "1.5px solid #E8E8E8",
-                background: active ? "#FDEAEA" : "#ffffff",
-                color: active ? "#B0001A" : "#3D3D3D",
-                fontWeight: active ? 700 : 500,
-                fontSize: "13px",
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-              }}
-            >
-              {tab.label}
-              {tab.id === "all" && (
-                <span
-                  style={{
-                    marginLeft: "6px",
-                    background: active ? "#E3001B" : "#E8E8E8",
-                    color: active ? "#ffffff" : "#6B6B6B",
-                    borderRadius: "10px",
-                    padding: "1px 7px",
-                    fontSize: "11px",
-                    fontWeight: 700,
-                  }}
-                >
-                  {MOCK_LEADS.length}
-                </span>
-              )}
+        {/* Tier filter */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
+          {[['all', 'Tous'], ['deciding', '🟢 Décideurs'], ['comparing', '🟡 Comparateurs'], ['exploring', '🔵 Explorateurs']].map(([val, label]) => (
+            <button key={val} onClick={() => setTierFilter(val)} style={{ background: tierFilter === val ? '#1A1A1A' : '#fff', color: tierFilter === val ? '#fff' : '#4B4B4B', border: 'none', borderRadius: 20, padding: '7px 16px', fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+              {label}
             </button>
-          );
-        })}
-      </div>
-
-      {/* Lead cards */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-        {filtered.map((lead) => (
-          <div
-            key={lead.id}
-            className="kpi-card"
-            style={{
-              flexDirection: "row",
-              gap: "20px",
-              alignItems: "center",
-              padding: "18px 20px",
-            }}
-          >
-            {/* Score ring */}
-            <ScoreRing score={lead.score} />
-
-            {/* Middle info */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p
-                style={{
-                  fontWeight: 700,
-                  color: "#1A1A1A",
-                  marginBottom: "6px",
-                  fontSize: "15px",
-                }}
-              >
-                Étudiant Anonyme #{lead.id}
-              </p>
-              <div
-                style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}
-              >
-                <Tag variant="gray">{lead.level}</Tag>
-                <SignalIcons
-                  stand={lead.visitedStand}
-                  conf={lead.conference}
-                  swipe={lead.swiped}
-                />
-                <span
-                  style={{ fontSize: "12px", color: "#6B6B6B" }}
-                >
-                  {lead.dwellMinutes} min
-                </span>
-              </div>
-            </div>
-
-            {/* Right: badge + action */}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "10px",
-                alignItems: "flex-end",
-                flexShrink: 0,
-              }}
-            >
-              <OrientationBadge score={lead.score} />
-              <button
-                type="button"
-                className="le-btn-base le-btn-primary le-btn-sm"
-                onClick={() => setModalLead(lead)}
-              >
-                Exporter le contact
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {filtered.length === 0 && (
-        <div
-          style={{
-            textAlign: "center",
-            padding: "48px 24px",
-            color: "#6B6B6B",
-          }}
-        >
-          <p style={{ fontSize: "2rem", marginBottom: "12px" }} aria-hidden="true">
-            🔍
-          </p>
-          <p className="le-body">Aucun lead dans cette catégorie.</p>
+          ))}
         </div>
-      )}
 
-      {/* Export modal */}
-      {modalLead && (
-        <ExportModal lead={modalLead} onClose={() => setModalLead(null)} />
-      )}
+        {/* Leads table */}
+        {loading ? <SkeletonTable rows={6} /> : filtered.length === 0 ? (
+          <EmptyState icon="📭" title="Aucun lead pour le moment" description="Les contacts qualifiés de votre stand apparaîtront ici après le salon." />
+        ) : (
+          <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 6px rgba(0,0,0,0.05)' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#F7F7F7' }}>
+                  {['Nom', 'Niveau', 'Code postal', 'Score', 'Segment', 'Action'].map(h => (
+                    <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B6B6B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((lead, i) => {
+                  const tier = TIER_COLORS[lead.score_tier]
+                  return (
+                    <tr key={lead.id} style={{ borderTop: '1px solid #F5F5F5', background: i % 2 === 0 ? '#fff' : '#FAFAFA' }}>
+                      <td style={{ padding: '12px 16px' }}>
+                        <p style={{ margin: '0 0 2px', fontWeight: 600, fontSize: '0.9rem', color: '#1A1A1A' }}>{lead.users?.name ?? '—'}</p>
+                        <p style={{ margin: 0, fontSize: '0.75rem', color: '#6B6B6B' }}>{lead.users?.email ?? ''}</p>
+                      </td>
+                      <td style={{ padding: '12px 16px', fontSize: '0.875rem', color: '#4B4B4B' }}>{lead.users?.education_level ?? '—'}</td>
+                      <td style={{ padding: '12px 16px', fontSize: '0.875rem', color: '#4B4B4B' }}>{lead.users?.postal_code ?? '—'}</td>
+                      <td style={{ padding: '12px 16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ flex: 1, height: 6, background: '#F0F0F0', borderRadius: 3, maxWidth: 60 }}>
+                            <div style={{ width: `${lead.score_value}%`, height: '100%', background: tier.color, borderRadius: 3 }} />
+                          </div>
+                          <span style={{ fontSize: '0.875rem', fontWeight: 700, color: tier.color }}>{lead.score_value}</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: '12px 16px' }}>
+                        <span style={{ background: tier.bg, color: tier.color, borderRadius: 8, padding: '3px 10px', fontSize: '0.75rem', fontWeight: 600 }}>{tier.label}</span>
+                      </td>
+                      <td style={{ padding: '12px 16px' }}>
+                        <button onClick={() => setSelectedLead(lead)} style={{ background: '#F5F5F5', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer', color: '#1A1A1A' }}>
+                          Détail
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Lead detail modal */}
+        <Modal open={!!selectedLead} onClose={() => setSelectedLead(null)} title={selectedLead?.users?.name ?? 'Détail lead'}>
+          {selectedLead && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                {[
+                  { label: 'Score', value: `${selectedLead.score_value}/100` },
+                  { label: 'Segment', value: TIER_COLORS[selectedLead.score_tier].label },
+                  { label: 'Niveau', value: selectedLead.users?.education_level ?? '—' },
+                  { label: 'Code postal', value: selectedLead.users?.postal_code ?? '—' },
+                  { label: 'Stands visités', value: selectedLead.stands_visited?.length ?? 0 },
+                  { label: 'Temps sur le salon', value: `${selectedLead.dwell_minutes ?? 0} min` },
+                ].map(item => (
+                  <div key={item.label} style={{ background: '#F7F7F7', borderRadius: 10, padding: '10px 14px' }}>
+                    <p style={{ margin: '0 0 3px', fontSize: '0.75rem', color: '#6B6B6B' }}>{item.label}</p>
+                    <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9375rem', color: '#1A1A1A' }}>{item.value}</p>
+                  </div>
+                ))}
+              </div>
+              <div style={{ background: '#F7F7F7', borderRadius: 10, padding: '12px 14px' }}>
+                <p style={{ margin: '0 0 6px', fontSize: '0.75rem', color: '#6B6B6B' }}>Filières déclarées</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {(selectedLead.education_branches ?? []).map(f => (
+                    <span key={f} style={{ background: '#fff', border: '1px solid #E0E0E0', borderRadius: 6, padding: '3px 10px', fontSize: '0.8125rem' }}>{f}</span>
+                  ))}
+                </div>
+              </div>
+              <a href={`mailto:${selectedLead.users?.email}`} style={{ display: 'block', textAlign: 'center', background: '#E3001B', color: '#fff', borderRadius: 12, padding: '13px', fontWeight: 600, textDecoration: 'none', fontSize: '0.9375rem' }}>
+                ✉ Contacter par email
+              </a>
+            </div>
+          )}
+        </Modal>
+      </main>
     </div>
-  );
+  )
 }

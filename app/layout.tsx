@@ -3,6 +3,7 @@ import { DM_Sans, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import StripeRule from "@/components/ui/StripeRule";
 import PwaRegister from "@/components/PwaRegister";
+import { ToastProvider } from "@/components/ui/Toaster";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -53,7 +54,9 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-white text-le-gray-900">
         <StripeRule />
-        {children}
+        <ToastProvider>
+          {children}
+        </ToastProvider>
         <PwaRegister />
       </body>
     </html>

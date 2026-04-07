@@ -1,351 +1,147 @@
-'use client';
+'use client'
+import { useEffect, useState } from 'react'
+import { useAuth } from '@/hooks/useAuth'
+import { getSupabase } from '@/lib/supabase/client'
+import { trackPageView } from '@/lib/analytics/track'
+import { Skeleton, SkeletonCard } from '@/components/ui/Skeleton'
+import { EmptyState } from '@/components/ui/EmptyState'
+import StudentBottomNav from '@/components/layouts/StudentBottomNav'
+import ServicesBar from '@/components/features/ServicesBar'
+import type { EventRow, SchoolRow } from '@/lib/supabase/types'
 
-import Logo from '@/components/ui/Logo';
-import OrientationBadge from '@/components/ui/OrientationBadge';
-import Tag from '@/components/ui/Tag';
-import Button from '@/components/ui/Button';
-import SectionLabel from '@/components/ui/SectionLabel';
+export default function StudentHomePage() {
+  const { profile, loading: authLoading } = useAuth()
+  const [events, setEvents] = useState<EventRow[]>([])
+  const [schools, setSchools] = useState<SchoolRow[]>([])
+  const [loading, setLoading] = useState(true)
 
-const UPCOMING_FAIRS = [
-  { id: 'fair-paris-2026', city: 'Paris', date: '15 avril 2026', venue: 'Palais des Congrès', tag: 'red' as const },
-  { id: 'fair-lyon-2026', city: 'Lyon', date: '22 avril 2026', venue: 'Cité Internationale', tag: 'blue' as const },
-  { id: 'fair-bordeaux-2026', city: 'Bordeaux', date: '3 mai 2026', venue: 'Parc des Expositions', tag: 'yellow' as const },
-];
+  useEffect(() => {
+    trackPageView('student_home')
+    async function load() {
+      const supabase = getSupabase()
+      const [eventsRes, schoolsRes] = await Promise.all([
+        supabase.from('events').select('*').order('event_date', { ascending: true }).limit(3),
+        supabase.from('schools').select('*').order('name').limit(6),
+      ])
+      setEvents(eventsRes.data ?? [])
+      setSchools(schoolsRes.data ?? [])
+      setLoading(false)
+    }
+    load()
+  }, [])
 
-const SAVED_SCHOOLS = [
-  { id: 'hec', name: 'HEC Paris', type: 'Grande École', city: 'Jouy-en-Josas', tag: 'red' as const },
-  { id: 'sciencespo', name: 'Sciences Po', type: 'Grande École', city: 'Paris', tag: 'blue' as const },
-  { id: 'insa', name: 'INSA Lyon', type: 'École d\'ingénieurs', city: 'Lyon', tag: 'yellow' as const },
-];
+  const firstName = profile?.name?.split(' ')[0] ?? 'Étudiant(e)'
+  const stage = profile?.orientation_stage ?? 'exploring'
+  const stageLabel: Record<string, string> = { exploring: 'Exploration', comparing: 'Comparaison', deciding: 'Décision' }
+  const stageColor: Record<string, string> = { exploring: '#003C8F', comparing: '#f59e0b', deciding: '#22c55e' }
 
-export default function HomePage() {
+  const nextEvent = events[0]
+  const daysUntil = nextEvent
+    ? Math.max(0, Math.ceil((new Date(nextEvent.event_date).getTime() - Date.now()) / 86400000))
+    : null
+
   return (
-    <div className="page-with-nav" style={{ background: '#F4F4F4', minHeight: '100vh' }}>
+    <div style={{ minHeight: '100vh', background: '#F7F7F7', paddingBottom: 100, fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
-      <div
-        style={{
-          background: '#fff',
-          padding: '20px 20px 16px',
-          borderBottom: '1px solid #E8E8E8',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <Logo variant="default" size="sm" />
-          <div
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: '50%',
-              background: '#E3001B',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              fontWeight: 700,
-              fontSize: 15,
-            }}
-          >
-            EA
+      <div style={{ background: 'linear-gradient(135deg,#E3001B,#C5001A)', padding: '52px 20px 28px', color: '#fff' }}>
+        {authLoading ? (
+          <div style={{ height: 60, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <Skeleton className="h-5 w-40" style={{ background: 'rgba(255,255,255,0.2)' }} />
+            <Skeleton className="h-3 w-28" style={{ background: 'rgba(255,255,255,0.15)' }} />
           </div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
-            <p className="le-caption" style={{ marginBottom: 2 }}>Bonjour,</p>
-            <p className="le-h3" style={{ margin: 0 }}>Emma Aubert 👋</p>
-          </div>
-          <OrientationBadge score={45} />
-        </div>
+        ) : (
+          <>
+            <p style={{ margin: '0 0 4px', fontSize: '0.8125rem', opacity: 0.75 }}>Bonjour 👋</p>
+            <h1 style={{ margin: '0 0 10px', fontSize: '1.5rem', fontWeight: 800 }}>{firstName}</h1>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.18)', borderRadius: 20, padding: '5px 12px', fontSize: '0.75rem', fontWeight: 600 }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: stageColor[stage] }} />
+              {stageLabel[stage]}
+            </span>
+          </>
+        )}
       </div>
 
-      {/* Prochains Salons */}
-      <div style={{ padding: '24px 20px 0' }}>
-        <SectionLabel>Prochains salons</SectionLabel>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
-          {UPCOMING_FAIRS.map((fair) => (
-            <div
-              key={fair.id}
-              className="le-card"
-              style={{ display: 'flex', alignItems: 'center', padding: '16px', gap: 14 }}
-            >
-              <div
-                style={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: 10,
-                  background: fair.tag === 'red' ? '#FDEAEA' : fair.tag === 'blue' ? '#E6ECF8' : '#FFFBE6',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: fair.tag === 'red' ? '#E3001B' : fair.tag === 'blue' ? '#003C8F' : '#7A6200',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                  }}
-                >
-                  {fair.date.split(' ')[1].toUpperCase().slice(0, 3)}
-                </span>
-                <span
-                  style={{
-                    fontSize: 22,
-                    fontWeight: 700,
-                    lineHeight: 1,
-                    color: fair.tag === 'red' ? '#E3001B' : fair.tag === 'blue' ? '#003C8F' : '#7A6200',
-                  }}
-                >
-                  {fair.date.split(' ')[0]}
-                </span>
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontWeight: 700, fontSize: 16, margin: '0 0 2px', color: '#1A1A1A' }}>
-                  Salon de {fair.city}
-                </p>
-                <p className="le-caption" style={{ margin: '0 0 6px' }}>
-                  {fair.venue}
-                </p>
-                <Tag variant={fair.tag}>{fair.date}</Tag>
-              </div>
-              <Button
-                variant="primary"
-                size="sm"
-                href={`/fair/${fair.id}`}
-                style={{ flexShrink: 0, fontSize: 13 }}
-              >
-                S&apos;inscrire
-              </Button>
+      <div style={{ padding: '0 20px', marginTop: -16 }}>
+        {/* Next fair countdown */}
+        {loading ? (
+          <Skeleton variant="card" style={{ marginBottom: 20, height: 100 }} />
+        ) : nextEvent ? (
+          <div style={{ background: '#fff', borderRadius: 16, padding: '18px 20px', marginBottom: 20, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <p style={{ margin: '0 0 3px', fontSize: '0.75rem', color: '#6B6B6B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Prochain salon</p>
+              <p style={{ margin: '0 0 4px', fontWeight: 700, fontSize: '1rem', color: '#1A1A1A' }}>{nextEvent.name}</p>
+              <p style={{ margin: 0, fontSize: '0.8125rem', color: '#6B6B6B' }}>{nextEvent.city} · {new Date(nextEvent.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}</p>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Écoles sauvegardées */}
-      <div style={{ padding: '24px 20px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <SectionLabel>Écoles sauvegardées</SectionLabel>
-          <a href="/schools" style={{ fontSize: 13, color: '#E3001B', fontWeight: 600, textDecoration: 'none' }}>
-            Voir tout →
-          </a>
-        </div>
-        <div style={{ display: 'flex', gap: 12, overflowX: 'auto' }} className="no-scrollbar">
-          {SAVED_SCHOOLS.map((school) => (
-            <a
-              key={school.id}
-              href={`/schools/${school.id}`}
-              style={{ textDecoration: 'none', flexShrink: 0, width: 160 }}
-            >
-              <div className="le-card" style={{ padding: '16px 14px' }}>
-                <div
-                  style={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: 8,
-                    background:
-                      school.tag === 'red'
-                        ? 'linear-gradient(135deg, #E3001B, #B0001A)'
-                        : school.tag === 'blue'
-                        ? 'linear-gradient(135deg, #003C8F, #0052CC)'
-                        : 'linear-gradient(135deg, #FFD100, #E6A800)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#fff',
-                    fontWeight: 700,
-                    fontSize: 16,
-                    marginBottom: 10,
-                  }}
-                >
-                  {school.name[0]}
-                </div>
-                <p style={{ fontWeight: 700, fontSize: 14, margin: '0 0 4px', color: '#1A1A1A' }}>
-                  {school.name}
-                </p>
-                <p className="le-caption" style={{ margin: '0 0 8px' }}>
-                  {school.city}
-                </p>
-                <Tag variant={school.tag}>{school.type}</Tag>
+            {daysUntil !== null && (
+              <div style={{ textAlign: 'center', background: '#FFF0F0', borderRadius: 12, padding: '10px 16px' }}>
+                <p style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color: '#E3001B', lineHeight: 1 }}>{daysUntil}</p>
+                <p style={{ margin: 0, fontSize: '0.6875rem', color: '#E3001B', fontWeight: 600 }}>jours</p>
               </div>
+            )}
+          </div>
+        ) : null}
+
+        {/* Quick actions */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 24 }}>
+          {[
+            { icon: '📁', label: 'Dossier', href: '/saved' },
+            { icon: '⚖️', label: 'Comparer', href: '/compare' },
+            { icon: '📋', label: 'Récap', href: nextEvent ? `/recap/${nextEvent.id}` : '#' },
+          ].map(a => (
+            <a key={a.href} href={a.href} style={{ background: '#fff', borderRadius: 14, padding: '16px 8px', textAlign: 'center', textDecoration: 'none', boxShadow: '0 1px 6px rgba(0,0,0,0.05)' }}>
+              <div style={{ fontSize: 24, marginBottom: 6 }}>{a.icon}</div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#1A1A1A' }}>{a.label}</div>
             </a>
           ))}
         </div>
-      </div>
 
-      {/* Mes actions rapides */}
-      <div style={{ padding: '24px 20px 0' }}>
-        <SectionLabel>Mes actions rapides</SectionLabel>
-        <div style={{ display: 'flex', gap: 12, overflowX: 'auto', marginTop: 16 }} className="no-scrollbar">
-          <a
-            href="/saved"
-            style={{ textDecoration: 'none', flexShrink: 0 }}
-          >
-            <div
-              style={{
-                background: '#F4F4F4',
-                borderRadius: 12,
-                padding: '18px 20px',
-                minWidth: 130,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 8,
-              }}
-            >
-              <span style={{ fontSize: 26 }}>📁</span>
-              <p style={{ fontSize: 13, fontWeight: 700, color: '#1A1A1A', margin: 0 }}>Mon dossier</p>
-            </div>
-          </a>
-          <a
-            href="/compare"
-            style={{ textDecoration: 'none', flexShrink: 0 }}
-          >
-            <div
-              style={{
-                background: '#E6ECF8',
-                borderRadius: 12,
-                padding: '18px 20px',
-                minWidth: 130,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 8,
-              }}
-            >
-              <span style={{ fontSize: 26 }}>⚖️</span>
-              <p style={{ fontSize: 13, fontWeight: 700, color: '#003C8F', margin: 0 }}>Comparer</p>
-            </div>
-          </a>
-          <a
-            href="/recap/fair-paris-2026"
-            style={{ textDecoration: 'none', flexShrink: 0 }}
-          >
-            <div
-              style={{
-                background: '#FDEAEA',
-                borderRadius: 12,
-                padding: '18px 20px',
-                minWidth: 130,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 8,
-              }}
-            >
-              <span style={{ fontSize: 26 }}>📋</span>
-              <p style={{ fontSize: 13, fontWeight: 700, color: '#E3001B', margin: 0 }}>Récapitulatif</p>
-            </div>
-          </a>
-        </div>
-      </div>
+        {/* Services */}
+        <ServicesBar />
 
-      {/* Article teaser */}
-      <div style={{ padding: '24px 20px 0' }}>
-        <SectionLabel>À lire</SectionLabel>
-        <a
-          href="#"
-          style={{ textDecoration: 'none', display: 'block', marginTop: 16 }}
-        >
-          <div
-            className="le-card"
-            style={{
-              padding: 0,
-              overflow: 'hidden',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            <div
-              style={{
-                height: 140,
-                background: 'linear-gradient(135deg, #E3001B 0%, #003C8F 100%)',
-                display: 'flex',
-                alignItems: 'flex-end',
-                padding: '16px',
-                position: 'relative',
-              }}
-            >
-              <div
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  background: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
-                }}
-              />
-              <Tag variant="red" style={{ position: 'relative', zIndex: 1 }}>Guide orientation</Tag>
-            </div>
-            <div style={{ padding: '16px' }}>
-              <p className="le-h3" style={{ margin: '0 0 6px', color: '#1A1A1A' }}>
-                Choisir son école après le bac : le guide complet 2026
-              </p>
-              <p className="le-body" style={{ margin: '0 0 12px', fontSize: 13 }}>
-                BTS, IUT, Licence, Grandes Écoles... comment s&apos;y retrouver dans l&apos;offre de formation ?
-              </p>
-              <span style={{ fontSize: 13, color: '#E3001B', fontWeight: 600 }}>
-                Lire l&apos;article →
-              </span>
-            </div>
+        {/* Upcoming events */}
+        <h2 style={{ fontSize: '1rem', fontWeight: 700, margin: '24px 0 12px', color: '#1A1A1A' }}>Prochains salons</h2>
+        {loading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {[1,2].map(i => <Skeleton key={i} variant="card" style={{ height: 80 }} />)}
           </div>
-        </a>
+        ) : events.length === 0 ? (
+          <EmptyState icon="📅" title="Aucun salon à venir" description="Les prochains salons seront affichés ici dès leur publication." />
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {events.map(ev => (
+              <a key={ev.id} href={`/fair/${ev.id}`} style={{ background: '#fff', borderRadius: 14, padding: '14px 16px', textDecoration: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 1px 6px rgba(0,0,0,0.05)' }}>
+                <div>
+                  <p style={{ margin: '0 0 3px', fontWeight: 700, fontSize: '0.9375rem', color: '#1A1A1A' }}>{ev.name}</p>
+                  <p style={{ margin: 0, fontSize: '0.8125rem', color: '#6B6B6B' }}>{ev.city} · {new Date(ev.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                </div>
+                <span style={{ color: '#E3001B', fontSize: 18 }}>›</span>
+              </a>
+            ))}
+          </div>
+        )}
+
+        {/* Suggested schools */}
+        <h2 style={{ fontSize: '1rem', fontWeight: 700, margin: '24px 0 12px', color: '#1A1A1A' }}>Établissements suggérés</h2>
+        {loading ? (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            {[1,2,3,4].map(i => <SkeletonCard key={i} />)}
+          </div>
+        ) : schools.length === 0 ? (
+          <EmptyState icon="🏫" title="Aucun établissement" description="Explorez les établissements dans l'onglet Découvrir." action={{ label: 'Découvrir', href: '/discover' }} />
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, paddingBottom: 20 }}>
+            {schools.map(school => (
+              <a key={school.id} href={`/schools/${school.id}`} style={{ background: '#fff', borderRadius: 14, padding: '14px', textDecoration: 'none', boxShadow: '0 1px 6px rgba(0,0,0,0.05)' }}>
+                <div style={{ width: '100%', height: 70, background: 'linear-gradient(135deg,#F0F0F0,#E8E8E8)', borderRadius: 10, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>🏫</div>
+                <p style={{ margin: '0 0 3px', fontWeight: 700, fontSize: '0.8125rem', color: '#1A1A1A', lineHeight: 1.3 }}>{school.name}</p>
+                <p style={{ margin: 0, fontSize: '0.75rem', color: '#6B6B6B' }}>{school.city} · {school.type}</p>
+                {school.parcoursup && <span style={{ display: 'inline-block', marginTop: 6, background: '#EEF2FF', color: '#003C8F', borderRadius: 6, padding: '2px 7px', fontSize: '0.6875rem', fontWeight: 600 }}>Parcoursup</span>}
+              </a>
+            ))}
+          </div>
+        )}
       </div>
-      {/* Prochain salon countdown card */}
-      <div style={{ padding: '24px 20px 32px' }}>
-        <div
-          className="le-card"
-          style={{
-            background: 'linear-gradient(135deg, #003C8F 0%, #001F5C 100%)',
-            padding: '20px',
-            border: 'none',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-            <div>
-              <p
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: 'rgba(255,255,255,0.7)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                  marginBottom: 4,
-                }}
-              >
-                Prochain salon
-              </p>
-              <p style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: 0 }}>
-                Salon de Paris
-              </p>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <p style={{ fontSize: 36, fontWeight: 700, color: '#FFD100', margin: 0, lineHeight: 1 }}>9</p>
-              <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.7)', margin: '2px 0 0' }}>jours</p>
-            </div>
-          </div>
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ height: 6, background: 'rgba(255,255,255,0.2)', borderRadius: 3, overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: '70%', background: '#FFD100', borderRadius: 3 }} />
-            </div>
-            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 6 }}>
-              15 avril 2026 — Palais des Congrès, Paris
-            </p>
-          </div>
-          <a
-            href="/fair/fair-paris-2026"
-            style={{
-              display: 'inline-block',
-              padding: '10px 20px',
-              background: '#FFD100',
-              color: '#1A1A1A',
-              borderRadius: 8,
-              fontSize: 13,
-              fontWeight: 700,
-              textDecoration: 'none',
-            }}
-          >
-            Voir le programme →
-          </a>
-        </div>
-      </div>
+      <StudentBottomNav />
     </div>
-  );
+  )
 }

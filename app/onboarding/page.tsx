@@ -1,982 +1,369 @@
-"use client";
+'use client'
+import { Suspense, useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { getSupabase } from '@/lib/supabase/client'
+import { useToast } from '@/components/ui/Toaster'
+import Logo from '@/components/ui/Logo'
 
-import { useSearchParams, useRouter } from "next/navigation";
-import { useState, Suspense } from "react";
-import Logo from "@/components/ui/Logo";
-import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
-import Tag from "@/components/ui/Tag";
-
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-type Role = "student" | "teacher" | "parent";
-
-interface CommonData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-}
-
-interface StudentData {
-  level: string;
-  series: string;
-  filieres: string[];
-  studyLevel: string;
-}
-
-interface TeacherData {
-  schoolName: string;
-  city: string;
-  groupName: string;
-  studentCount: string;
-  selectedFair: string;
-  eventCode: string;
-}
-
-interface ParentData {
-  childHasAccount: boolean | null;
-  childEmail: string;
-}
-
-// ─── Constants ───────────────────────────────────────────────────────────────
-
-const ROLE_LABELS: Record<Role, string> = {
-  student: "Étudiant(e)",
-  teacher: "Enseignant(e)",
-  parent: "Parent",
-};
-
-const ROLE_STEPS: Record<Role, number> = {
-  student: 4, // 0 (common) + 3
-  teacher: 3, // 0 (common) + 2
-  parent: 3,  // 0 (common) + 2
-};
-
-const STUDENT_LEVELS = ["Seconde", "Première", "Terminale", "Bac+1", "Bac+2", "Bac+3 et +"];
-const STUDENT_SERIES = ["Bac général", "Bac techno", "Bac pro"];
-const STUDY_LEVELS = ["Bac+2", "Bac+3", "Bac+5", "Bac+8 / Doctorat"];
-
+const STUDENT_LEVELS = ['Seconde', 'Première', 'Terminale', 'Bac+1', 'Bac+2', 'Bac+3 et +']
+const STUDENT_SERIES = ['Générale', 'Technologique', 'Professionnelle']
 const FILIERES = [
-  "Économie-Gestion",
-  "Ingénierie-Industrie",
-  "Santé-Social",
-  "Droit-Sciences politiques",
-  "Arts-Culture",
-  "Sciences-Nature",
-  "Communication-Information",
-  "Éducation-Formation",
-];
-
-const MOCK_FAIRS = [
-  { id: "paris-2026", label: "Salon de Paris — 15 avril 2026" },
-  { id: "lyon-2026", label: "Salon de Lyon — 22 avril 2026" },
-  { id: "bordeaux-2026", label: "Salon de Bordeaux — 30 avril 2026" },
-];
-
-// ─── Progress bar ─────────────────────────────────────────────────────────────
-
-function ProgressBar({ current, total }: { current: number; total: number }) {
-  const pct = Math.round(((current + 1) / total) * 100);
-  return (
-    <div style={{ marginBottom: "32px" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginBottom: "8px",
-          fontSize: "12px",
-          color: "#6B6B6B",
-        }}
-      >
-        <span>Étape {current + 1} / {total}</span>
-        <span>{pct}%</span>
-      </div>
-      <div
-        style={{
-          height: "4px",
-          background: "#E8E8E8",
-          borderRadius: "2px",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            height: "100%",
-            width: `${pct}%`,
-            background: "#E3001B",
-            borderRadius: "2px",
-            transition: "width 0.3s ease",
-          }}
-        />
-      </div>
-    </div>
-  );
-}
-
-// ─── Step 0: Common quick info ────────────────────────────────────────────────
-
-function StepCommon({
-  role,
-  data,
-  onChange,
-  onNext,
-}: {
-  role: Role;
-  data: CommonData;
-  onChange: (d: Partial<CommonData>) => void;
-  onNext: () => void;
-}) {
-  return (
-    <div>
-      {/* Role badge */}
-      <div style={{ marginBottom: "24px" }}>
-        <Tag variant="red">
-          Vous vous inscrivez en tant que {ROLE_LABELS[role]}
-        </Tag>
-      </div>
-
-      <h2 className="le-h2" style={{ marginBottom: "8px" }}>
-        Créez votre compte
-      </h2>
-      <p className="le-body" style={{ color: "#6B6B6B", marginBottom: "28px" }}>
-        Quelques informations pour démarrer.
-      </p>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-          <Input
-            id="firstName"
-            label="Prénom"
-            required
-            value={data.firstName}
-            onChange={(e) => onChange({ firstName: e.target.value })}
-            placeholder="Camille"
-          />
-          <Input
-            id="lastName"
-            label="Nom"
-            required
-            value={data.lastName}
-            onChange={(e) => onChange({ lastName: e.target.value })}
-            placeholder="Martin"
-          />
-        </div>
-        <Input
-          id="email"
-          label="Adresse e-mail"
-          type="email"
-          required
-          value={data.email}
-          onChange={(e) => onChange({ email: e.target.value })}
-          placeholder="camille.martin@exemple.fr"
-        />
-        <Input
-          id="password"
-          label="Mot de passe"
-          type="password"
-          required
-          value={data.password}
-          onChange={(e) => onChange({ password: e.target.value })}
-          placeholder="Au moins 8 caractères"
-        />
-      </div>
-
-      <div style={{ marginTop: "28px" }}>
-        <Button
-          variant="primary"
-          onClick={onNext}
-          disabled={!data.firstName || !data.lastName || !data.email || !data.password}
-          style={{ width: "100%" }}
-        >
-          Continuer
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-// ─── Student Step 1: Academic profile ─────────────────────────────────────────
-
-function StudentStep1({
-  data,
-  onChange,
-  onNext,
-  onSkip,
-}: {
-  data: StudentData;
-  onChange: (d: Partial<StudentData>) => void;
-  onNext: () => void;
-  onSkip: () => void;
-}) {
-  const showSeries = ["Seconde", "Première", "Terminale"].includes(data.level);
-
-  return (
-    <div>
-      <h2 className="le-h2" style={{ marginBottom: "8px" }}>
-        Votre profil académique
-      </h2>
-      <p className="le-body" style={{ color: "#6B6B6B", marginBottom: "28px" }}>
-        Ces informations nous permettent de personnaliser vos recommandations.
-      </p>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-        {/* Level selector */}
-        <div>
-          <label className="le-label" style={{ display: "block", marginBottom: "8px" }}>
-            Votre niveau actuel
-          </label>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-            {STUDENT_LEVELS.map((lvl) => (
-              <button
-                key={lvl}
-                type="button"
-                onClick={() => onChange({ level: lvl, series: "" })}
-                style={{
-                  padding: "8px 16px",
-                  borderRadius: "8px",
-                  border: data.level === lvl ? "2px solid #E3001B" : "2px solid #E8E8E8",
-                  background: data.level === lvl ? "#FDEAEA" : "#ffffff",
-                  color: data.level === lvl ? "#E3001B" : "#3D3D3D",
-                  fontWeight: data.level === lvl ? 600 : 400,
-                  fontSize: "0.9rem",
-                  cursor: "pointer",
-                  transition: "all 0.15s",
-                }}
-              >
-                {lvl}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Series selector */}
-        {showSeries && (
-          <div>
-            <label className="le-label" style={{ display: "block", marginBottom: "8px" }}>
-              Votre série de bac
-            </label>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-              {STUDENT_SERIES.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => onChange({ series: s })}
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: "8px",
-                    border: data.series === s ? "2px solid #E3001B" : "2px solid #E8E8E8",
-                    background: data.series === s ? "#FDEAEA" : "#ffffff",
-                    color: data.series === s ? "#E3001B" : "#3D3D3D",
-                    fontWeight: data.series === s ? 600 : 400,
-                    fontSize: "0.9rem",
-                    cursor: "pointer",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div style={{ marginTop: "32px", display: "flex", flexDirection: "column", gap: "12px" }}>
-        <Button variant="primary" onClick={onNext} style={{ width: "100%" }}>
-          Continuer
-        </Button>
-        <button
-          type="button"
-          onClick={onSkip}
-          style={{ background: "none", border: "none", color: "#6B6B6B", fontSize: "0.9rem", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: "3px" }}
-        >
-          Passer cette étape
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ─── Student Step 2: Interests ─────────────────────────────────────────────────
-
-function StudentStep2({
-  data,
-  onChange,
-  onNext,
-  onSkip,
-}: {
-  data: StudentData;
-  onChange: (d: Partial<StudentData>) => void;
-  onNext: () => void;
-  onSkip: () => void;
-}) {
-  function toggleFiliere(f: string) {
-    const current = data.filieres;
-    if (current.includes(f)) {
-      onChange({ filieres: current.filter((x) => x !== f) });
-    } else {
-      onChange({ filieres: [...current, f] });
-    }
-  }
-
-  return (
-    <div>
-      <h2 className="le-h2" style={{ marginBottom: "8px" }}>
-        Vos centres d&apos;intérêt
-      </h2>
-      <p className="le-body" style={{ color: "#6B6B6B", marginBottom: "28px" }}>
-        Pour des recommandations encore plus pertinentes — vous pouvez passer cette étape.
-      </p>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-        {/* Filieres chips */}
-        <div>
-          <label className="le-label" style={{ display: "block", marginBottom: "10px" }}>
-            Quelles filières vous intéressent ?
-          </label>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-            {FILIERES.map((f) => {
-              const active = data.filieres.includes(f);
-              return (
-                <button
-                  key={f}
-                  type="button"
-                  onClick={() => toggleFiliere(f)}
-                  style={{
-                    padding: "8px 14px",
-                    borderRadius: "20px",
-                    border: active ? "2px solid #E3001B" : "2px solid #E8E8E8",
-                    background: active ? "#E3001B" : "#ffffff",
-                    color: active ? "#ffffff" : "#3D3D3D",
-                    fontWeight: active ? 600 : 400,
-                    fontSize: "0.875rem",
-                    cursor: "pointer",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  {f}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Study level */}
-        <div>
-          <label className="le-label" style={{ display: "block", marginBottom: "10px" }}>
-            Quel niveau d&apos;études visez-vous ?
-          </label>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-            {STUDY_LEVELS.map((lvl) => (
-              <button
-                key={lvl}
-                type="button"
-                onClick={() => onChange({ studyLevel: lvl })}
-                style={{
-                  padding: "8px 16px",
-                  borderRadius: "8px",
-                  border: data.studyLevel === lvl ? "2px solid #E3001B" : "2px solid #E8E8E8",
-                  background: data.studyLevel === lvl ? "#FDEAEA" : "#ffffff",
-                  color: data.studyLevel === lvl ? "#E3001B" : "#3D3D3D",
-                  fontWeight: data.studyLevel === lvl ? 600 : 400,
-                  fontSize: "0.9rem",
-                  cursor: "pointer",
-                  transition: "all 0.15s",
-                }}
-              >
-                {lvl}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ marginTop: "32px", display: "flex", flexDirection: "column", gap: "12px" }}>
-        <Button variant="primary" onClick={onNext} style={{ width: "100%" }}>
-          Continuer
-        </Button>
-        <button
-          type="button"
-          onClick={onSkip}
-          style={{ background: "none", border: "none", color: "#6B6B6B", fontSize: "0.9rem", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: "3px" }}
-        >
-          Passer cette étape
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ─── Student Step 3: Confirmation ─────────────────────────────────────────────
-
-function StudentStep3({
-  common,
-  student,
-}: {
-  common: CommonData;
-  student: StudentData;
-}) {
-  const router = useRouter();
-  const hasLevel = !!student.level;
-  const hasFilieres = student.filieres.length > 0;
-  const hasStudyLevel = !!student.studyLevel;
-
-  return (
-    <div style={{ textAlign: "center" }}>
-      <div
-        style={{
-          width: "72px",
-          height: "72px",
-          borderRadius: "50%",
-          background: "#FDEAEA",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          margin: "0 auto 24px",
-          fontSize: "2rem",
-        }}
-      >
-        ✓
-      </div>
-
-      <h2 className="le-h2" style={{ marginBottom: "8px" }}>
-        Votre profil de base est créé !
-      </h2>
-      <p className="le-body" style={{ color: "#6B6B6B", marginBottom: "28px" }}>
-        Bienvenue, {common.firstName}. Voici ce que nous savons de vous.
-      </p>
-
-      {/* Summary */}
-      <div
-        style={{
-          textAlign: "left",
-          background: "#F4F4F4",
-          borderRadius: "12px",
-          padding: "20px",
-          marginBottom: "28px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "12px",
-        }}
-      >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: "0.9rem", color: "#6B6B6B" }}>Niveau actuel</span>
-          {hasLevel ? (
-            <Tag variant="blue">{student.level}{student.series ? ` — ${student.series}` : ""}</Tag>
-          ) : (
-            <span style={{ fontSize: "0.875rem", color: "#6B6B6B", fontStyle: "italic" }}>Non renseigné</span>
-          )}
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
-          <span style={{ fontSize: "0.9rem", color: "#6B6B6B", flexShrink: 0 }}>Filières</span>
-          {hasFilieres ? (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", justifyContent: "flex-end" }}>
-              {student.filieres.map((f) => (
-                <Tag key={f} variant="red" style={{ fontSize: "0.75rem" }}>{f}</Tag>
-              ))}
-            </div>
-          ) : (
-            <span style={{ fontSize: "0.875rem", color: "#6B6B6B", fontStyle: "italic" }}>Non renseigné</span>
-          )}
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: "0.9rem", color: "#6B6B6B" }}>Niveau visé</span>
-          {hasStudyLevel ? (
-            <Tag variant="yellow">{student.studyLevel}</Tag>
-          ) : (
-            <span style={{ fontSize: "0.875rem", color: "#6B6B6B", fontStyle: "italic" }}>Non renseigné</span>
-          )}
-        </div>
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-        <Button variant="primary" href="/home" style={{ width: "100%" }}>
-          Accéder au salon
-        </Button>
-        <Button variant="secondary" href="/profile" style={{ width: "100%" }}>
-          Enrichir mon profil
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-// ─── Teacher Step 1: School info ───────────────────────────────────────────────
-
-function TeacherStep1({
-  data,
-  onChange,
-  onNext,
-}: {
-  data: TeacherData;
-  onChange: (d: Partial<TeacherData>) => void;
-  onNext: () => void;
-}) {
-  return (
-    <div>
-      <h2 className="le-h2" style={{ marginBottom: "8px" }}>
-        Votre établissement
-      </h2>
-      <p className="le-body" style={{ color: "#6B6B6B", marginBottom: "28px" }}>
-        Informations sur votre école et votre groupe.
-      </p>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-        <Input
-          id="schoolName"
-          label="Nom de l'établissement"
-          required
-          value={data.schoolName}
-          onChange={(e) => onChange({ schoolName: e.target.value })}
-          placeholder="Lycée Victor Hugo"
-        />
-        <Input
-          id="city"
-          label="Ville"
-          required
-          value={data.city}
-          onChange={(e) => onChange({ city: e.target.value })}
-          placeholder="Paris"
-        />
-        <Input
-          id="groupName"
-          label="Nom de classe / groupe"
-          value={data.groupName}
-          onChange={(e) => onChange({ groupName: e.target.value })}
-          placeholder="Terminale S — Groupe 2"
-        />
-        <Input
-          id="studentCount"
-          label="Nombre d'élèves (approx.)"
-          type="number"
-          value={data.studentCount}
-          onChange={(e) => onChange({ studentCount: e.target.value })}
-          placeholder="28"
-        />
-      </div>
-
-      <div style={{ marginTop: "28px" }}>
-        <Button
-          variant="primary"
-          onClick={onNext}
-          disabled={!data.schoolName || !data.city}
-          style={{ width: "100%" }}
-        >
-          Continuer
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-// ─── Teacher Step 2: Fair selection ───────────────────────────────────────────
-
-function TeacherStep2({
-  data,
-  onChange,
-  onFinish,
-}: {
-  data: TeacherData;
-  onChange: (d: Partial<TeacherData>) => void;
-  onFinish: () => void;
-}) {
-  const [useCode, setUseCode] = useState(false);
-
-  return (
-    <div>
-      <h2 className="le-h2" style={{ marginBottom: "8px" }}>
-        Choisissez votre salon
-      </h2>
-      <p className="le-body" style={{ color: "#6B6B6B", marginBottom: "28px" }}>
-        Sélectionnez le salon auquel votre groupe participera.
-      </p>
-
-      {!useCode ? (
-        <>
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
-            {MOCK_FAIRS.map((fair) => (
-              <button
-                key={fair.id}
-                type="button"
-                onClick={() => onChange({ selectedFair: fair.id })}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "16px",
-                  borderRadius: "10px",
-                  border: data.selectedFair === fair.id ? "2px solid #E3001B" : "2px solid #E8E8E8",
-                  background: data.selectedFair === fair.id ? "#FDEAEA" : "#ffffff",
-                  textAlign: "left",
-                  cursor: "pointer",
-                  transition: "all 0.15s",
-                }}
-              >
-                <div
-                  style={{
-                    width: "20px",
-                    height: "20px",
-                    borderRadius: "50%",
-                    border: data.selectedFair === fair.id ? "6px solid #E3001B" : "2px solid #E8E8E8",
-                    flexShrink: 0,
-                  }}
-                />
-                <span style={{ fontSize: "0.9375rem", color: "#1A1A1A", fontWeight: data.selectedFair === fair.id ? 600 : 400 }}>
-                  {fair.label}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setUseCode(true)}
-            style={{ background: "none", border: "none", color: "#003C8F", fontSize: "0.9rem", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: "3px" }}
-          >
-            Je rejoins un salon existant avec un code →
-          </button>
-        </>
-      ) : (
-        <>
-          <Input
-            id="eventCode"
-            label="Code événement"
-            value={data.eventCode}
-            onChange={(e) => onChange({ eventCode: e.target.value })}
-            placeholder="EX2026PARIS"
-          />
-          <button
-            type="button"
-            onClick={() => setUseCode(false)}
-            style={{ background: "none", border: "none", color: "#6B6B6B", fontSize: "0.875rem", cursor: "pointer", marginTop: "8px", textDecoration: "underline", textUnderlineOffset: "3px" }}
-          >
-            ← Choisir dans la liste
-          </button>
-        </>
-      )}
-
-      <div style={{ marginTop: "28px" }}>
-        <Button
-          variant="primary"
-          onClick={onFinish}
-          disabled={!data.selectedFair && !data.eventCode}
-          style={{ width: "100%" }}
-        >
-          Accéder au tableau de bord
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-// ─── Parent Step 1: Parent / child link ───────────────────────────────────────
-
-function ParentStep1({
-  data,
-  onChange,
-  onNext,
-}: {
-  data: ParentData;
-  onChange: (d: Partial<ParentData>) => void;
-  onNext: () => void;
-}) {
-  return (
-    <div>
-      <h2 className="le-h2" style={{ marginBottom: "8px" }}>
-        Votre enfant a-t-il déjà un compte ?
-      </h2>
-      <p className="le-body" style={{ color: "#6B6B6B", marginBottom: "28px" }}>
-        Connectez vos comptes pour suivre le parcours d&apos;orientation ensemble.
-      </p>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "24px" }}>
-        {[
-          { value: true, label: "Oui, mon enfant a déjà un compte L'Étudiant" },
-          { value: false, label: "Non, mon enfant n'a pas encore de compte" },
-        ].map((opt) => (
-          <button
-            key={String(opt.value)}
-            type="button"
-            onClick={() => onChange({ childHasAccount: opt.value })}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              padding: "16px",
-              borderRadius: "10px",
-              border: data.childHasAccount === opt.value ? "2px solid #E3001B" : "2px solid #E8E8E8",
-              background: data.childHasAccount === opt.value ? "#FDEAEA" : "#ffffff",
-              textAlign: "left",
-              cursor: "pointer",
-              transition: "all 0.15s",
-            }}
-          >
-            <div
-              style={{
-                width: "20px",
-                height: "20px",
-                borderRadius: "50%",
-                border: data.childHasAccount === opt.value ? "6px solid #E3001B" : "2px solid #E8E8E8",
-                flexShrink: 0,
-              }}
-            />
-            <span style={{ fontSize: "0.9375rem", color: "#1A1A1A" }}>{opt.label}</span>
-          </button>
-        ))}
-      </div>
-
-      {data.childHasAccount === true && (
-        <div style={{ marginBottom: "20px" }}>
-          <Input
-            id="childEmail"
-            label="Adresse e-mail de votre enfant"
-            type="email"
-            value={data.childEmail}
-            onChange={(e) => onChange({ childEmail: e.target.value })}
-            placeholder="emma.dupont@exemple.fr"
-          />
-          <p style={{ fontSize: "0.8125rem", color: "#6B6B6B", marginTop: "6px" }}>
-            Un lien de connexion sera envoyé à votre enfant pour accepter la relation.
-          </p>
-        </div>
-      )}
-
-      {data.childHasAccount === false && (
-        <div
-          style={{
-            background: "#E6ECF8",
-            borderRadius: "10px",
-            padding: "16px",
-            marginBottom: "20px",
-          }}
-        >
-          <p style={{ fontSize: "0.9rem", color: "#003C8F", margin: 0 }}>
-            Votre enfant peut créer un compte L&apos;Étudiant. Une fois son compte créé, vous pourrez accepter la connexion depuis votre espace parent.
-          </p>
-        </div>
-      )}
-
-      <Button
-        variant="primary"
-        onClick={onNext}
-        disabled={data.childHasAccount === null}
-        style={{ width: "100%" }}
-      >
-        Continuer
-      </Button>
-    </div>
-  );
-}
-
-// ─── Parent Step 2: Confirmation ──────────────────────────────────────────────
-
-function ParentStep2({
-  common,
-  parent,
-}: {
-  common: CommonData;
-  parent: ParentData;
-}) {
-  return (
-    <div style={{ textAlign: "center" }}>
-      <div
-        style={{
-          width: "72px",
-          height: "72px",
-          borderRadius: "50%",
-          background: "#E6ECF8",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          margin: "0 auto 24px",
-          fontSize: "2rem",
-        }}
-      >
-        📬
-      </div>
-
-      <h2 className="le-h2" style={{ marginBottom: "8px" }}>
-        {parent.childHasAccount && parent.childEmail
-          ? "Lien envoyé à votre enfant"
-          : "Compte parent créé !"}
-      </h2>
-
-      <p className="le-body" style={{ color: "#6B6B6B", marginBottom: "28px" }}>
-        {parent.childHasAccount && parent.childEmail
-          ? `Un e-mail de connexion a été envoyé à ${parent.childEmail}. Votre enfant devra accepter pour finaliser le lien.`
-          : `Bienvenue, ${common.firstName}. Votre espace parent est prêt. Invitez votre enfant à créer son compte pour suivre son parcours.`}
-      </p>
-
-      <Button variant="primary" href="/parent/home" style={{ width: "100%" }}>
-        Accéder à l&apos;espace parent
-      </Button>
-    </div>
-  );
-}
-
-// ─── Main onboarding component ────────────────────────────────────────────────
+  'Droit et Sciences Politiques', 'Économie et Gestion', 'Commerce et Marketing',
+  'Informatique et Numérique', 'Sciences et Technologies', 'Santé',
+  'Lettres et Sciences Humaines', 'Arts et Culture', 'Social et Éducation',
+]
 
 function OnboardingInner() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const role: Role = (searchParams.get("role") as Role) || "student";
+  const router = useRouter()
+  const params = useSearchParams()
+  const { toast } = useToast()
+  const role = params.get('role') ?? 'student'
 
-  const [step, setStep] = useState(0);
-  const [common, setCommon] = useState<CommonData>({ firstName: "", lastName: "", email: "", password: "" });
-  const [student, setStudent] = useState<StudentData>({ level: "", series: "", filieres: [], studyLevel: "" });
-  const [teacher, setTeacher] = useState<TeacherData>({ schoolName: "", city: "", groupName: "", studentCount: "", selectedFair: "", eventCode: "" });
-  const [parent, setParent] = useState<ParentData>({ childHasAccount: null, childEmail: "" });
+  const [step, setStep] = useState(1)
+  const [loading, setLoading] = useState(false)
+  const [fairs, setFairs] = useState<{ id: string; name: string; city: string; event_date: string }[]>([])
 
-  const totalSteps = ROLE_STEPS[role];
+  // Form state
+  const [form, setForm] = useState({
+    firstName: '', lastName: '', email: '', password: '', dob: '',
+    level: '', series: '', postalCode: '',
+    filieres: [] as string[], selectedFair: '',
+    optinLetudiant: false, optinCommercial: false, optinWax: false,
+    // Teacher
+    schoolName: '', teacherEmail: '',
+  })
 
-  function next() {
-    setStep((s) => s + 1);
+  useEffect(() => {
+    async function loadFairs() {
+      const { data } = await getSupabase().from('events').select('id, name, city, event_date').order('event_date')
+      setFairs(data ?? [])
+    }
+    loadFairs()
+  }, [])
+
+  function update(key: string, value: unknown) {
+    setForm(prev => ({ ...prev, [key]: value }))
   }
-  function back() {
-    setStep((s) => Math.max(0, s - 1));
+
+  function toggleFiliere(f: string) {
+    setForm(prev => ({
+      ...prev,
+      filieres: prev.filieres.includes(f) ? prev.filieres.filter(x => x !== f) : [...prev.filieres, f]
+    }))
   }
 
-  function renderStep() {
-    // Step 0 is always common
-    if (step === 0) {
-      return (
-        <StepCommon
-          role={role}
-          data={common}
-          onChange={(d) => setCommon((prev) => ({ ...prev, ...d }))}
-          onNext={next}
-        />
-      );
-    }
+  async function handleSubmit() {
+    setLoading(true)
+    try {
+      const supabase = getSupabase()
+      const email = role === 'teacher' ? form.teacherEmail : form.email
+      const name = `${form.firstName} ${form.lastName}`.trim()
 
-    if (role === "student") {
-      if (step === 1)
-        return (
-          <StudentStep1
-            data={student}
-            onChange={(d) => setStudent((prev) => ({ ...prev, ...d }))}
-            onNext={next}
-            onSkip={next}
-          />
-        );
-      if (step === 2)
-        return (
-          <StudentStep2
-            data={student}
-            onChange={(d) => setStudent((prev) => ({ ...prev, ...d }))}
-            onNext={next}
-            onSkip={next}
-          />
-        );
-      if (step === 3) return <StudentStep3 common={common} student={student} />;
-    }
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password: form.password,
+        options: {
+          data: { name, role, education_level: form.level, bac_series: form.series },
+        },
+      })
 
-    if (role === "teacher") {
-      if (step === 1)
-        return (
-          <TeacherStep1
-            data={teacher}
-            onChange={(d) => setTeacher((prev) => ({ ...prev, ...d }))}
-            onNext={next}
-          />
-        );
-      if (step === 2)
-        return (
-          <TeacherStep2
-            data={teacher}
-            onChange={(d) => setTeacher((prev) => ({ ...prev, ...d }))}
-            onFinish={() => router.push("/teacher/dashboard")}
-          />
-        );
-    }
+      if (error) { toast(error.message, 'error'); setLoading(false); return }
 
-    if (role === "parent") {
-      if (step === 1)
-        return (
-          <ParentStep1
-            data={parent}
-            onChange={(d) => setParent((prev) => ({ ...prev, ...d }))}
-            onNext={next}
-          />
-        );
-      if (step === 2) return <ParentStep2 common={common} parent={parent} />;
-    }
+      if (data.user) {
+        await supabase.from('users').upsert({
+          id: data.user.id,
+          email,
+          name: name || email,
+          role: role as 'student' | 'teacher' | 'parent',
+          dob: form.dob || null,
+          education_level: form.level || null,
+          bac_series: form.series || null,
+          postal_code: form.postalCode || null,
+          education_branches: form.filieres,
+          optin_letudiant: form.optinLetudiant,
+          optin_commercial: form.optinCommercial,
+          optin_wax: form.optinWax,
+          consent_date: new Date().toISOString(),
+          orientation_stage: 'exploring',
+          orientation_score: 0,
+        })
+      }
 
-    return null;
+      toast('✓ Compte créé avec succès !', 'success')
+      setTimeout(() => {
+        if (role === 'teacher') router.push('/teacher/dashboard')
+        else if (role === 'parent') router.push('/parent/home')
+        else router.push('/home')
+      }, 800)
+    } catch (err) {
+      toast('Erreur lors de la création du compte', 'error')
+      setLoading(false)
+    }
   }
+
+  const inputStyle = { width: '100%', boxSizing: 'border-box' as const, border: '1px solid #E0E0E0', borderRadius: 12, padding: '13px 16px', fontSize: '0.9375rem', outline: 'none', fontFamily: 'inherit', color: '#1A1A1A', background: '#fff' }
+  const labelStyle = { display: 'block' as const, fontSize: '0.8125rem', fontWeight: 600, color: '#4B4B4B', marginBottom: 6 }
+  const btnPrimary = { width: '100%', background: '#E3001B', color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontSize: '1rem', fontWeight: 700, cursor: 'pointer', opacity: loading ? 0.7 : 1 }
+
+  // Steps for student
+  const totalSteps = role === 'student' ? 4 : 3
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#F4F4F4",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        padding: "40px 24px 80px",
-      }}
-    >
+    <div style={{ minHeight: '100vh', background: '#F7F7F7', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: "40px" }}>
-        <a href="/">
-          <Logo variant="default" size="md" />
-        </a>
+      <div style={{ background: '#E3001B', padding: '24px 24px 32px', color: '#fff' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+          <Logo variant="inverted" size="md" />
+        </div>
+        <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+          {Array.from({ length: totalSteps }).map((_, i) => (
+            <div key={i} style={{ height: 4, borderRadius: 2, background: i < step ? '#fff' : 'rgba(255,255,255,0.3)', flex: 1, maxWidth: 60, transition: 'background 0.3s' }} />
+          ))}
+        </div>
+        <p style={{ textAlign: 'center', margin: '10px 0 0', fontSize: '0.8125rem', opacity: 0.8 }}>Étape {step}/{totalSteps}</p>
       </div>
 
-      {/* Card */}
-      <div
-        style={{
-          background: "#ffffff",
-          borderRadius: "16px",
-          padding: "40px 36px",
-          width: "100%",
-          maxWidth: "520px",
-          boxShadow: "0 2px 16px rgba(0,0,0,0.07)",
-        }}
-      >
-        <ProgressBar current={step} total={totalSteps} />
+      <div style={{ padding: '28px 24px', maxWidth: 480, margin: '0 auto' }}>
 
-        {/* Back button */}
-        {step > 0 && (
-          <button
-            type="button"
-            onClick={back}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              background: "none",
-              border: "none",
-              color: "#6B6B6B",
-              fontSize: "0.875rem",
-              cursor: "pointer",
-              marginBottom: "20px",
-              padding: 0,
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M10 4l-4 4 4 4" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            Retour
-          </button>
+        {/* ─── STUDENT STEPS ─── */}
+        {role === 'student' && (
+          <>
+            {step === 1 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <h2 style={{ margin: '0 0 4px', fontSize: '1.375rem', fontWeight: 800 }}>Qui êtes-vous ?</h2>
+                <p style={{ margin: '0 0 8px', color: '#6B6B6B', fontSize: '0.875rem' }}>Créez votre espace personnel L&apos;Étudiant</p>
+                {[['Prénom', 'firstName'], ['Nom', 'lastName']].map(([label, key]) => (
+                  <div key={key}>
+                    <label style={labelStyle}>{label}</label>
+                    <input style={inputStyle} value={form[key as keyof typeof form] as string} onChange={e => update(key, e.target.value)} placeholder={label} />
+                  </div>
+                ))}
+                <div>
+                  <label style={labelStyle}>Email</label>
+                  <input style={inputStyle} type="email" value={form.email} onChange={e => update('email', e.target.value)} placeholder="prenom.nom@email.com" />
+                </div>
+                <div>
+                  <label style={labelStyle}>Mot de passe</label>
+                  <input style={inputStyle} type="password" value={form.password} onChange={e => update('password', e.target.value)} placeholder="8 caractères minimum" />
+                </div>
+                <div>
+                  <label style={labelStyle}>Date de naissance</label>
+                  <input style={inputStyle} type="date" value={form.dob} onChange={e => update('dob', e.target.value)} />
+                </div>
+                <button style={btnPrimary} onClick={() => {
+                  if (!form.firstName || !form.email || !form.password) { toast('Merci de remplir tous les champs obligatoires', 'warning'); return }
+                  if (form.password.length < 8) { toast('Le mot de passe doit faire au moins 8 caractères', 'warning'); return }
+                  setStep(2)
+                }}>Continuer →</button>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <h2 style={{ margin: '0 0 4px', fontSize: '1.375rem', fontWeight: 800 }}>Votre parcours</h2>
+                <div>
+                  <label style={labelStyle}>Niveau actuel</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    {STUDENT_LEVELS.map(l => (
+                      <button key={l} onClick={() => update('level', l)} style={{ padding: '10px 14px', border: `2px solid ${form.level === l ? '#E3001B' : '#E0E0E0'}`, borderRadius: 10, background: form.level === l ? '#FFF0F0' : '#fff', color: form.level === l ? '#E3001B' : '#4B4B4B', fontWeight: form.level === l ? 700 : 400, cursor: 'pointer', fontSize: '0.875rem' }}>{l}</button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label style={labelStyle}>Série (si lycéen)</label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {STUDENT_SERIES.map(s => (
+                      <button key={s} onClick={() => update('series', s)} style={{ flex: 1, padding: '10px', border: `2px solid ${form.series === s ? '#E3001B' : '#E0E0E0'}`, borderRadius: 10, background: form.series === s ? '#FFF0F0' : '#fff', color: form.series === s ? '#E3001B' : '#4B4B4B', fontWeight: form.series === s ? 700 : 400, cursor: 'pointer', fontSize: '0.8125rem' }}>{s}</button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label style={labelStyle}>Code postal</label>
+                  <input style={inputStyle} value={form.postalCode} onChange={e => update('postalCode', e.target.value)} placeholder="75001" maxLength={5} />
+                </div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button style={{ ...btnPrimary, background: '#F0F0F0', color: '#4B4B4B', width: 'auto', padding: '14px 24px' }} onClick={() => setStep(1)}>← Retour</button>
+                  <button style={{ ...btnPrimary }} onClick={() => { if (!form.level) { toast('Choisissez votre niveau', 'warning'); return } setStep(3) }}>Continuer →</button>
+                </div>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <h2 style={{ margin: '0 0 4px', fontSize: '1.375rem', fontWeight: 800 }}>Vos centres d&apos;intérêt</h2>
+                <p style={{ margin: '0 0 8px', color: '#6B6B6B', fontSize: '0.875rem' }}>Choisissez les filières qui vous intéressent</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {FILIERES.map(f => (
+                    <button key={f} onClick={() => toggleFiliere(f)} style={{ padding: '8px 14px', border: `2px solid ${form.filieres.includes(f) ? '#E3001B' : '#E0E0E0'}`, borderRadius: 20, background: form.filieres.includes(f) ? '#FFF0F0' : '#fff', color: form.filieres.includes(f) ? '#E3001B' : '#4B4B4B', fontWeight: form.filieres.includes(f) ? 700 : 400, cursor: 'pointer', fontSize: '0.8125rem' }}>{f}</button>
+                  ))}
+                </div>
+                {/* GDPR Consents */}
+                <div style={{ background: '#F7F7F7', borderRadius: 14, padding: 16, marginTop: 8, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 700, color: '#1A1A1A' }}>Consentements (RGPD)</p>
+                  {[
+                    { key: 'optinLetudiant', label: "J'accepte de recevoir les communications de L'Étudiant (obligatoire)", required: true },
+                    { key: 'optinCommercial', label: "J'accepte les offres commerciales de partenaires", required: false },
+                    { key: 'optinWax', label: 'J\'accepte le suivi post-salon personnalisé (WAX)', required: false },
+                  ].map(c => (
+                    <label key={c.key} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={form[c.key as keyof typeof form] as boolean} onChange={e => update(c.key, e.target.checked)} style={{ marginTop: 2, accentColor: '#E3001B', width: 16, height: 16 }} />
+                      <span style={{ fontSize: '0.8125rem', color: '#4B4B4B', lineHeight: 1.5 }}>{c.label}{c.required && <span style={{ color: '#E3001B' }}> *</span>}</span>
+                    </label>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button style={{ ...btnPrimary, background: '#F0F0F0', color: '#4B4B4B', width: 'auto', padding: '14px 24px' }} onClick={() => setStep(2)}>← Retour</button>
+                  <button style={btnPrimary} onClick={() => { if (!form.optinLetudiant) { toast('Veuillez accepter les communications L\'Étudiant', 'warning'); return } setStep(4) }}>Continuer →</button>
+                </div>
+              </div>
+            )}
+
+            {step === 4 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <h2 style={{ margin: '0 0 4px', fontSize: '1.375rem', fontWeight: 800 }}>Choisissez votre salon</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {fairs.length === 0 ? (
+                    <p style={{ color: '#6B6B6B', fontSize: '0.875rem' }}>Chargement des salons…</p>
+                  ) : fairs.map(f => (
+                    <button key={f.id} onClick={() => update('selectedFair', f.id)} style={{ padding: '14px 16px', border: `2px solid ${form.selectedFair === f.id ? '#E3001B' : '#E0E0E0'}`, borderRadius: 12, background: form.selectedFair === f.id ? '#FFF0F0' : '#fff', textAlign: 'left', cursor: 'pointer' }}>
+                      <p style={{ margin: '0 0 3px', fontWeight: 700, color: form.selectedFair === f.id ? '#E3001B' : '#1A1A1A', fontSize: '0.9375rem' }}>{f.name}</p>
+                      <p style={{ margin: 0, fontSize: '0.8125rem', color: '#6B6B6B' }}>{f.city} · {new Date(f.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Summary */}
+                <div style={{ background: '#FFF0F0', border: '1px solid #FFD0D0', borderRadius: 14, padding: 16 }}>
+                  <p style={{ margin: '0 0 6px', fontWeight: 700, fontSize: '0.9375rem', color: '#1A1A1A' }}>Récapitulatif</p>
+                  <p style={{ margin: '0 0 3px', fontSize: '0.8125rem', color: '#4B4B4B' }}>{form.firstName} {form.lastName} · {form.email}</p>
+                  <p style={{ margin: '0 0 3px', fontSize: '0.8125rem', color: '#4B4B4B' }}>{form.level}{form.series ? ` · Bac ${form.series}` : ''}</p>
+                  <p style={{ margin: 0, fontSize: '0.8125rem', color: '#4B4B4B' }}>{form.filieres.length} filière{form.filieres.length !== 1 ? 's' : ''} sélectionnée{form.filieres.length !== 1 ? 's' : ''}</p>
+                </div>
+
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button style={{ ...btnPrimary, background: '#F0F0F0', color: '#4B4B4B', width: 'auto', padding: '14px 24px' }} onClick={() => setStep(3)}>← Retour</button>
+                  <button style={{ ...btnPrimary, opacity: loading ? 0.7 : 1 }} onClick={handleSubmit} disabled={loading}>
+                    {loading ? 'Création en cours…' : 'Créer mon espace →'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
-        {renderStep()}
+        {/* ─── TEACHER STEPS ─── */}
+        {role === 'teacher' && (
+          <>
+            {step === 1 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <h2 style={{ margin: '0 0 8px', fontSize: '1.375rem', fontWeight: 800 }}>Espace enseignant</h2>
+                {[['Prénom', 'firstName'], ['Nom', 'lastName'], ['Établissement', 'schoolName']].map(([label, key]) => (
+                  <div key={key}>
+                    <label style={labelStyle}>{label}</label>
+                    <input style={inputStyle} value={form[key as keyof typeof form] as string} onChange={e => update(key, e.target.value)} placeholder={label} />
+                  </div>
+                ))}
+                <div>
+                  <label style={labelStyle}>Email professionnel</label>
+                  <input style={inputStyle} type="email" value={form.teacherEmail} onChange={e => update('teacherEmail', e.target.value)} placeholder="prenom.nom@etablissement.fr" />
+                </div>
+                <div>
+                  <label style={labelStyle}>Mot de passe</label>
+                  <input style={inputStyle} type="password" value={form.password} onChange={e => update('password', e.target.value)} placeholder="8 caractères minimum" />
+                </div>
+                <button style={btnPrimary} onClick={() => setStep(2)}>Continuer →</button>
+              </div>
+            )}
+            {step === 2 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <h2 style={{ margin: '0 0 8px', fontSize: '1.375rem', fontWeight: 800 }}>Choisissez votre salon</h2>
+                {fairs.map(f => (
+                  <button key={f.id} onClick={() => update('selectedFair', f.id)} style={{ padding: '14px 16px', border: `2px solid ${form.selectedFair === f.id ? '#E3001B' : '#E0E0E0'}`, borderRadius: 12, background: form.selectedFair === f.id ? '#FFF0F0' : '#fff', textAlign: 'left', cursor: 'pointer' }}>
+                    <p style={{ margin: '0 0 3px', fontWeight: 700, color: form.selectedFair === f.id ? '#E3001B' : '#1A1A1A' }}>{f.name}</p>
+                    <p style={{ margin: 0, fontSize: '0.8125rem', color: '#6B6B6B' }}>{f.city}</p>
+                  </button>
+                ))}
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button style={{ ...btnPrimary, background: '#F0F0F0', color: '#4B4B4B', width: 'auto', padding: '14px 24px' }} onClick={() => setStep(1)}>← Retour</button>
+                  <button style={btnPrimary} onClick={() => setStep(3)}>Continuer →</button>
+                </div>
+              </div>
+            )}
+            {step === 3 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <h2 style={{ margin: '0 0 8px', fontSize: '1.375rem', fontWeight: 800 }}>Confirmation</h2>
+                <div style={{ background: '#F7F7F7', borderRadius: 14, padding: 16 }}>
+                  <p style={{ margin: '0 0 6px', fontWeight: 700 }}>Récapitulatif</p>
+                  <p style={{ margin: '0 0 3px', fontSize: '0.875rem', color: '#4B4B4B' }}>{form.firstName} {form.lastName}</p>
+                  <p style={{ margin: '0 0 3px', fontSize: '0.875rem', color: '#4B4B4B' }}>{form.schoolName}</p>
+                  <p style={{ margin: 0, fontSize: '0.875rem', color: '#4B4B4B' }}>{form.teacherEmail}</p>
+                </div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button style={{ ...btnPrimary, background: '#F0F0F0', color: '#4B4B4B', width: 'auto', padding: '14px 24px' }} onClick={() => setStep(2)}>← Retour</button>
+                  <button style={{ ...btnPrimary, opacity: loading ? 0.7 : 1 }} onClick={handleSubmit} disabled={loading}>
+                    {loading ? 'Création…' : 'Créer mon espace →'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ─── PARENT STEPS ─── */}
+        {role === 'parent' && (
+          <>
+            {step === 1 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <h2 style={{ margin: '0 0 8px', fontSize: '1.375rem', fontWeight: 800 }}>Espace parent</h2>
+                {[['Prénom', 'firstName'], ['Nom', 'lastName']].map(([label, key]) => (
+                  <div key={key}>
+                    <label style={labelStyle}>{label}</label>
+                    <input style={inputStyle} value={form[key as keyof typeof form] as string} onChange={e => update(key, e.target.value)} placeholder={label} />
+                  </div>
+                ))}
+                <div>
+                  <label style={labelStyle}>Email</label>
+                  <input style={inputStyle} type="email" value={form.email} onChange={e => update('email', e.target.value)} placeholder="votre@email.com" />
+                </div>
+                <div>
+                  <label style={labelStyle}>Mot de passe</label>
+                  <input style={inputStyle} type="password" value={form.password} onChange={e => update('password', e.target.value)} placeholder="8 caractères minimum" />
+                </div>
+                <button style={btnPrimary} onClick={() => setStep(2)}>Continuer →</button>
+              </div>
+            )}
+            {step === 2 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <h2 style={{ margin: '0 0 8px', fontSize: '1.375rem', fontWeight: 800 }}>Lier un enfant</h2>
+                <p style={{ color: '#6B6B6B', fontSize: '0.875rem' }}>Entrez l&apos;email de votre enfant — il recevra une invitation à valider.</p>
+                <div>
+                  <label style={labelStyle}>Email de votre enfant</label>
+                  <input style={inputStyle} type="email" placeholder="enfant@email.com" />
+                </div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button style={{ ...btnPrimary, background: '#F0F0F0', color: '#4B4B4B', width: 'auto', padding: '14px 24px' }} onClick={() => setStep(1)}>← Retour</button>
+                  <button style={{ ...btnPrimary, opacity: loading ? 0.7 : 1 }} onClick={handleSubmit} disabled={loading}>
+                    {loading ? 'Création…' : 'Créer mon espace →'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
-  );
+  )
 }
 
 export default function OnboardingPage() {
   return (
     <Suspense fallback={
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F4F4F4' }}>
-        <div style={{ width: 40, height: 40, borderRadius: '50%', border: '3px solid #E3001B', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 40, height: 40, border: '3px solid #E3001B', borderTop: '3px solid transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
       </div>
     }>
       <OnboardingInner />
     </Suspense>
-  );
+  )
 }
