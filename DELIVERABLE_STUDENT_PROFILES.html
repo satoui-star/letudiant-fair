@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>L'Étudiant Salons — Analyse des profils étudiants · Brouillon de travail</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400;1,9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --red:#E3001B; --red-dark:#B0001A; --red-light:#FDE8EB;
+  --blue:#003C8F; --blue-light:#E6ECF8;
+  --yellow:#FFD100; --yellow-light:#FFFBE6;
+  --gray-900:#1A1A1A; --gray-700:#3D3D3D; --gray-500:#6B6B6B; --gray-300:#C8C8C8; --gray-200:#E8E8E8; --gray-100:#F4F4F4;
+  --green:#1B7F3A; --green-light:#E8F5EC;
+  --orange:#C25A00; --orange-light:#FFF0E0;
+  --white:#FFFFFF;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',system-ui,sans-serif;font-size:14px;color:var(--gray-900);background:#F8F8F8;line-height:1.6}
+@media print{body{background:#fff} .no-print{display:none} .page-break{page-break-before:always}}
+
+/* ── LAYOUT ── */
+.page-wrap{max-width:1100px;margin:0 auto;padding:0 32px 80px}
+
+/* ── HEADER ── */
+.doc-header{background:var(--white);border-bottom:1px solid var(--gray-200);padding:0 32px;margin-bottom:40px}
+.doc-header-inner{max-width:1100px;margin:0 auto;padding:32px 0 24px;display:flex;justify-content:space-between;align-items:flex-start}
+.stripe-rule{height:5px;background:linear-gradient(90deg,var(--red) 60%,var(--blue) 60% 80%,var(--yellow) 80%);margin-bottom:0}
+.doc-title-block .kicker{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:6px}
+.doc-title-block h1{font-size:30px;font-weight:800;color:var(--gray-900);line-height:1.15;letter-spacing:-0.5px;margin-bottom:8px}
+.doc-title-block .subtitle{color:var(--gray-500);font-size:14px;max-width:560px}
+.doc-meta{text-align:right;font-size:12px;color:var(--gray-500);line-height:1.8}
+.doc-meta strong{color:var(--gray-700)}
+.status-badge{display:inline-block;background:var(--orange-light);color:var(--orange);border:1px solid #e09040;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:4px;margin-top:4px}
+
+/* ── SECTION ── */
+.section{background:var(--white);border:1px solid var(--gray-200);border-radius:8px;margin-bottom:32px;overflow:hidden}
+.section-head{padding:20px 28px 16px;border-bottom:1px solid var(--gray-200)}
+.section-stripe{height:4px;background:linear-gradient(90deg,var(--red) 60%,var(--blue) 60% 80%,var(--yellow) 80%);margin-bottom:16px}
+.section-num{display:inline-block;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:4px}
+.section-head h2{font-size:20px;font-weight:800;color:var(--gray-900);letter-spacing:-0.3px;margin-bottom:4px}
+.section-head .section-desc{font-size:13px;color:var(--gray-500)}
+.section-body{padding:28px}
+
+/* ── ASSUMPTIONS BOX ── */
+.assumptions{background:#F0F4FF;border:1px solid #C5D3F0;border-left:4px solid var(--blue);border-radius:6px;padding:14px 16px;margin-bottom:28px}
+.assumptions .assum-title{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--blue);margin-bottom:8px}
+.assumptions ul{display:grid;grid-template-columns:1fr 1fr;gap:3px 20px;list-style:none}
+.assumptions li{font-size:12px;color:var(--gray-700);padding-left:12px;position:relative}
+.assumptions li::before{content:'→';position:absolute;left:0;color:var(--blue);font-size:10px;top:1px}
+.assum-note{font-size:11px;color:var(--gray-500);margin-top:8px;font-style:italic}
+
+/* ── PERSONA GRID ── */
+.persona-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px}
+@media(max-width:780px){.persona-grid{grid-template-columns:1fr}}
+
+/* ── PERSONA CARD ── */
+.persona-card{border:1.5px solid var(--gray-200);border-radius:10px;overflow:hidden}
+.persona-card.digital .persona-card-header{background:linear-gradient(135deg,#1A0A0E 0%,#3a0010 100%);border-bottom:3px solid var(--red)}
+.persona-card.walkin .persona-card-header{background:linear-gradient(135deg,#0a0e1a 0%,#001540 100%);border-bottom:3px solid var(--blue)}
+.persona-card-header{padding:20px 20px 16px}
+.persona-archetype{font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.digital .persona-archetype{color:#ff6b6b}
+.walkin .persona-archetype{color:#7cb8ff}
+.persona-name{font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.3px;margin-bottom:2px}
+.persona-details{font-size:12px;color:rgba(255,255,255,0.6);line-height:1.5}
+.persona-score{display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px}
+.persona-score .score-val{font-size:20px;font-weight:800}
+.digital .persona-score .score-val{color:var(--red)}
+.walkin .persona-score .score-val{color:#ff9800}
+.persona-score .score-label{font-size:11px;color:rgba(255,255,255,0.6)}
+.persona-body{padding:18px 20px;background:var(--white)}
+
+/* ── PROFILE ROW ── */
+.profile-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.profile-chip{font-size:11px;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:4px;padding:3px 8px;color:var(--gray-700)}
+.profile-chip.filled{background:var(--blue-light);border-color:#bed0ec;color:var(--blue)}
+.profile-chip.missing{background:#fff3e0;border-color:#ffc87a;color:var(--orange);text-decoration:line-through}
+
+/* ── DATA TABLE ── */
+.data-row{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;padding:6px 0;border-bottom:1px solid var(--gray-100);align-items:start}
+.data-row:last-child{border-bottom:none}
+.data-label{font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap}
+.data-value{font-size:13px;color:var(--gray-900)}
+.data-value.missing{color:var(--gray-300);font-style:italic}
+
+/* ── JOURNEY MAP ── */
+.journey-map{margin:20px 0}
+.journey-map-title{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray-500);margin-bottom:12px}
+.journey-phases{display:flex;gap:0;margin-bottom:4px}
+.journey-phase{flex:1;position:relative}
+.phase-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:6px 10px;text-align:center}
+.phase-before .phase-label{background:#F0F4FF;color:var(--blue)}
+.phase-during .phase-label{background:var(--red-light);color:var(--red)}
+.phase-after .phase-label{background:var(--gray-100);color:var(--gray-500)}
+.phase-items{padding:8px;display:flex;flex-direction:column;gap:4px;min-height:80px;border:1px solid var(--gray-200);border-top:none}
+.phase-before .phase-items{border-color:#C5D3F0}
+.phase-during .phase-items{border-color:#f5c0c8}
+.tp{font-size:11px;padding:4px 6px;border-radius:4px;display:flex;align-items:flex-start;gap:5px;line-height:1.3}
+.tp-icon{font-size:12px;flex-shrink:0;margin-top:1px}
+.tp.active{background:var(--green-light);color:var(--green)}
+.tp.gap{background:#fff3e0;color:var(--orange)}
+.tp.missing{background:var(--gray-100);color:var(--gray-500)}
+
+/* ── GAP BOX ── */
+.gap-box{background:#FFF8E1;border:1.5px solid var(--yellow);border-left:5px solid var(--orange);border-radius:6px;padding:14px 16px;margin-top:16px}
+.gap-title{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--orange);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.gap-body{font-size:12.5px;color:var(--gray-700);line-height:1.6}
+.gap-body strong{color:var(--gray-900)}
+
+/* ── STATS BAND ── */
+.stats-band{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px}
+.stat-card{background:var(--white);border:1px solid var(--gray-200);border-radius:8px;padding:16px 18px;text-align:center}
+.stat-val{font-size:26px;font-weight:800;color:var(--red);letter-spacing:-0.5px;line-height:1}
+.stat-label{font-size:11px;color:var(--gray-500);margin-top:4px;font-weight:500}
+.stat-note{font-size:10px;color:var(--gray-300);margin-top:3px;font-style:italic}
+
+/* ── DATA ARCH TABLE ── */
+.arch-phase-header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:6px;margin-bottom:8px}
+.arch-phase-header.before{background:#EEF2FF}
+.arch-phase-header.during{background:var(--red-light)}
+.arch-phase-header.after{background:var(--gray-100)}
+.arch-phase-icon{font-size:20px}
+.arch-phase-name{font-size:14px;font-weight:800;color:var(--gray-900)}
+.arch-phase-desc{font-size:12px;color:var(--gray-500)}
+
+.arch-table{width:100%;border-collapse:collapse;margin-bottom:28px;font-size:12.5px}
+.arch-table thead tr th{background:var(--gray-100);padding:8px 12px;text-align:left;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gray-500);border-bottom:1px solid var(--gray-200);white-space:nowrap}
+.arch-table tbody tr:nth-child(odd){background:#FAFAFA}
+.arch-table tbody tr:nth-child(even){background:var(--white)}
+.arch-table td{padding:9px 12px;border-bottom:1px solid var(--gray-100);vertical-align:top;line-height:1.45}
+.arch-table td:first-child{font-weight:600;color:var(--gray-900)}
+
+.status-pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;white-space:nowrap}
+.status-exists{background:var(--green-light);color:var(--green)}
+.status-missing{background:#fff3e0;color:var(--orange)}
+.status-partial{background:var(--yellow-light);color:#8a6a00}
+
+.gdpr-chip{display:inline-block;background:#FDE8EB;color:var(--red-dark);border:1px solid #f5b0bc;border-radius:4px;font-size:10px;font-weight:600;padding:2px 6px;white-space:nowrap}
+.gdpr-warn{display:inline-block;background:#fff3e0;color:var(--orange);border:1px solid #ffc87a;border-radius:4px;font-size:10px;font-weight:600;padding:2px 6px;white-space:nowrap;margin-top:3px}
+.legal-basis{font-size:11px;color:var(--blue);font-weight:600}
+.gdpr-constraint{font-size:11px;color:var(--gray-700);margin-top:2px}
+.gdpr-constraint .warn{color:var(--orange);font-weight:600}
+
+/* ── MOCKUP SECTION ── */
+.mockup-outer{display:grid;grid-template-columns:380px 1fr;gap:32px;align-items:start}
+@media(max-width:860px){.mockup-outer{grid-template-columns:1fr}}
+
+/* ── PHONE FRAME ── */
+.phone-wrap{position:relative;width:340px;margin:0 auto}
+.phone-frame{background:#1A1A1A;border-radius:44px;padding:14px;box-shadow:0 24px 80px rgba(0,0,0,0.35),0 4px 12px rgba(0,0,0,0.2),inset 0 0 0 1px rgba(255,255,255,0.08);position:relative}
+.phone-notch{width:120px;height:28px;background:#1A1A1A;border-radius:0 0 20px 20px;margin:0 auto 6px;position:relative;z-index:10}
+.phone-notch::before{content:'';width:60px;height:6px;background:#2a2a2a;border-radius:3px;display:block;margin:10px auto 0}
+.phone-screen{background:var(--white);border-radius:34px;overflow:hidden;height:680px;overflow-y:auto;scrollbar-width:none}
+.phone-screen::-webkit-scrollbar{display:none}
+
+/* ── APP CONTENT ── */
+.app-statusbar{background:var(--white);padding:6px 20px 0;display:flex;justify-content:space-between;font-size:11px;font-weight:600;color:var(--gray-900);position:sticky;top:0;z-index:20}
+.app-header{background:var(--red);padding:16px 18px 14px;color:var(--white)}
+.app-header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.app-back{font-size:18px;color:rgba(255,255,255,0.8)}
+.app-header-title{font-size:13px;font-weight:700;color:rgba(255,255,255,0.8)}
+.app-header h2{font-size:20px;font-weight:800;letter-spacing:-0.3px;line-height:1.2;margin-bottom:8px}
+.app-header-date{font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:10px}
+.orientation-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.2);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700}
+
+.app-stats-bar{display:flex;background:var(--white);border-bottom:1px solid var(--gray-200);padding:10px 16px;gap:0}
+.app-stat{flex:1;text-align:center;border-right:1px solid var(--gray-200)}
+.app-stat:last-child{border-right:none}
+.app-stat-val{font-size:16px;font-weight:800;color:var(--gray-900)}
+.app-stat-label{font-size:9px;color:var(--gray-500);font-weight:500;text-transform:uppercase;letter-spacing:0.5px}
+
+.app-section{padding:14px 16px 0}
+.app-section-title{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray-500);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.app-section-title::after{content:'';flex:1;height:1px;background:var(--gray-200)}
+
+/* school cards in phone */
+.school-card-phone{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--gray-200);border-radius:8px;margin-bottom:7px;background:var(--white)}
+.school-card-phone:first-child{border-color:var(--red);background:var(--red-light)}
+.school-rank{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
+.rank-1{background:var(--red);color:var(--white)}
+.rank-2{background:var(--gray-200);color:var(--gray-700)}
+.rank-3,.rank-4{background:var(--gray-100);color:var(--gray-500)}
+.school-info{flex:1;min-width:0}
+.school-name-phone{font-size:12px;font-weight:700;color:var(--gray-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.school-meta-phone{font-size:10px;color:var(--gray-500);display:flex;align-items:center;gap:5px;margin-top:1px}
+.school-dwell{font-size:10px;font-weight:600;color:var(--gray-500);text-align:right;flex-shrink:0}
+.heart-badge{color:var(--red);font-size:13px}
+
+/* algo box */
+.algo-box{margin:0 16px 12px;background:#F0F4FF;border:1px solid #C5D3F0;border-radius:8px;padding:10px 12px}
+.algo-box-title{font-size:10px;font-weight:800;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px}
+.algo-box-body{font-size:11px;color:var(--gray-700);line-height:1.5}
+.algo-score{font-size:22px;font-weight:800;color:var(--red);display:inline}
+
+/* next steps */
+.next-step{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:8px;margin-bottom:7px;border:1px solid var(--gray-200)}
+.next-step-1{background:var(--red-light);border-color:#f5b0bc}
+.next-step-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.next-step-info{flex:1;min-width:0}
+.next-step-label{font-size:11px;font-weight:700;color:var(--gray-900);line-height:1.3}
+.next-step-sub{font-size:10px;color:var(--gray-500);margin-top:2px}
+.next-step-cta{display:inline-block;margin-top:5px;background:var(--red);color:var(--white);font-size:10px;font-weight:700;padding:4px 10px;border-radius:5px;text-decoration:none}
+.next-step-cta.outline{background:transparent;color:var(--blue);border:1px solid var(--blue)}
+
+/* missed */
+.missed-item{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--yellow-light);border:1px solid #ffe066;border-radius:7px;margin-bottom:5px}
+.missed-icon{font-size:14px;flex-shrink:0}
+.missed-text{font-size:11px;color:var(--gray-700);line-height:1.4}
+
+/* wax banner */
+.wax-banner{margin:12px 14px 16px;background:var(--blue);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px}
+.wax-text{flex:1;font-size:11px;color:rgba(255,255,255,0.9);line-height:1.4;font-weight:500}
+.wax-text strong{color:var(--white);display:block;font-size:12px;margin-bottom:2px}
+.wax-btn{background:var(--yellow);color:var(--gray-900);font-size:10px;font-weight:800;padding:6px 10px;border-radius:6px;white-space:nowrap;flex-shrink:0}
+
+/* ── ANNOTATIONS ── */
+.annotations{display:flex;flex-direction:column;gap:14px}
+.ann-card{border:1px solid var(--gray-200);border-radius:8px;overflow:hidden}
+.ann-head{padding:8px 14px;font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase}
+.ann-head.red{background:var(--red-light);color:var(--red)}
+.ann-head.blue{background:var(--blue-light);color:var(--blue)}
+.ann-head.yellow{background:var(--yellow-light);color:#7a5c00}
+.ann-head.green{background:var(--green-light);color:var(--green)}
+.ann-head.gray{background:var(--gray-100);color:var(--gray-500)}
+.ann-body{padding:12px 14px;background:var(--white)}
+.ann-formula{font-family:'DM Mono',monospace;font-size:11px;background:var(--gray-100);padding:7px 10px;border-radius:5px;color:var(--gray-700);line-height:1.6;margin-bottom:8px}
+.ann-body p{font-size:12px;color:var(--gray-700);line-height:1.5;margin-bottom:6px}
+.ann-body p:last-child{margin-bottom:0}
+.ann-body .field{font-family:'DM Mono',monospace;font-size:11px;background:var(--blue-light);color:var(--blue);padding:1px 5px;border-radius:3px}
+
+/* ── FOOTER ── */
+.doc-footer{text-align:center;padding:32px 0 0;border-top:1px solid var(--gray-200);margin-top:40px}
+.footer-stripe{height:4px;background:linear-gradient(90deg,var(--red) 60%,var(--blue) 60% 80%,var(--yellow) 80%);width:120px;border-radius:2px;margin:0 auto 16px}
+.doc-footer p{font-size:12px;color:var(--gray-500)}
+
+/* ── UTILITY ── */
+.tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.5px;padding:2px 7px;border-radius:4px;text-transform:uppercase}
+.tag-red{background:var(--red-light);color:var(--red)}
+.tag-blue{background:var(--blue-light);color:var(--blue)}
+.tag-yellow{background:var(--yellow-light);color:#7a5c00}
+.tag-gray{background:var(--gray-100);color:var(--gray-500)}
+.tag-green{background:var(--green-light);color:var(--green)}
+
+hr.section-hr{border:none;border-top:1px solid var(--gray-200);margin:24px 0}
+.simulated-note{font-size:10px;color:var(--gray-300);font-style:italic;text-align:right;margin-top:6px}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<div class="stripe-rule"></div>
+<div class="doc-header">
+  <div class="doc-header-inner">
+    <div class="doc-title-block">
+      <div class="kicker">L'Étudiant Salons · Analyse Données Étudiants</div>
+      <h1>Profils étudiants & architecture<br>de capture de données</h1>
+      <p class="subtitle">Deux profils nommés, une proposition d'architecture de collecte, et un mockup conçu du bilan post-salon pour la persona Léa.</p>
+    </div>
+    <div class="doc-meta">
+      <strong>Brouillon de travail</strong><br>
+      Échéance présentation : 19 avril 2026<br>
+      Remis le : 10 avril 2026<br>
+      <span class="status-badge">Working Draft</span>
+    </div>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+<!-- ══════════════════════════════════════════
+     SECTION 1 — PERSONAS
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-stripe"></div>
+    <div class="section-num">Section 01</div>
+    <h2>Profils étudiants — Deux personas nommées</h2>
+    <p class="section-desc">Basées sur des données simulées avec hypothèses explicites. Sources : L'Étudiant (700k visiteurs / 130 salons), Explori Event App Benchmark 2023, enquête CIJ 2022 sur les pratiques numériques des lycéens.</p>
+  </div>
+  <div class="section-body">
+
+    <!-- ASSUMPTIONS -->
+    <div class="assumptions">
+      <div class="assum-title">Hypothèses de modélisation — données simulées</div>
+      <ul>
+        <li><strong>~5 385 visiteurs / salon</strong> (700k ÷ 130 salons)</li>
+        <li><strong>14% de pré-inscrits numériques</strong> → ~753 / salon (Explori 2023, apps événements éducatifs)</li>
+        <li><strong>43% d'adoption QR scanner</strong> parmi les inscrits → ~324 scanners actifs / salon</li>
+        <li><strong>3,2 scans moyens</strong> par étudiant actif (hors conférences)</li>
+        <li><strong>22% d'inscriptions le jour J</strong> (entrée) parmi les inscrits numériques → ~166 / salon</li>
+        <li><strong>8% de retour recap</strong> (J+1 à J+7) — métrique non trackée aujourd'hui</li>
+        <li><strong>0% de conférences trackées</strong> par QR — toutes non instrumentées</li>
+        <li><strong>Score de lead = 12/100</strong> pour profil incomplet sans signaux comportementaux</li>
+      </ul>
+      <div class="assum-note">* Ces chiffres sont des estimations simulées à partir de benchmarks sectoriels. Ils seront affinés lors de la mise en production avec les données réelles Supabase.</div>
+    </div>
+
+    <!-- STATS BAND -->
+    <div class="stats-band">
+      <div class="stat-card">
+        <div class="stat-val">~14%</div>
+        <div class="stat-label">Taux de pré-inscription numérique</div>
+        <div class="stat-note">Simulated · Explori 2023</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">0%</div>
+        <div class="stat-label">Conférences trackées par QR</div>
+        <div class="stat-note">Gap critique actuel</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">8%</div>
+        <div class="stat-label">Retour sur page recap (J+7)</div>
+        <div class="stat-note">Simulated · non mesuré aujourd'hui</div>
+      </div>
+    </div>
+
+    <!-- PERSONA CARDS -->
+    <div class="persona-grid">
+
+      <!-- ── PERSONA 1 : LÉA ── -->
+      <div class="persona-card digital">
+        <div class="persona-card-header">
+          <div class="persona-archetype">Digital-First · Terminale Générale</div>
+          <div class="persona-name">Léa Moreau, 17 ans</div>
+          <div class="persona-details">Terminale G · BAC général · Paris 11e (75011)<br>Intérêts : Architecture, Design graphique<br>Optin WAX : <strong style="color:#7effa0">Oui</strong> · Profil : <strong style="color:#7effa0">Complet</strong></div>
+          <div class="persona-score">
+            <span class="score-val">78</span><span style="font-size:14px;color:rgba(255,255,255,0.4)">/100</span>
+            <span class="score-label">Score ENSAD · Tier Décision</span>
+          </div>
+        </div>
+        <div class="persona-body">
+
+          <!-- Profile chips -->
+          <div class="profile-row">
+            <span class="profile-chip filled">education_level: terminale</span>
+            <span class="profile-chip filled">bac_series: général</span>
+            <span class="profile-chip filled">postal_code: 75011</span>
+            <span class="profile-chip filled">interests: [architecture, design]</span>
+            <span class="profile-chip filled">optin_wax: true</span>
+          </div>
+
+          <!-- Data table -->
+          <div class="data-row"><div class="data-label">Découverte</div><div class="data-value">Story Instagram @letudiant_fr · J-3</div></div>
+          <div class="data-row"><div class="data-label">Scans stands</div><div class="data-value">ENSAD (18min) · Boulle (12min) · ENSA Paris (8min) · ESAD Reims (5min)</div></div>
+          <div class="data-row"><div class="data-label">Swipe right</div><div class="data-value">ENSAD, École Boulle (avant la visite physique)</div></div>
+          <div class="data-row"><div class="data-label">Conférence</div><div class="data-value" style="color:var(--orange)">⚠ Métiers du design — présente, mais 0 scan</div></div>
+          <div class="data-row"><div class="data-label">Recap</div><div class="data-value">Ouverte J+1 · 47 secondes · <strong>bounce</strong></div></div>
+          <div class="data-row"><div class="data-label">Score ENSAD</div><div class="data-value"><strong style="color:var(--red)">78/100 — Tier Décision</strong> (non exporté par ENSAD)</div></div>
+
+          <!-- Journey Map -->
+          <div class="journey-map">
+            <div class="journey-map-title">Carte de parcours Léa</div>
+            <div class="journey-phases">
+              <div class="journey-phase phase-before">
+                <div class="phase-label">Avant</div>
+                <div class="phase-items">
+                  <div class="tp active"><span class="tp-icon">📲</span>Story Instagram</div>
+                  <div class="tp active"><span class="tp-icon">✅</span>Inscription complète</div>
+                  <div class="tp active"><span class="tp-icon">❤️</span>2 swipes avant J</div>
+                  <div class="tp gap"><span class="tp-icon">⬜</span>Wishlist stands : absente</div>
+                </div>
+              </div>
+              <div class="journey-phase phase-during">
+                <div class="phase-label">Pendant</div>
+                <div class="phase-items">
+                  <div class="tp active"><span class="tp-icon">📍</span>4 scans stands</div>
+                  <div class="tp gap"><span class="tp-icon">⚠️</span>Dwell : entrée seule, pas sortie</div>
+                  <div class="tp gap"><span class="tp-icon">⚠️</span>Conférence : présente, 0 trace</div>
+                  <div class="tp active"><span class="tp-icon">🔖</span>2 bookmarks</div>
+                </div>
+              </div>
+              <div class="journey-phase phase-after">
+                <div class="phase-label">Après</div>
+                <div class="phase-items">
+                  <div class="tp gap"><span class="tp-icon">⚠️</span>Recap ouverte 47s · bounce</div>
+                  <div class="tp missing"><span class="tp-icon">❌</span>Email WAX générique</div>
+                  <div class="tp missing"><span class="tp-icon">❌</span>0 JPO suggérée</div>
+                  <div class="tp missing"><span class="tp-icon">❌</span>Score non exporté par ENSAD</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gap box -->
+          <div class="gap-box">
+            <div class="gap-title">⚡ Le gap critique</div>
+            <div class="gap-body">L'Étudiant possède des données comportementales riches sur Léa — <strong>18 minutes au stand ENSAD, 2 swipes avant même la visite physique, score de 78/100</strong>. Pourtant elle reçoit le même email WAX qu'un étudiant intéressé par les écoles de commerce. La page recap affiche un classement générique, pas la <strong>Journée Portes Ouvertes ENSAD du 15 mars</strong> qu'elle aurait convertie. ENSAD ne sait pas que Léa est en tier Décision — <strong>la fonctionnalité d'export de leads existe mais n'est pas activée</strong>.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PERSONA 2 : HUGO ── -->
+      <div class="persona-card walkin">
+        <div class="persona-card-header">
+          <div class="persona-archetype">Walk-in · Groupe scolaire · Première</div>
+          <div class="persona-name">Hugo Leclerc, 16 ans</div>
+          <div class="persona-details">Première · BAC non renseigné · Normandie (76000)<br>Intérêts : <em style="opacity:0.6">Non déclarés</em><br>Optin WAX : <strong style="color:#ff6b6b">Non</strong> · Profil : <strong style="color:#ff9800">Incomplet</strong></div>
+          <div class="persona-score">
+            <span class="score-val" style="color:#ff9800">12</span><span style="font-size:14px;color:rgba(255,255,255,0.4)">/100</span>
+            <span class="score-label">Score SciPo · Tier Exploration</span>
+          </div>
+        </div>
+        <div class="persona-body">
+
+          <!-- Profile chips -->
+          <div class="profile-row">
+            <span class="profile-chip filled">education_level: première</span>
+            <span class="profile-chip missing">bac_series: ∅ manquant</span>
+            <span class="profile-chip missing">interests: ∅ manquant</span>
+            <span class="profile-chip missing">postal_code: ∅ manquant</span>
+            <span class="profile-chip filled">group_id: grp_dupont_28</span>
+            <span class="profile-chip" style="background:#fff0f0;border-color:#f5b0bc;color:var(--red)">optin_wax: false</span>
+          </div>
+
+          <!-- Data table -->
+          <div class="data-row"><div class="data-label">Arrivée</div><div class="data-value">Entrée fair · Inscription en 3 min sous pression de groupe</div></div>
+          <div class="data-row"><div class="data-label">Groupe</div><div class="data-value">Prof M. Dupont · 28 élèves · Lycée Maupassant, Fécamp</div></div>
+          <div class="data-row"><div class="data-label">Scans stands</div><div class="data-value">Sciences Po (entrée seule, dwell estimé 5min) · HEC (entrée seule)</div></div>
+          <div class="data-row"><div class="data-label">Réel dwell</div><div class="data-value" style="color:var(--orange)">⚠ ~35 min au stand Sciences Po (observé, non tracké — pas de scan sortie)</div></div>
+          <div class="data-row"><div class="data-label">Conférences</div><div class="data-value" style="color:var(--orange)">⚠ 2 conférences (prof l'a conduit) — 0 scan, 0 trace</div></div>
+          <div class="data-row"><div class="data-label">Post-fair</div><div class="data-value missing">App jamais rouverte · 0 email · 0 recap</div></div>
+          <div class="data-row"><div class="data-label">Score SciPo</div><div class="data-value"><strong style="color:var(--orange)">12/100 — Tier Exploration</strong> (faux négatif grave)</div></div>
+
+          <!-- Journey Map -->
+          <div class="journey-map">
+            <div class="journey-map-title">Carte de parcours Hugo</div>
+            <div class="journey-phases">
+              <div class="journey-phase phase-before">
+                <div class="phase-label">Avant</div>
+                <div class="phase-items">
+                  <div class="tp missing"><span class="tp-icon">❌</span>Aucune pré-inscription</div>
+                  <div class="tp missing"><span class="tp-icon">❌</span>0 profil, 0 intérêts</div>
+                  <div class="tp active"><span class="tp-icon">🏫</span>Inscription prof → groupe</div>
+                </div>
+              </div>
+              <div class="journey-phase phase-during">
+                <div class="phase-label">Pendant</div>
+                <div class="phase-items">
+                  <div class="tp gap"><span class="tp-icon">⚠️</span>Inscription 3min · profil vide</div>
+                  <div class="tp active"><span class="tp-icon">📍</span>2 scans stands (guidés)</div>
+                  <div class="tp gap"><span class="tp-icon">⚠️</span>35min SciPo → estimé 5min</div>
+                  <div class="tp missing"><span class="tp-icon">❌</span>2 conférences : aucune trace</div>
+                </div>
+              </div>
+              <div class="journey-phase phase-after">
+                <div class="phase-label">Après</div>
+                <div class="phase-items">
+                  <div class="tp missing"><span class="tp-icon">❌</span>0 email (pas d'optin)</div>
+                  <div class="tp missing"><span class="tp-icon">❌</span>Prof : 0 insight élèves</div>
+                  <div class="tp missing"><span class="tp-icon">❌</span>Parent : 0 communication</div>
+                  <div class="tp missing"><span class="tp-icon">❌</span>SciPo : lead invisible</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gap box -->
+          <div class="gap-box">
+            <div class="gap-title">⚡ Le gap critique</div>
+            <div class="gap-body">Hugo est un <strong>faux négatif systémique</strong>. Son score de 12/100 n'est pas la réalité de son engagement — il a passé <strong>35 minutes au stand Sciences Po</strong>. Le problème : (a) aucun intérêt déclaré → score déclaratif = 0, (b) pas de scan de sortie → dwell estimé à 5min, (c) 2 conférences assistées sans trace. Sciences Po n'a aucune idée de son existence. Le professeur M. Dupont <strong>n'a aucun outil pour voir lesquels de ses 28 élèves ont montré un intérêt réel</strong>. Le parent n'a reçu aucune communication.</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /persona-grid -->
+    <div class="simulated-note">⚠ Données comportementales simulées à des fins d'illustration — hypothèses détaillées ci-dessus</div>
+
+  </div>
+</div><!-- /section -->
+
+
+<!-- ══════════════════════════════════════════
+     SECTION 2 — DATA CAPTURE ARCHITECTURE
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-stripe"></div>
+    <div class="section-num">Section 02</div>
+    <h2>Architecture de capture de données — Proposition</h2>
+    <p class="section-desc">Carte complète des données existantes, manquantes, et partiellement collectées — par phase du parcours. Pour chaque point de collecte en-salon, mécanisme de collecte et contrainte RGPD identifiés.</p>
+  </div>
+  <div class="section-body">
+
+    <!-- ── PHASE AVANT ── -->
+    <div class="arch-phase-header before">
+      <span class="arch-phase-icon">📅</span>
+      <div>
+        <div class="arch-phase-name">Phase 1 — AVANT le salon</div>
+        <div class="arch-phase-desc">Pré-inscription · Profil · Préparation de visite</div>
+      </div>
+    </div>
+    <table class="arch-table">
+      <thead>
+        <tr>
+          <th>Donnée</th>
+          <th>Statut</th>
+          <th>Mécanisme de collecte</th>
+          <th>Base légale RGPD</th>
+          <th>Contrainte à naviguer</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Email, nom, date de naissance, rôle</td>
+          <td><span class="status-pill status-exists">✓ Existe</span></td>
+          <td>Formulaire onboarding — <span class="field">users.email</span>, <span class="field">users.dob</span></td>
+          <td><span class="legal-basis">Art. 6(1)(b) Contrat</span></td>
+          <td class="gdpr-constraint">Mineur &lt;16 ans : consentement parental requis (RGPD Art. 8) — implémenté via gate DOB</td>
+        </tr>
+        <tr>
+          <td>Niveau scolaire, série BAC, intérêts</td>
+          <td><span class="status-pill status-exists">✓ Existe</span></td>
+          <td>Onboarding étape 2 — <span class="field">users.education_level</span>, <span class="field">users.bac_series</span>, <span class="field">users.interests</span></td>
+          <td><span class="legal-basis">Art. 6(1)(b) Contrat</span></td>
+          <td class="gdpr-constraint">Non obligatoire → taux de complétion ~78% (Hugo = profil incomplet). Incentiver la complétion.</td>
+        </tr>
+        <tr>
+          <td>Code postal, région</td>
+          <td><span class="status-pill status-exists">✓ Existe</span></td>
+          <td>Onboarding — <span class="field">users.postal_code</span></td>
+          <td><span class="legal-basis">Art. 6(1)(b) Contrat</span></td>
+          <td class="gdpr-constraint">Donnée personnelle — ne pas enrichir avec géolocalisation sans consentement explicite</td>
+        </tr>
+        <tr>
+          <td>Consentements opt-in (letudiant, commercial, WAX)</td>
+          <td><span class="status-pill status-exists">✓ Existe</span></td>
+          <td>Checkboxes onboarding — <span class="field">users.optin_wax</span>, <span class="field">users.optin_commercial</span></td>
+          <td><span class="legal-basis">Art. 6(1)(a) Consentement</span></td>
+          <td class="gdpr-constraint"><span class="warn">⚠ Audit consent_audit absent</span> — le log actuel n'est qu'un console.info, non conforme. Ajouter table <span class="field">consent_audit</span>.</td>
+        </tr>
+        <tr>
+          <td style="color:var(--orange)">Wishlist stands pré-visite</td>
+          <td><span class="status-pill status-missing">✗ Manquant</span></td>
+          <td>Checklist in-app sur /home (J-7 avant salon). Mapping des stands planifiés.</td>
+          <td><span class="legal-basis">Art. 6(1)(b) Contrat</span></td>
+          <td class="gdpr-constraint">Partie intégrante du service — pas de consentement séparé requis. Données de préférence, non comportementales.</td>
+        </tr>
+        <tr>
+          <td style="color:var(--orange)">Type d'accompagnateur</td>
+          <td><span class="status-pill status-missing">✗ Manquant</span></td>
+          <td>Question onboarding : seul / groupe scolaire / famille. Enrichit le contexte de visite.</td>
+          <td><span class="legal-basis">Art. 6(1)(b) Contrat</span></td>
+          <td class="gdpr-constraint">Dès lors que le group_id est déjà collecté pour les profs, la cohérence est naturelle.</td>
+        </tr>
+        <tr>
+          <td style="color:var(--orange)">Première visite salon ?</td>
+          <td><span class="status-pill status-missing">✗ Manquant</span></td>
+          <td>Question onboarding simple (oui/non). Segmentation temporelle du parcours d'orientation.</td>
+          <td><span class="legal-basis">Art. 6(1)(f) Intérêt légitime</span></td>
+          <td class="gdpr-constraint">Donnée factuelle sur le comportement passé — aucune donnée sensible. Mention dans notice d'info.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ── PHASE PENDANT ── -->
+    <div class="arch-phase-header during">
+      <span class="arch-phase-icon">📍</span>
+      <div>
+        <div class="arch-phase-name">Phase 2 — PENDANT le salon</div>
+        <div class="arch-phase-desc">Scans QR · Comportement en présentiel · Signaux d'engagement</div>
+      </div>
+    </div>
+    <table class="arch-table">
+      <thead>
+        <tr>
+          <th>Donnée</th>
+          <th>Statut</th>
+          <th>Mécanisme de collecte</th>
+          <th>Base légale RGPD</th>
+          <th>Contrainte à naviguer</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Scan QR entrée stand (stand_id, timestamp)</td>
+          <td><span class="status-pill status-exists">✓ Existe</span></td>
+          <td>QR code à l'entrée du stand, scanné par l'étudiant. <span class="field">scans.stand_id</span>, <span class="field">scans.channel='entry'</span></td>
+          <td><span class="legal-basis">Art. 6(1)(b) Contrat</span></td>
+          <td class="gdpr-constraint">Consentement déjà donné lors de l'inscription. Affichage d'un panneau visible à l'entrée stand (Art. 13) recommandé.</td>
+        </tr>
+        <tr>
+          <td>Swipe right/left (app discover tab)</td>
+          <td><span class="status-pill status-exists">✓ Existe</span></td>
+          <td>react-tinder-card → <span class="field">matches.student_swipe</span> + <span class="field">analytics_events</span></td>
+          <td><span class="legal-basis">Art. 6(1)(b) Contrat</span></td>
+          <td class="gdpr-constraint">Donnée de préférence — non sensible. Usage commercial (cession aux écoles) nécessite optin_commercial = true.</td>
+        </tr>
+        <tr>
+          <td>Bookmarks écoles</td>
+          <td><span class="status-pill status-exists">✓ Existe</span></td>
+          <td>Bouton ♡ → <span class="field">users.wishlist[]</span> + <span class="field">analytics_events</span></td>
+          <td><span class="legal-basis">Art. 6(1)(b) Contrat</span></td>
+          <td class="gdpr-constraint">Idem swipe — usage analytique ok, usage commercial conditionné à optin.</td>
+        </tr>
+        <tr style="background:#E8F5EC !important">
+          <td style="color:var(--green)"><strong>✓ Rendez-vous pré-salon (RDV)</strong><br><span style="font-size:11px;color:var(--green);font-weight:700">Signal d'intérêt le plus fort</span></td>
+          <td><span class="status-pill status-exists">✓ Implémenté</span></td>
+          <td>Bouton "Rendez-vous" dans la fiche école <span class="field">/schools/[id]</span> → onglet RDV → sélection de créneau → <span class="field">appointments</span> table. L'étudiant choisit un slot de 15min avec un représentant avant le salon.</td>
+          <td><span class="legal-basis">Art. 6(1)(b) Contrat</span></td>
+          <td class="gdpr-constraint">Donnée de préférence volontaire. Aucune contrainte RGPD supplémentaire — l'étudiant initie la démarche. Impact fort sur le score : <strong>appointmentBooked pèse 0.35</strong> dans BehaviouralSignals. Remplace l'exit scan QR <em>(jugé non réaliste — friction trop élevée)</em>.</td>
+        </tr>
+        <tr>
+          <td style="color:var(--orange)">Présence conférence / atelier</td>
+          <td><span class="status-pill status-missing">✗ Manquant</span></td>
+          <td>QR code à l'entrée de chaque conférence (organisateur scanne ou étudiant scanne). <span class="field">scans.stand_id</span> → session type.</td>
+          <td><span class="legal-basis">Art. 6(1)(f) Intérêt légitime</span></td>
+          <td class="gdpr-constraint">Espace semi-public. <span class="warn">⚠ Affichage obligatoire Art. 13</span> : panneau "Vos données de présence sont collectées par L'Étudiant — voir notice". Pas d'identification biométrique.</td>
+        </tr>
+        <tr>
+          <td style="color:var(--orange)">Co-visite (groupe scolaire)</td>
+          <td><span class="status-pill status-partial">~ Partiel</span></td>
+          <td>Déjà présent via <span class="field">users.group_id</span> pour les groupes profs. Corrélation des scans du groupe = signal de visite accompagnée.</td>
+          <td><span class="legal-basis">Art. 6(1)(f) Intérêt légitime</span></td>
+          <td class="gdpr-constraint"><span class="warn">⚠ Données mineurs</span> : protection renforcée. L'exploitation analytique de groupe (sans identification individuelle dans le dashboard prof) doit rester agrégée.</td>
+        </tr>
+        <tr>
+          <td style="color:var(--orange)">Présence non-scan (file d'attente stand)</td>
+          <td><span class="status-pill status-missing">✗ Manquant</span></td>
+          <td>Beacon BLE passif (opt-in) aux stands à forte fréquentation. Signal de proximité sans identification automatique.</td>
+          <td><span class="legal-basis" style="color:var(--red)">Art. 6(1)(a) CONSENTEMENT EXPLICITE</span></td>
+          <td class="gdpr-constraint"><span class="warn">⚠ Haute contrainte RGPD</span> : donnée de localisation-adjacent. Consentement granulaire séparé requis. Droit d'opposition permanente. Ne peut pas être bundlé dans le consentement principal. Risque CNIL élevé sans avis DPO préalable.</td>
+        </tr>
+        <tr>
+          <td style="color:var(--orange)">Micro-sondage post-scan (1 question)</td>
+          <td><span class="status-pill status-missing">✗ Manquant</span></td>
+          <td>Notification push 5min après scan : "Ce stand vous a intéressé ?" [Oui / Non / Neutre]. In-app ou notification.</td>
+          <td><span class="legal-basis">Art. 6(1)(a) Consentement</span></td>
+          <td class="gdpr-constraint">Opt-in souple acceptable si l'utilisateur a consenti aux notifications app. Non intrusif. Fenêtre de 5min pertinente. Limiter à 1 question max.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ── PHASE APRÈS ── -->
+    <div class="arch-phase-header after">
+      <span class="arch-phase-icon">📬</span>
+      <div>
+        <div class="arch-phase-name">Phase 3 — APRÈS le salon</div>
+        <div class="arch-phase-desc">Suivi post-visite · Conversion · Longitudinal</div>
+      </div>
+    </div>
+    <table class="arch-table">
+      <thead>
+        <tr>
+          <th>Donnée</th>
+          <th>Statut</th>
+          <th>Mécanisme de collecte</th>
+          <th>Base légale RGPD</th>
+          <th>Contrainte à naviguer</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color:var(--orange)">Retour app / engagement recap (J+1 à J+7)</td>
+          <td><span class="status-pill status-partial">~ Partiel</span></td>
+          <td><span class="field">analytics_events.event_type='page_view'</span> sur /recap — infrastructure existe, non activée ni analysée.</td>
+          <td><span class="legal-basis">Art. 6(1)(f) Intérêt légitime</span></td>
+          <td class="gdpr-constraint">Log d'usage interne — pas de base légale problématique. Activer le tracking et le dashboard admin.</td>
+        </tr>
+        <tr>
+          <td style="color:var(--orange)">Ouverture / clic email WAX</td>
+          <td><span class="status-pill status-missing">✗ Manquant</span></td>
+          <td>Pixel de tracking email (ESP standard : Sendinblue, Mailjet). UTM parameters sur liens.</td>
+          <td><span class="legal-basis">Art. 6(1)(a) Consentement (optin_wax)</span></td>
+          <td class="gdpr-constraint"><span class="warn">⚠ Traitement déjà consenti</span> via optin_wax. Désinscription honorée sous 10 jours ouvrés (recommandation CNIL). Mentionner dans email.</td>
+        </tr>
+        <tr>
+          <td style="color:var(--orange)">Sondage intention candidature (J+7)</td>
+          <td><span class="status-pill status-missing">✗ Manquant</span></td>
+          <td>Prompt in-app sur page /recap ou /profile : "As-tu candidaté à une des écoles visitées ?" — 3 choix.</td>
+          <td><span class="legal-basis">Art. 6(1)(a) Consentement</span></td>
+          <td class="gdpr-constraint">Données de comportement futur — sensibles pour le scoring. Consentement séparé, stockage limité à 12 mois.</td>
+        </tr>
+        <tr>
+          <td style="color:var(--orange)">Confirmation vœu Parcoursup (J+90)</td>
+          <td><span class="status-pill status-missing">✗ Manquant</span></td>
+          <td>Auto-déclaration volontaire dans le profil app : "J'ai mis [École] dans mes vœux Parcoursup".</td>
+          <td><span class="legal-basis">Art. 6(1)(a) Consentement</span></td>
+          <td class="gdpr-constraint"><span class="warn">⚠ Données d'orientation scolaire</span> — potentiellement sensibles. Stockage séparé de la table users avec période de rétention propre (24 mois max recommandé). Ne pas partager avec exposants sans consentement dédié.</td>
+        </tr>
+        <tr>
+          <td style="color:var(--orange)">Issue d'inscription (J+12 mois)</td>
+          <td><span class="status-pill status-missing">✗ Manquant</span></td>
+          <td>Email de suivi à la rentrée scolaire suivante : "Es-tu inscrit(e) dans l'une de ces écoles ?"</td>
+          <td><span class="legal-basis">Art. 6(1)(a) Consentement</span></td>
+          <td class="gdpr-constraint"><span class="warn">⚠ Donnée longitudinale</span> : clause de limitation de conservation explicite obligatoire. Recommandation : 24 mois max, suppression automatique. Avis DPO recommandé avant mise en production.</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+</div><!-- /section -->
+
+
+<!-- ══════════════════════════════════════════
+     SECTION 3 — MOCKUP POST-FAIR
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-stripe"></div>
+    <div class="section-num">Section 03</div>
+    <h2>Mockup conçu — Bilan post-salon · Persona Léa</h2>
+    <p class="section-desc">Interface /recap/[eventId] telle qu'elle devrait s'afficher pour Léa, J+1 après le Salon de Paris. Layout, copy et logique de recommandation visibles. Annotations de la logique moteur à droite.</p>
+  </div>
+  <div class="section-body">
+
+    <div class="mockup-outer">
+
+      <!-- ── PHONE MOCKUP ── -->
+      <div>
+        <div class="phone-wrap">
+          <div class="phone-frame">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+
+              <!-- status bar -->
+              <div class="app-statusbar">
+                <span>9:41</span>
+                <span>●●●●○ 📶 🔋</span>
+              </div>
+
+              <!-- app header -->
+              <div class="app-header">
+                <div class="app-header-top">
+                  <span class="app-back">‹</span>
+                  <span class="app-header-title">Salon de Paris</span>
+                  <span style="font-size:16px">⋯</span>
+                </div>
+                <div>
+                  <h2>Ton bilan,<br>Léa ✦</h2>
+                  <div class="app-header-date">Salon de l'Orientation · Paris · 7 avril 2026</div>
+                  <div class="orientation-pill">
+                    <span>🔵</span>
+                    <span>En comparaison</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- stats bar -->
+              <div class="app-stats-bar">
+                <div class="app-stat">
+                  <div class="app-stat-val">4</div>
+                  <div class="app-stat-label">Stands visités</div>
+                </div>
+                <div class="app-stat">
+                  <div class="app-stat-val">2</div>
+                  <div class="app-stat-label">Coups de cœur</div>
+                </div>
+                <div class="app-stat">
+                  <div class="app-stat-val">1h43</div>
+                  <div class="app-stat-label">Durée estimée</div>
+                </div>
+              </div>
+
+              <!-- schools visited -->
+              <div class="app-section">
+                <div class="app-section-title">Tes écoles visitées</div>
+
+                <div class="school-card-phone">
+                  <div class="school-rank rank-1">1</div>
+                  <div class="school-info">
+                    <div class="school-name-phone">ENSAD Paris</div>
+                    <div class="school-meta-phone">
+                      <span class="tag tag-red" style="font-size:9px;padding:1px 5px">Design</span>
+                      <span>École nationale d'art</span>
+                    </div>
+                  </div>
+                  <div class="school-dwell">
+                    <div>18 min</div>
+                    <div class="heart-badge">❤️</div>
+                  </div>
+                </div>
+
+                <div class="school-card-phone">
+                  <div class="school-rank rank-2">2</div>
+                  <div class="school-info">
+                    <div class="school-name-phone">École Boulle</div>
+                    <div class="school-meta-phone">
+                      <span class="tag tag-blue" style="font-size:9px;padding:1px 5px">Arts appli.</span>
+                      <span>EPSAA · Paris 12e</span>
+                    </div>
+                  </div>
+                  <div class="school-dwell">
+                    <div>12 min</div>
+                    <div class="heart-badge">❤️</div>
+                  </div>
+                </div>
+
+                <div class="school-card-phone">
+                  <div class="school-rank rank-3">3</div>
+                  <div class="school-info">
+                    <div class="school-name-phone">ENSA Paris-Belleville</div>
+                    <div class="school-meta-phone">
+                      <span class="tag tag-gray" style="font-size:9px;padding:1px 5px">Architecture</span>
+                      <span>École nationale</span>
+                    </div>
+                  </div>
+                  <div class="school-dwell"><div>8 min</div></div>
+                </div>
+
+                <div class="school-card-phone">
+                  <div class="school-rank rank-4">4</div>
+                  <div class="school-info">
+                    <div class="school-name-phone">ESAD Reims</div>
+                    <div class="school-meta-phone">
+                      <span class="tag tag-gray" style="font-size:9px;padding:1px 5px">Design</span>
+                      <span>École supérieure</span>
+                    </div>
+                  </div>
+                  <div class="school-dwell"><div>5 min</div></div>
+                </div>
+              </div>
+
+              <!-- algo explanation -->
+              <div class="algo-box">
+                <div class="algo-box-title">Pourquoi ENSAD en tête ?</div>
+                <div class="algo-box-body">Tu y as passé <strong>3× plus de temps</strong> qu'aux autres stands. Tu avais aussi swipé à droite sur leur profil avant ta visite physique.<br><strong>Score d'intérêt : <span class="algo-score">78</span>/100</strong></div>
+              </div>
+
+              <!-- next steps -->
+              <div class="app-section">
+                <div class="app-section-title">La suite pour toi</div>
+
+                <div class="next-step next-step-1">
+                  <div class="next-step-icon">🗓</div>
+                  <div class="next-step-info">
+                    <div class="next-step-label">Journée Portes Ouvertes ENSAD</div>
+                    <div class="next-step-sub">Samedi 15 mars · Paris 13e · Gratuit</div>
+                    <a class="next-step-cta">Je m'inscris →</a>
+                  </div>
+                </div>
+
+                <div class="next-step">
+                  <div class="next-step-icon">📄</div>
+                  <div class="next-step-info">
+                    <div class="next-step-label">Brochure Architecture intérieure</div>
+                    <div class="next-step-sub">École Boulle · PDF · 12 pages</div>
+                    <a class="next-step-cta outline">Télécharger</a>
+                  </div>
+                </div>
+
+                <div class="next-step">
+                  <div class="next-step-icon">⚖️</div>
+                  <div class="next-step-info">
+                    <div class="next-step-label">Comparer ENSAD vs École Boulle</div>
+                    <div class="next-step-sub">Frais · taux insertion · débouchés</div>
+                    <a class="next-step-cta outline">Voir comparatif</a>
+                  </div>
+                </div>
+              </div>
+
+              <!-- missed stands -->
+              <div class="app-section">
+                <div class="app-section-title">Pas eu le temps de visiter</div>
+                <div class="missed-item">
+                  <div class="missed-icon">📌</div>
+                  <div class="missed-text"><strong>HEAR Strasbourg</strong> · Sciences de l'Art<br><span style="color:var(--orange)">Tu l'avais mis en favori avant la visite</span></div>
+                </div>
+                <div class="missed-item">
+                  <div class="missed-icon">📌</div>
+                  <div class="missed-text"><strong>HEAD – Genève</strong> · Design industriel<br><span style="color:var(--orange)">Dans ta wishlist pré-salon</span></div>
+                </div>
+              </div>
+
+              <!-- WAX banner -->
+              <div class="wax-banner">
+                <span style="font-size:20px">📬</span>
+                <div class="wax-text">
+                  <strong>Reste dans la boucle</strong>
+                  Reçois les dates d'inscription de tes 2 coups de cœur par email
+                </div>
+                <div class="wax-btn">Activé ✓</div>
+              </div>
+
+            </div><!-- /phone-screen -->
+          </div><!-- /phone-frame -->
+        </div><!-- /phone-wrap -->
+        <div style="text-align:center;font-size:11px;color:var(--gray-300);margin-top:10px;font-style:italic">Mockup conçu — /recap/[eventId] · Léa Moreau · J+1</div>
+      </div>
+
+      <!-- ── ANNOTATIONS ── -->
+      <div class="annotations">
+
+        <div class="ann-card">
+          <div class="ann-head red">Logique de classement des écoles</div>
+          <div class="ann-body">
+            <div class="ann-formula">behaviouralScore =
+  appointmentBooked × 0.35  ← signal #1
+  + swipe_right     × 0.25
+  + visitedStand    × 0.25
+  + attendedConf    × 0.15
+
+score = 0.5 × declarative
+      + 0.5 × behavioural</div>
+            <p>ENSAD obtient <strong>78/100</strong> : Léa a swipé à droite (0.25) + visité le stand (0.25) + profil intérêts design/architecture qui matchent (déclaratif fort). Si elle avait pris un RDV avant le salon, son score serait passé à <strong>~91/100</strong>.</p>
+            <p><span style="background:#E8F5EC;color:#1B7F3A;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700">Nouveau</span> Le <span class="field">dwell_minutes</span> a été supprimé — exit QR scan jugé non réaliste (friction trop haute). Remplacé par <span class="field">appointments.status</span>.</p>
+            <p>Source : <span class="field">lib/scoring/leadScore.ts</span> — weights configurables sans redéploiement.</p>
+          </div>
+        </div>
+
+        <div class="ann-card">
+          <div class="ann-head blue">Logique "La suite pour toi"</div>
+          <div class="ann-body">
+            <div class="ann-formula">next_steps =
+  filter(events, school_id IN top2_schools)
+  + filter(brochures, fields INTERSECT interests)
+  + [compare_link IF top2_score_delta &lt; 20]</div>
+            <p>L'étape 1 (JPO ENSAD) est issue de la table <span class="field">events</span> filtrée sur school_id = ENSAD et date &gt; aujourd'hui.</p>
+            <p>L'étape 2 (brochure) est issue de <span class="field">formations</span> où fields ∩ users.interests ≠ ∅.</p>
+            <p>L'étape 3 (comparatif) est déclenchée quand le delta de score entre top-1 et top-2 est &lt; 20 pts → indécision probable.</p>
+          </div>
+        </div>
+
+        <div class="ann-card">
+          <div class="ann-head yellow">"Pas eu le temps" — logique</div>
+          <div class="ann-body">
+            <div class="ann-formula">missed =
+  users.wishlist[]
+  MINUS
+  scans.stand_ids (this event)</div>
+            <p>Intersecte la <span class="field">users.wishlist</span> (stands mis en favori avant la visite) avec les <span class="field">scans</span> du jour. Tout stand favori non scanné = manqué.</p>
+            <p><strong>Dépend de la wishlist pré-visite</strong> — donnée aujourd'hui manquante (Phase 1, Section 2). Sans cette fonctionnalité, ce bloc ne s'affiche pas.</p>
+          </div>
+        </div>
+
+        <div class="ann-card">
+          <div class="ann-head green">Bloc WAX — conditions d'affichage</div>
+          <div class="ann-body">
+            <div class="ann-formula">show_wax_banner =
+  users.optin_wax === true
+  AND score_tier IN ['comparing','deciding']</div>
+            <p>Le banner s'affiche uniquement si l'étudiant a donné son optin WAX <strong>ET</strong> est en tier Comparaison ou Décision. Pour Hugo (optin_wax = false), ce bloc est remplacé par un CTA d'activation.</p>
+          </div>
+        </div>
+
+        <div class="ann-card">
+          <div class="ann-head gray">Données manquantes pour ce mockup</div>
+          <div class="ann-body">
+            <p>🔴 <strong>Wishlist pré-visite</strong> : le bloc "Pas eu le temps" dépend d'une fonctionnalité non encore buildée (<span class="field">/home</span> J-7). Sans elle, afficher les favoris bookmarkés dans l'app à la place.</p>
+            <p>🔴 <strong>Conférence "Métiers du design"</strong> : non trackée. Si elle l'était, elle renforcerait le score ENSAD et déclencherait une recommandation directe du programme post-bac design.</p>
+            <p>🟡 <strong>Dwell réel</strong> : estimé depuis scan entrée uniquement. Avec exit scan, les 18min ENSAD pourraient être 25min — changeant le ranking.</p>
+          </div>
+        </div>
+
+      </div><!-- /annotations -->
+
+    </div><!-- /mockup-outer -->
+
+  </div>
+</div><!-- /section -->
+
+<!-- ══ FOOTER ══ -->
+<div class="doc-footer">
+  <div class="footer-stripe"></div>
+  <p><strong>Working draft — 10 avril 2026 — L'Étudiant Salons · Analyse des profils étudiants</strong></p>
+  <p style="margin-top:4px">Stack : Next.js 16.2.2 · Supabase PostgreSQL · @supabase/ssr · TypeScript · Vercel</p>
+  <p style="margin-top:4px;color:var(--gray-300)">Données comportementales simulées à des fins d'illustration. Toutes les hypothèses sont explicitées dans le document.</p>
+</div>
+
+</div><!-- /page-wrap -->
+</body>
+</html>

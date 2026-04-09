@@ -5,7 +5,8 @@ import { getSupabase } from '@/lib/supabase/client'
 import { track } from '@/lib/analytics/track'
 import { useToast } from '@/components/ui/Toaster'
 import { Skeleton } from '@/components/ui/Skeleton'
-import type { SchoolRow, FormationRow } from '@/lib/supabase/types'
+import { bookAppointment, cancelAppointment, getStudentAppointmentForSchool } from '@/lib/supabase/database'
+import type { SchoolRow, FormationRow, AppointmentRow } from '@/lib/supabase/types'
 
 export default function SchoolDetailPage({ params }: { params: Promise<{ schoolId: string }> }) {
   const { schoolId } = use(params)
@@ -14,22 +15,76 @@ export default function SchoolDetailPage({ params }: { params: Promise<{ schoolI
   const [formations, setFormations] = useState<FormationRow[]>([])
   const [loading, setLoading] = useState(true)
   const [bookmarked, setBookmarked] = useState(false)
-  const [activeTab, setActiveTab] = useState<'info' | 'formations' | 'stats'>('info')
+  const [activeTab, setActiveTab] = useState<'info' | 'formations' | 'stats' | 'rdv'>('info')
+  const [appointment, setAppointment] = useState<AppointmentRow | null>(null)
+  const [bookingSlot, setBookingSlot] = useState<string | null>(null)
+  const [bookingNote, setBookingNote] = useState('')
+  const [bookingLoading, setBookingLoading] = useState(false)
 
   useEffect(() => {
     track('school_view', { school_id: schoolId, source: 'direct' })
     async function load() {
       const supabase = getSupabase()
+      const { data: { user } } = await supabase.auth.getUser()
       const [schoolRes, formationsRes] = await Promise.all([
         supabase.from('schools').select('*').eq('id', schoolId).single(),
         supabase.from('formations').select('*').eq('school_id', schoolId).order('name'),
       ])
       if (schoolRes.data) setSchool(schoolRes.data)
       setFormations(formationsRes.data ?? [])
+      // Load existing appointment for this school (use the first upcoming event)
+      if (user) {
+        const { data: events } = await supabase
+          .from('events')
+          .select('id')
+          .gte('event_date', new Date().toISOString().slice(0, 10))
+          .order('event_date')
+          .limit(1)
+        if (events?.[0]) {
+          const existing = await getStudentAppointmentForSchool(user.id, schoolId, events[0].id)
+          setAppointment(existing)
+        }
+      }
       setLoading(false)
     }
     load()
   }, [schoolId])
+
+  async function handleBook() {
+    if (!bookingSlot) return
+    setBookingLoading(true)
+    try {
+      const supabase = getSupabase()
+      const { data: { user } } = await supabase.auth.getUser()
+      const { data: events } = await supabase
+        .from('events')
+        .select('id')
+        .gte('event_date', new Date().toISOString().slice(0, 10))
+        .order('event_date')
+        .limit(1)
+      if (!user || !events?.[0]) { toast('Connectez-vous pour réserver', 'error'); return }
+      const appt = await bookAppointment({
+        student_id: user.id,
+        school_id: schoolId,
+        event_id: events[0].id,
+        slot_time: bookingSlot,
+        student_notes: bookingNote || null,
+      })
+      setAppointment(appt)
+      track('appointment_book', { school_id: schoolId, slot_time: bookingSlot })
+      toast('✓ Rendez-vous confirmé ! Vous recevrez un rappel avant le salon.', 'success')
+    } finally {
+      setBookingLoading(false)
+    }
+  }
+
+  async function handleCancel() {
+    if (!appointment) return
+    await cancelAppointment(appointment.id)
+    setAppointment(null)
+    setBookingSlot(null)
+    toast('Rendez-vous annulé', 'info')
+  }
 
   function toggleBookmark() {
     setBookmarked(b => !b)
@@ -80,8 +135,8 @@ export default function SchoolDetailPage({ params }: { params: Promise<{ schoolI
 
       {/* Tabs */}
       <div style={{ display: 'flex', background: '#fff', borderBottom: '1px solid #F0F0F0' }}>
-        {([['info', 'Infos'], ['formations', 'Formations'], ['stats', 'Statistiques']] as const).map(([tab, label]) => (
-          <button key={tab} onClick={() => setActiveTab(tab)} style={{ flex: 1, padding: '14px 8px', background: 'none', border: 'none', borderBottom: `2px solid ${activeTab === tab ? '#E3001B' : 'transparent'}`, fontWeight: activeTab === tab ? 700 : 400, color: activeTab === tab ? '#E3001B' : '#6B6B6B', cursor: 'pointer', fontSize: '0.875rem' }}>
+        {([['info', 'Infos'], ['formations', 'Formations'], ['stats', 'Stats'], ['rdv', appointment ? '📅 RDV ✓' : 'Rendez-vous']] as const).map(([tab, label]) => (
+          <button key={tab} onClick={() => setActiveTab(tab)} style={{ flex: 1, padding: '14px 6px', background: 'none', border: 'none', borderBottom: `2px solid ${activeTab === tab ? '#E3001B' : 'transparent'}`, fontWeight: activeTab === tab ? 700 : 400, color: activeTab === tab ? '#E3001B' : tab === 'rdv' && appointment ? '#15803d' : '#6B6B6B', cursor: 'pointer', fontSize: '0.8125rem' }}>
             {label}
           </button>
         ))}
@@ -131,6 +186,20 @@ export default function SchoolDetailPage({ params }: { params: Promise<{ schoolI
           </div>
         )}
 
+        {activeTab === 'rdv' && (
+          <RdvTab
+            school={school}
+            appointment={appointment}
+            bookingSlot={bookingSlot}
+            bookingNote={bookingNote}
+            bookingLoading={bookingLoading}
+            onSelectSlot={setBookingSlot}
+            onNoteChange={setBookingNote}
+            onBook={handleBook}
+            onCancel={handleCancel}
+          />
+        )}
+
         {activeTab === 'stats' && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             {[
@@ -149,6 +218,152 @@ export default function SchoolDetailPage({ params }: { params: Promise<{ schoolI
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+// ─── Rendez-vous Tab ──────────────────────────────────────────────────────────
+
+const SLOT_LABELS: Record<string, string> = {
+  '09:00': '9h00 – 9h15',
+  '09:30': '9h30 – 9h45',
+  '10:00': '10h00 – 10h15',
+  '10:30': '10h30 – 10h45',
+  '11:00': '11h00 – 11h15',
+  '11:30': '11h30 – 11h45',
+  '14:00': '14h00 – 14h15',
+  '14:30': '14h30 – 14h45',
+  '15:00': '15h00 – 15h15',
+  '15:30': '15h30 – 15h45',
+}
+
+function RdvTab({
+  school,
+  appointment,
+  bookingSlot,
+  bookingNote,
+  bookingLoading,
+  onSelectSlot,
+  onNoteChange,
+  onBook,
+  onCancel,
+}: {
+  school: SchoolRow
+  appointment: AppointmentRow | null
+  bookingSlot: string | null
+  bookingNote: string
+  bookingLoading: boolean
+  onSelectSlot: (slot: string) => void
+  onNoteChange: (note: string) => void
+  onBook: () => void
+  onCancel: () => void
+}) {
+  // Upcoming fair date (hardcoded as next-fair placeholder until events are seeded)
+  const fairDate = 'Samedi 7 juin 2026'
+
+  if (appointment) {
+    const slotKey = new Date(appointment.slot_time).toTimeString().slice(0, 5)
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ background: '#E8F5EC', border: '1.5px solid #4caf50', borderRadius: 14, padding: 20 }}>
+          <p style={{ margin: '0 0 6px', fontSize: '1rem', fontWeight: 800, color: '#1B7F3A' }}>✓ Rendez-vous réservé</p>
+          <p style={{ margin: '0 0 4px', fontSize: '0.875rem', color: '#2d5a3d' }}>{fairDate} · {SLOT_LABELS[slotKey] ?? slotKey}</p>
+          <p style={{ margin: '0 0 4px', fontSize: '0.875rem', color: '#2d5a3d' }}>Stand <strong>{school.name}</strong></p>
+          {appointment.student_notes && (
+            <p style={{ margin: '8px 0 0', fontSize: '0.8125rem', color: '#4B4B4B', fontStyle: 'italic' }}>Note : {appointment.student_notes}</p>
+          )}
+        </div>
+        <div style={{ background: '#F0F4FF', border: '1px solid #C5D3F0', borderRadius: 12, padding: 16 }}>
+          <p style={{ margin: '0 0 6px', fontSize: '0.875rem', fontWeight: 700, color: '#003C8F' }}>💡 Ce RDV booste ton profil</p>
+          <p style={{ margin: 0, fontSize: '0.8125rem', color: '#4B4B4B', lineHeight: 1.5 }}>
+            Prendre un rendez-vous avant le salon est le signal d&apos;intérêt le plus fort dans notre système de scoring.
+            Ton profil remonte en priorité dans la liste des leads de {school.name}.
+          </p>
+        </div>
+        <button
+          onClick={onCancel}
+          style={{ background: 'none', border: '1.5px solid #E3001B', color: '#E3001B', borderRadius: 10, padding: '12px 20px', fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer' }}
+        >
+          Annuler ce rendez-vous
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* Context */}
+      <div style={{ background: '#fff', borderRadius: 14, padding: 16 }}>
+        <h3 style={{ margin: '0 0 6px', fontSize: '0.9375rem', fontWeight: 700 }}>Réservez un créneau avec un représentant</h3>
+        <p style={{ margin: 0, fontSize: '0.875rem', color: '#6B6B6B', lineHeight: 1.5 }}>
+          Rencontrez un conseiller <strong>{school.name}</strong> lors du salon du <strong>{fairDate}</strong>.
+          Créneaux de 15 minutes — gratuit, sur place.
+        </p>
+      </div>
+
+      {/* Slot picker */}
+      <div style={{ background: '#fff', borderRadius: 14, padding: 16 }}>
+        <p style={{ margin: '0 0 12px', fontSize: '0.875rem', fontWeight: 700, color: '#1A1A1A' }}>Choisissez un créneau</p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          {Object.entries(SLOT_LABELS).map(([key, label]) => {
+            const isSelected = bookingSlot?.endsWith(key + ':00')
+            return (
+              <button
+                key={key}
+                onClick={() => onSelectSlot(`2026-06-07T${key}:00`)}
+                style={{
+                  background: isSelected ? '#E3001B' : '#F5F5F5',
+                  color: isSelected ? '#fff' : '#1A1A1A',
+                  border: isSelected ? '2px solid #E3001B' : '2px solid transparent',
+                  borderRadius: 10,
+                  padding: '10px 8px',
+                  fontSize: '0.8125rem',
+                  fontWeight: isSelected ? 700 : 400,
+                  cursor: 'pointer',
+                }}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Optional note */}
+      <div style={{ background: '#fff', borderRadius: 14, padding: 16 }}>
+        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: 8 }}>
+          Votre question principale <span style={{ color: '#6B6B6B', fontWeight: 400 }}>(optionnel)</span>
+        </label>
+        <textarea
+          value={bookingNote}
+          onChange={e => onNoteChange(e.target.value)}
+          placeholder="Ex : Je veux en savoir plus sur le programme Architecture intérieure…"
+          rows={3}
+          style={{ width: '100%', border: '1.5px solid #E8E8E8', borderRadius: 8, padding: '10px 12px', fontSize: '0.875rem', color: '#1A1A1A', resize: 'none', fontFamily: 'inherit' }}
+        />
+      </div>
+
+      {/* CTA */}
+      <button
+        onClick={onBook}
+        disabled={!bookingSlot || bookingLoading}
+        style={{
+          background: bookingSlot ? '#E3001B' : '#E8E8E8',
+          color: bookingSlot ? '#fff' : '#6B6B6B',
+          border: 'none',
+          borderRadius: 12,
+          padding: '15px 20px',
+          fontWeight: 800,
+          fontSize: '1rem',
+          cursor: bookingSlot ? 'pointer' : 'not-allowed',
+        }}
+      >
+        {bookingLoading ? 'Réservation en cours…' : bookingSlot ? 'Confirmer le rendez-vous →' : 'Sélectionnez un créneau'}
+      </button>
+
+      <p style={{ fontSize: '0.75rem', color: '#6B6B6B', textAlign: 'center' }}>
+        Vous pouvez annuler jusqu'à 24h avant le salon
+      </p>
     </div>
   )
 }

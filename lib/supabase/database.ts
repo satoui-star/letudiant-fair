@@ -1,5 +1,5 @@
 import { getSupabase } from './client'
-import type { UserRow, EventRow, SchoolRow, ScanRow, LeadRow, MatchRow, GroupRow } from './types'
+import type { UserRow, EventRow, SchoolRow, ScanRow, LeadRow, MatchRow, GroupRow, AppointmentRow } from './types'
 
 // ─── Users ────────────────────────────────────────────────────────────────────
 
@@ -151,6 +151,50 @@ export async function addMemberToGroup(groupId: string, userId: string): Promise
       .update({ member_uids: [...existing, userId] })
       .eq('id', groupId)
   }
+}
+
+// ─── Appointments ─────────────────────────────────────────────────────────────
+
+export async function bookAppointment(
+  appointment: Pick<AppointmentRow, 'student_id' | 'school_id' | 'event_id' | 'slot_time' | 'student_notes'>
+): Promise<AppointmentRow | null> {
+  const { data } = await getSupabase()
+    .from('appointments')
+    .insert({ ...appointment, slot_duration: 15, status: 'pending' })
+    .select()
+    .single()
+  return data
+}
+
+export async function cancelAppointment(id: string): Promise<void> {
+  await getSupabase().from('appointments').update({ status: 'cancelled' }).eq('id', id)
+}
+
+export async function getAppointmentsForStudent(studentId: string, eventId: string): Promise<AppointmentRow[]> {
+  const { data } = await getSupabase()
+    .from('appointments')
+    .select('*, schools(name, city, type)')
+    .eq('student_id', studentId)
+    .eq('event_id', eventId)
+    .neq('status', 'cancelled')
+    .order('slot_time')
+  return data ?? []
+}
+
+export async function getStudentAppointmentForSchool(
+  studentId: string,
+  schoolId: string,
+  eventId: string
+): Promise<AppointmentRow | null> {
+  const { data } = await getSupabase()
+    .from('appointments')
+    .select('*')
+    .eq('student_id', studentId)
+    .eq('school_id', schoolId)
+    .eq('event_id', eventId)
+    .neq('status', 'cancelled')
+    .maybeSingle()
+  return data
 }
 
 // ─── Auth helpers ─────────────────────────────────────────────────────────────

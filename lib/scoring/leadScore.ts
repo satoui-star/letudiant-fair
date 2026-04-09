@@ -9,22 +9,22 @@ export interface DeclarativeSignals {
 }
 
 export interface BehaviouralSignals {
+  appointmentBooked: boolean  // pre-fair RDV — strongest collectible intent signal
+  swipedRight: boolean
   visitedStand: boolean
   attendedConference: boolean
-  swipedRight: boolean
-  dwellMinutes: number
 }
 
 export interface ScoreWeights {
-  declarative: number           // 0.5
-  behavioural: number           // 0.5
-  fieldInterestOverlap: number  // 0.4
-  educationLevelMatch: number   // 0.3
-  orientationStageProxy: number // 0.3
-  visitedStand: number          // 0.25
-  attendedConference: number    // 0.25
-  swipedRight: number           // 0.30
-  dwellTime: number             // 0.20
+  declarative: number              // 0.5
+  behavioural: number              // 0.5
+  fieldInterestOverlap: number     // 0.4
+  educationLevelMatch: number      // 0.3
+  orientationStageProxy: number    // 0.3
+  appointmentBooked: number        // 0.35 — deliberate pre-fair commitment
+  swipedRight: number              // 0.25 — digital preference
+  visitedStand: number             // 0.25 — physical presence
+  attendedConference: number       // 0.15 — adjacent interest
 }
 
 const DEFAULT_WEIGHTS: ScoreWeights = {
@@ -33,10 +33,10 @@ const DEFAULT_WEIGHTS: ScoreWeights = {
   fieldInterestOverlap: 0.4,
   educationLevelMatch: 0.3,
   orientationStageProxy: 0.3,
+  appointmentBooked: 0.35,
+  swipedRight: 0.25,
   visitedStand: 0.25,
-  attendedConference: 0.25,
-  swipedRight: 0.30,
-  dwellTime: 0.20,
+  attendedConference: 0.15,
 }
 
 function fieldInterestOverlap(studentFields: string[], schoolTargetFields: string[]): number {
@@ -71,10 +71,10 @@ export function computeLeadScore(
     weights.orientationStageProxy * orientationStageProxy(student.profile.educationLevel)
 
   const behaviouralScore =
-    weights.visitedStand * (signals.visitedStand ? 1 : 0) +
-    weights.attendedConference * (signals.attendedConference ? 1 : 0) +
+    weights.appointmentBooked * (signals.appointmentBooked ? 1 : 0) +
     weights.swipedRight * (signals.swipedRight ? 1 : 0) +
-    weights.dwellTime * Math.min(signals.dwellMinutes / 30, 1)
+    weights.visitedStand * (signals.visitedStand ? 1 : 0) +
+    weights.attendedConference * (signals.attendedConference ? 1 : 0)
 
   const rawScore = weights.declarative * declarativeScore + weights.behavioural * behaviouralScore
   const value = Math.round(rawScore * 100)

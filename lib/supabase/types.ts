@@ -113,8 +113,19 @@ export type ScanRow = {
   event_id: string
   stand_id: string | null
   session_id: string | null
-  channel: 'entry' | 'stand' | 'conference' | 'exit'
-  dwell_estimate: number | null
+  channel: 'entry' | 'stand' | 'conference'
+  created_at: string
+}
+
+export type AppointmentRow = {
+  id: string
+  student_id: string
+  school_id: string
+  event_id: string
+  slot_time: string        // ISO timestamp of the chosen slot
+  slot_duration: number   // minutes, default 15
+  status: 'pending' | 'confirmed' | 'attended' | 'cancelled'
+  student_notes: string | null
   created_at: string
 }
 
@@ -128,7 +139,7 @@ export type LeadRow = {
   study_wishes: string[]
   stands_visited: string[]
   confs_attended: string[]
-  dwell_minutes: number
+  appointment_booked: boolean  // pre-fair appointment = strongest intent signal
   swipe_result: boolean
   score_value: number
   score_tier: 'exploring' | 'comparing' | 'deciding'
@@ -208,6 +219,11 @@ export type Database = {
         Row: MatchRow
         Insert: Partial<MatchRow> & { student_id: string; school_id: string }
         Update: Partial<MatchRow>
+      }
+      appointments: {
+        Row: AppointmentRow
+        Insert: Partial<AppointmentRow> & { student_id: string; school_id: string; event_id: string; slot_time: string }
+        Update: Partial<AppointmentRow>
       }
       groups: {
         Row: GroupRow
