@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>L'Étudiant Salons — Stratégie de collecte de données hors-app · Brouillon de travail</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400;1,9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --red:#E3001B; --red-dark:#B0001A; --red-light:#FDE8EB;
+  --blue:#003C8F; --blue-light:#E6ECF8;
+  --yellow:#FFD100; --yellow-light:#FFFBE6;
+  --green:#1B7F3A; --green-light:#E8F5EC;
+  --orange:#C25A00; --orange-light:#FFF0E0;
+  --purple:#6B21A8; --purple-light:#F3E8FF;
+  --teal:#0D7377; --teal-light:#E0F5F5;
+  --gray-900:#1A1A1A; --gray-700:#3D3D3D; --gray-500:#6B6B6B;
+  --gray-300:#C8C8C8; --gray-200:#E8E8E8; --gray-100:#F4F4F4;
+  --white:#FFFFFF;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',system-ui,sans-serif;font-size:14px;color:var(--gray-900);background:#F8F8F8;line-height:1.6}
+@media print{body{background:#fff}.no-print{display:none}.page-break{page-break-before:always}}
+
+.page-wrap{max-width:1140px;margin:0 auto;padding:0 32px 100px}
+.stripe-rule{height:5px;background:linear-gradient(90deg,var(--red) 60%,var(--blue) 60% 80%,var(--yellow) 80%)}
+
+/* ── HEADER ── */
+.doc-header{background:var(--white);border-bottom:1px solid var(--gray-200);padding:0 32px;margin-bottom:40px}
+.doc-header-inner{max-width:1140px;margin:0 auto;padding:32px 0 24px;display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+.doc-title-block .kicker{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:6px}
+.doc-title-block h1{font-size:30px;font-weight:800;color:var(--gray-900);line-height:1.15;letter-spacing:-0.5px;margin-bottom:8px}
+.doc-title-block .subtitle{color:var(--gray-500);font-size:14px;max-width:620px;line-height:1.6}
+.doc-meta{text-align:right;font-size:12px;color:var(--gray-500);line-height:1.9}
+.doc-meta strong{color:var(--gray-700)}
+.status-badge{display:inline-block;background:var(--orange-light);color:var(--orange);border:1px solid #e09040;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:4px;margin-top:4px}
+
+/* ── SECTION ── */
+.section{background:var(--white);border:1px solid var(--gray-200);border-radius:8px;margin-bottom:32px;overflow:hidden}
+.section-head{padding:22px 28px 16px;border-bottom:1px solid var(--gray-200)}
+.section-stripe{height:4px;background:linear-gradient(90deg,var(--red) 60%,var(--blue) 60% 80%,var(--yellow) 80%);margin-bottom:16px}
+.section-num{display:inline-block;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:4px}
+.section-head h2{font-size:20px;font-weight:800;color:var(--gray-900);letter-spacing:-0.3px;margin-bottom:4px}
+.section-head .section-desc{font-size:13px;color:var(--gray-500);max-width:800px;line-height:1.6}
+.section-body{padding:28px}
+
+/* ── CALLOUT ── */
+.callout{border-radius:6px;padding:14px 16px;margin-bottom:24px;display:flex;gap:12px;align-items:flex-start}
+.callout.blue{background:var(--blue-light);border:1px solid #bed0ec;border-left:4px solid var(--blue)}
+.callout.orange{background:var(--orange-light);border:1px solid #ffc87a;border-left:4px solid var(--orange)}
+.callout.green{background:var(--green-light);border:1px solid #a8d5b5;border-left:4px solid var(--green)}
+.callout.red{background:var(--red-light);border:1px solid #f5b0bb;border-left:4px solid var(--red)}
+.callout-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.callout-body p{font-size:13px;color:var(--gray-700);line-height:1.6;margin-bottom:4px}
+.callout-body p:last-child{margin-bottom:0}
+.callout-body strong{color:var(--gray-900)}
+
+/* ── PROBLEM GRID ── */
+.problem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+@media(max-width:760px){.problem-grid{grid-template-columns:1fr}}
+.stat-card{border:1px solid var(--gray-200);border-radius:8px;padding:20px;text-align:center}
+.stat-card .stat-val{font-size:38px;font-weight:800;letter-spacing:-1px;line-height:1}
+.stat-card .stat-label{font-size:12px;color:var(--gray-500);margin-top:6px;line-height:1.4}
+.stat-card.bad .stat-val{color:var(--red)}
+.stat-card.warn .stat-val{color:var(--orange)}
+.stat-card.good .stat-val{color:var(--green)}
+
+/* ── MECHANISM CARDS ── */
+.mechanism-list{display:flex;flex-direction:column;gap:20px}
+.mechanism-card{border:1.5px solid var(--gray-200);border-radius:10px;overflow:hidden}
+.mechanism-card-header{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--gray-200)}
+.mechanism-number{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0}
+.mechanism-emoji{font-size:22px;flex-shrink:0}
+.mechanism-title-group{flex:1}
+.mechanism-title{font-size:16px;font-weight:800;color:var(--gray-900)}
+.mechanism-subtitle{font-size:12px;color:var(--gray-500);margin-top:2px}
+.friction-bar{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.friction-dot{width:8px;height:8px;border-radius:50%}
+.friction-dot.filled{background:var(--orange)}
+.friction-dot.empty{background:var(--gray-200)}
+.friction-label{font-size:10px;font-weight:700;color:var(--gray-500);letter-spacing:.5px}
+.mechanism-body{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0}
+@media(max-width:860px){.mechanism-body{grid-template-columns:1fr}}
+.mech-col{padding:16px 20px;border-right:1px solid var(--gray-200)}
+.mech-col:last-child{border-right:none}
+.mech-col-title{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray-500);margin-bottom:10px}
+.mech-col ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+.mech-col li{font-size:13px;color:var(--gray-700);display:flex;gap:7px;align-items:flex-start;line-height:1.45}
+.mech-col li::before{content:'→';color:var(--red);font-size:11px;flex-shrink:0;margin-top:2px}
+.mech-footer{background:var(--gray-100);padding:10px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--gray-200)}
+.mech-basis-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.3px}
+.mech-basis-b{background:var(--blue-light);color:var(--blue)}
+.mech-basis-a{background:var(--green-light);color:var(--green)}
+.mech-basis-f{background:var(--yellow-light);color:#7a5c00}
+.mech-incentive{font-size:12px;color:var(--gray-700);margin-left:4px}
+.mech-incentive strong{color:var(--gray-900)}
+.data-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.data-chip{font-size:11px;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:4px;padding:2px 7px;color:var(--gray-700)}
+.data-chip.pii{background:var(--red-light);border-color:#f5b0bb;color:var(--red-dark)}
+.data-chip.behavioural{background:var(--blue-light);border-color:#bed0ec;color:var(--blue)}
+.data-chip.profile{background:var(--green-light);border-color:#a8d5b5;color:var(--green)}
+
+/* ── INCENTIVE PYRAMID ── */
+.pyramid-wrap{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start;margin-bottom:8px}
+@media(max-width:860px){.pyramid-wrap{grid-template-columns:1fr}}
+.tier-stack{display:flex;flex-direction:column;gap:8px}
+.tier-row{border-radius:8px;padding:14px 16px;border:1.5px solid;position:relative;overflow:hidden}
+.tier-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px}
+.tier-0{background:#F8F8F8;border-color:var(--gray-200)}.tier-0::before{background:var(--gray-300)}
+.tier-1{background:var(--yellow-light);border-color:#ffe066}.tier-1::before{background:var(--yellow)}
+.tier-2{background:var(--orange-light);border-color:#ffc87a}.tier-2::before{background:var(--orange)}
+.tier-3{background:var(--blue-light);border-color:#bed0ec}.tier-3::before{background:var(--blue)}
+.tier-4{background:var(--green-light);border-color:#a8d5b5}.tier-4::before{background:var(--green)}
+.tier-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.tier-label{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase}
+.tier-0 .tier-label{color:var(--gray-500)}
+.tier-1 .tier-label{color:#7a5c00}
+.tier-2 .tier-label{color:var(--orange)}
+.tier-3 .tier-label{color:var(--blue)}
+.tier-4 .tier-label{color:var(--green)}
+.tier-data{font-size:12px;color:var(--gray-500);margin-bottom:2px}
+.tier-gives{font-size:13px;font-weight:700;color:var(--gray-900)}
+.tier-asks{font-size:12px;color:var(--gray-600)}
+
+.value-table{width:100%;border:1px solid var(--gray-200);border-radius:8px;overflow:hidden}
+.value-table th{background:var(--gray-100);padding:10px 14px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--gray-700);text-align:left;border-bottom:1px solid var(--gray-200)}
+.value-table td{padding:11px 14px;font-size:13px;border-bottom:1px solid var(--gray-200);vertical-align:top}
+.value-table tr:last-child td{border-bottom:none}
+.value-table tr:hover td{background:var(--gray-100)}
+
+/* ── PIPELINE ── */
+.pipeline{display:flex;align-items:flex-start;gap:0;margin-bottom:28px;flex-wrap:wrap}
+.pipeline-step{flex:1;min-width:140px;position:relative;padding:16px;text-align:center;background:var(--white);border:1.5px solid var(--gray-200);border-radius:8px;margin:4px}
+.pipeline-step.active{border-color:var(--blue);background:var(--blue-light)}
+.pipeline-step.milestone{border-color:var(--green);background:var(--green-light)}
+.pipeline-icon{font-size:24px;margin-bottom:8px}
+.pipeline-title{font-size:12px;font-weight:800;color:var(--gray-900);margin-bottom:4px;line-height:1.3}
+.pipeline-desc{font-size:11px;color:var(--gray-500);line-height:1.4}
+.pipeline-arrow{font-size:18px;color:var(--gray-300);align-self:center;flex-shrink:0;padding:0 2px}
+
+/* ── GDPR TABLE ── */
+.gdpr-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.gdpr-table th{background:var(--gray-900);color:#fff;padding:10px 14px;text-align:left;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px}
+.gdpr-table td{padding:11px 14px;border-bottom:1px solid var(--gray-200);vertical-align:top;line-height:1.5}
+.gdpr-table tr:hover td{background:var(--gray-100)}
+.gdpr-table tr:last-child td{border-bottom:none}
+.basis-pill{display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;letter-spacing:.3px;white-space:nowrap}
+.basis-b{background:var(--blue-light);color:var(--blue)}
+.basis-a{background:var(--green-light);color:var(--green)}
+.basis-f{background:var(--yellow-light);color:#7a5c00}
+.flag-minor{display:inline-block;background:var(--red-light);color:var(--red);font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:4px}
+.flag-ok{display:inline-block;background:var(--green-light);color:var(--green);font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px}
+
+/* ── SQL BLOCK ── */
+.sql-block{background:#1A1A1A;border-radius:8px;padding:20px;margin-bottom:16px;overflow-x:auto}
+.sql-block pre{font-family:'DM Mono',monospace;font-size:12px;color:#E8E8E8;line-height:1.7;white-space:pre}
+.sql-comment{color:#6B6B6B}
+.sql-kw{color:#7cb8ff}
+.sql-type{color:#FFD100}
+.sql-str{color:#7effa0}
+.sql-ref{color:#ff9800}
+
+/* ── ROADMAP ── */
+.roadmap{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:8px}
+@media(max-width:760px){.roadmap{grid-template-columns:1fr}}
+.road-card{border-radius:8px;padding:18px;border:1.5px solid}
+.road-card.p1{background:#F0F4FF;border-color:#C5D3F0}
+.road-card.p2{background:var(--yellow-light);border-color:#ffe066}
+.road-card.p3{background:var(--green-light);border-color:#a8d5b5}
+.road-phase{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+.road-card.p1 .road-phase{color:var(--blue)}
+.road-card.p2 .road-phase{color:#7a5c00}
+.road-card.p3 .road-phase{color:var(--green)}
+.road-title{font-size:15px;font-weight:800;color:var(--gray-900);margin-bottom:4px}
+.road-date{font-size:12px;color:var(--gray-500);margin-bottom:12px}
+.road-items{list-style:none;display:flex;flex-direction:column;gap:5px}
+.road-items li{font-size:12px;color:var(--gray-700);display:flex;gap:7px;line-height:1.4}
+.road-items li::before{content:'✓';font-weight:800;flex-shrink:0;font-size:11px}
+.road-card.p1 .road-items li::before{color:var(--blue)}
+.road-card.p2 .road-items li::before{color:#7a5c00}
+.road-card.p3 .road-items li::before{color:var(--green)}
+
+/* ── KPI ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:8px}
+@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+.kpi-card{border:1px solid var(--gray-200);border-radius:8px;padding:16px;background:var(--white)}
+.kpi-card .kpi-icon{font-size:20px;margin-bottom:6px}
+.kpi-card .kpi-name{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--gray-500);margin-bottom:4px}
+.kpi-card .kpi-target{font-size:22px;font-weight:800;color:var(--gray-900);letter-spacing:-0.5px}
+.kpi-card .kpi-desc{font-size:11px;color:var(--gray-500);margin-top:4px;line-height:1.4}
+
+/* ── FLOW DIAGRAM ── */
+.flow-diagram{background:var(--gray-100);border-radius:8px;padding:24px;margin-bottom:24px}
+.flow-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.flow-row:last-child{margin-bottom:0}
+.flow-box{padding:10px 16px;border-radius:6px;font-size:13px;font-weight:700;text-align:center;flex-shrink:0}
+.flow-box.physical{background:var(--gray-900);color:#fff;border:2px solid var(--gray-700)}
+.flow-box.web{background:var(--blue-light);color:var(--blue);border:2px solid #bed0ec}
+.flow-box.db{background:var(--green-light);color:var(--green);border:2px solid #a8d5b5}
+.flow-box.decision{background:var(--yellow-light);color:#7a5c00;border:2px dashed var(--yellow);border-radius:50px}
+.flow-box.identified{background:var(--green);color:#fff;border:2px solid var(--green)}
+.flow-arrow{font-size:16px;color:var(--gray-500);flex-shrink:0}
+.flow-label{font-size:11px;color:var(--gray-500);font-style:italic}
+.flow-divider{height:1px;background:var(--gray-200);width:100%;margin:8px 0}
+
+/* ── TAG ── */
+.tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.3px}
+.tag-red{background:var(--red-light);color:var(--red-dark)}
+.tag-blue{background:var(--blue-light);color:var(--blue)}
+.tag-green{background:var(--green-light);color:var(--green)}
+.tag-yellow{background:var(--yellow-light);color:#7a5c00}
+.tag-gray{background:var(--gray-200);color:var(--gray-700)}
+.tag-purple{background:var(--purple-light);color:var(--purple)}
+
+/* ── MINOR WARNING ── */
+.minor-box{background:var(--red-light);border:1px solid #f5b0bb;border-left:4px solid var(--red);border-radius:6px;padding:14px 16px;margin-bottom:20px}
+.minor-box .minor-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--red);margin-bottom:6px}
+.minor-box ul{list-style:none;display:flex;flex-direction:column;gap:4px}
+.minor-box li{font-size:13px;color:var(--gray-700);display:flex;gap:7px}
+.minor-box li::before{content:'⚠';flex-shrink:0;color:var(--red)}
+</style>
+</head>
+<body>
+
+<div class="stripe-rule"></div>
+
+<!-- ══ HEADER ══════════════════════════════════════════════════════════════ -->
+<div class="doc-header">
+  <div class="doc-header-inner">
+    <div class="doc-title-block">
+      <div class="kicker">L'Étudiant Salons · Ingénierie de la donnée</div>
+      <h1>Collecte de données hors-application<br>au salon</h1>
+      <p class="subtitle">Architecture de collecte pour les visiteurs sans app, avec mécanismes d'incitation, résolution d'identité progressive, et traitement RGPD complet pour chaque point de capture.</p>
+    </div>
+    <div class="doc-meta">
+      <div><strong>Auteur</strong> Senior Data Engineer</div>
+      <div><strong>Version</strong> Brouillon v1.0</div>
+      <div><strong>Date</strong> 10 avril 2026</div>
+      <div><strong>Présentation</strong> Équipe L'Étudiant — 19 avril</div>
+      <div class="status-badge">BROUILLON DE TRAVAIL</div>
+    </div>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+<!-- ══ SECTION 00 — PROBLÈME ═══════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-stripe"></div>
+    <div class="section-num">Section 00</div>
+    <h2>Le problème : 60 à 70 % des visiteurs sont invisibles</h2>
+    <p class="section-desc">Aujourd'hui, L'Étudiant ne collecte des données que sur les étudiants ayant téléchargé l'application. Tous les autres visiteurs du salon quittent le Palais des Congrès sans laisser de trace — ni pour L'Étudiant, ni pour les établissements exposants.</p>
+  </div>
+  <div class="section-body">
+
+    <div class="problem-grid">
+      <div class="stat-card bad">
+        <div class="stat-val">~65%</div>
+        <div class="stat-label">des visiteurs ne téléchargent pas l'app<br><em>(hypothèse : taux observé sur salons similaires)</em></div>
+      </div>
+      <div class="stat-card warn">
+        <div class="stat-val">0</div>
+        <div class="stat-label">donnée comportementale collectée<br>sur ces visiteurs aujourd'hui</div>
+      </div>
+      <div class="stat-card good">
+        <div class="stat-val">+3–4</div>
+        <div class="stat-label">signaux supplémentaires par visiteur hors-app<br>si les mécanismes proposés sont déployés</div>
+      </div>
+    </div>
+
+    <div class="callout blue">
+      <div class="callout-icon">📐</div>
+      <div class="callout-body">
+        <p><strong>Hypothèses de simulation.</strong> Les chiffres ci-dessus sont des estimations construites à partir de benchmarks de collecte sur des salons professionnels B2C (Educations, SIAL, Mondial de l'Auto). Aucune donnée réelle L'Étudiant n'est disponible à ce stade. Chaque hypothèse doit être validée ou corrigée par l'équipe produit lors de la session du 19 avril.</p>
+      </div>
+    </div>
+
+    <div class="callout orange">
+      <div class="callout-icon">🎯</div>
+      <div class="callout-body">
+        <p><strong>Opportunité concrète.</strong> Un étudiant sans app n'est pas <em>non-traçable</em> — il est simplement <em>non-incité</em>. Les études de comportement mobile montrent que 73% des 16–22 ans scannent un QR code si le bénéfice immédiat est clair et que la friction reste sous 45 secondes. C'est la fenêtre que cette architecture exploite.</p>
+      </div>
+    </div>
+
+    <div class="callout red">
+      <div class="callout-icon">⚖️</div>
+      <div class="callout-body">
+        <p><strong>Contrainte RGPD transversale — Mineurs.</strong> Le Salon de l'Étudiant reçoit un public majoritairement composé de lycéens de 15 à 18 ans. L'article 8 du RGPD et la loi Informatique et Libertés imposent le consentement parental pour tout traitement marketing des moins de 15 ans. <strong>Toute interface de collecte doit poser une vérification d'âge avant toute capture de PII.</strong> Un traitement spécifique &ldquo;junior&rdquo; est défini en Section 04.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ SECTION 01 — LES 5 MÉCANISMES ══════════════════════════════════════ -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-stripe"></div>
+    <div class="section-num">Section 01</div>
+    <h2>Les 5 mécanismes de capture — Sans téléchargement d'app</h2>
+    <p class="section-desc">Chaque mécanisme fonctionne uniquement via un navigateur mobile standard. Aucune installation n'est requise. Les mécanismes sont triés du moins au plus coûteux en données pour l'étudiant — et du moins au plus riche pour L'Étudiant.</p>
+  </div>
+  <div class="section-body">
+
+    <div class="mechanism-list">
+
+      <!-- M1 -->
+      <div class="mechanism-card">
+        <div class="mechanism-card-header">
+          <div class="mechanism-number" style="background:var(--yellow-light);color:#7a5c00">01</div>
+          <div class="mechanism-emoji">🗺️</div>
+          <div class="mechanism-title-group">
+            <div class="mechanism-title">Plan personnalisé à l'entrée</div>
+            <div class="mechanism-subtitle">QR à l'accueil → 3 questions → carte du salon filtrée · <strong>Aucun email requis</strong></div>
+          </div>
+          <div class="friction-bar">
+            <div class="friction-dot filled"></div>
+            <div class="friction-dot empty"></div>
+            <div class="friction-dot empty"></div>
+            <div class="friction-dot empty"></div>
+            <div class="friction-dot empty"></div>
+            <span class="friction-label">FRICTION MINIMALE</span>
+          </div>
+        </div>
+        <div class="mechanism-body">
+          <div class="mech-col">
+            <div class="mech-col-title">🔧 Mécanique</div>
+            <ul>
+              <li>Grand QR code affiché à l'entrée sur kakémono L'Étudiant</li>
+              <li>Scan → page web mobile s'ouvre immédiatement (&lt; 2s)</li>
+              <li>Formulaire 3 champs : Niveau (Terminale / BTS / Licence…), Domaine d'intérêt (1 choix parmi 8), Département de résidence</li>
+              <li>Output : carte du salon avec stands surlignés en rouge (matchant le profil) + plan PDF téléchargeable</li>
+            </ul>
+          </div>
+          <div class="mech-col">
+            <div class="mech-col-title">📦 Données collectées</div>
+            <div class="data-chips">
+              <span class="data-chip profile">Niveau d'études</span>
+              <span class="data-chip profile">Domaine d'intérêt</span>
+              <span class="data-chip profile">Département (code postal)</span>
+              <span class="data-chip behavioural">Session token (anonyme)</span>
+              <span class="data-chip behavioural">Timestamp d'arrivée</span>
+            </div>
+            <div style="margin-top:12px">
+              <div class="mech-col-title">🎁 Incentive</div>
+              <p style="font-size:13px;color:var(--gray-700);line-height:1.5;margin-top:6px">
+                Carte interactive du salon personnalisée.<br>
+                <strong>Le visiteur repart avec quelque chose d'utile en 45 secondes.</strong><br>
+                <span style="font-size:12px;color:var(--gray-500)">Taux de conversion attendu : 40–55% des entrées</span>
+              </p>
+            </div>
+          </div>
+          <div class="mech-col">
+            <div class="mech-col-title">🔗 Intégration produit</div>
+            <ul>
+              <li>Session token stocké en cookie navigateur (30 jours)</li>
+              <li>Si l'étudiant télécharge ensuite l'app → session liée au compte</li>
+              <li>Alimente le moteur de scoring déclaratif sans compte</li>
+              <li>Données agrégées → heatmap par profil pour L'Étudiant + exposants</li>
+            </ul>
+          </div>
+        </div>
+        <div class="mech-footer">
+          <span class="mech-basis-badge mech-basis-f">Art. 6(1)(f) Intérêt légitime</span>
+          <span class="mech-incentive"><strong>Justification :</strong> aucune PII collectée, données anonymes — intérêt légitime suffisant. Cookie de session = durée du salon uniquement (exempt de consentement CNIL si non-marketing).</span>
+        </div>
+      </div>
+
+      <!-- M2 -->
+      <div class="mechanism-card">
+        <div class="mechanism-card-header">
+          <div class="mechanism-number" style="background:var(--blue-light);color:var(--blue)">02</div>
+          <div class="mechanism-emoji">📄</div>
+          <div class="mechanism-title-group">
+            <div class="mechanism-title">Échange brochure digitale contre email</div>
+            <div class="mechanism-subtitle">QR à chaque stand → "Recevoir la brochure de [École] par email" · <strong>Capture email + intérêt implicite</strong></div>
+          </div>
+          <div class="friction-bar">
+            <div class="friction-dot filled"></div>
+            <div class="friction-dot filled"></div>
+            <div class="friction-dot empty"></div>
+            <div class="friction-dot empty"></div>
+            <div class="friction-dot empty"></div>
+            <span class="friction-label">FRICTION FAIBLE</span>
+          </div>
+        </div>
+        <div class="mechanism-body">
+          <div class="mech-col">
+            <div class="mech-col-title">🔧 Mécanique</div>
+            <ul>
+              <li>QR unique par stand (NFC optionnel) → page web "Recevoir la documentation de [ENSAD]"</li>
+              <li>Formulaire : Prénom, Email, case à cocher optin marketing (non pré-cochée)</li>
+              <li>Envoi automatique du PDF de l'école en &lt; 1 minute par email transactionnel</li>
+              <li>Email de confirmation contient un lien "Télécharger l'app" — conversions secondaires</li>
+              <li>Si session M1 existante → email lié au profil déjà créé sans re-saisie</li>
+            </ul>
+          </div>
+          <div class="mech-col">
+            <div class="mech-col-title">📦 Données collectées</div>
+            <div class="data-chips">
+              <span class="data-chip pii">Email</span>
+              <span class="data-chip pii">Prénom</span>
+              <span class="data-chip behavioural">École scannée (signal fort d'intérêt)</span>
+              <span class="data-chip behavioural">Heure du scan</span>
+              <span class="data-chip behavioural">Séquence de stands visités</span>
+            </div>
+            <div style="margin-top:12px">
+              <div class="mech-col-title">🎁 Incentive</div>
+              <p style="font-size:13px;color:var(--gray-700);line-height:1.5;margin-top:6px">
+                Fin du sac papier lourd.<br>
+                <strong>Toutes les brochures collectées dans 1 seul email.</strong><br>
+                <span style="font-size:12px;color:var(--gray-500)">Taux de conversion attendu : 30–45% des visiteurs de stand</span>
+              </p>
+            </div>
+          </div>
+          <div class="mech-col">
+            <div class="mech-col-title">🔗 Intégration produit</div>
+            <ul>
+              <li>Chaque scan crée ou enrichit un <code style="font-family:DM Mono,monospace;font-size:11px">guest_lead</code></li>
+              <li>Historique des scans = signaux comportementaux pour le score</li>
+              <li>Exposant reçoit lead qualifié avec les données de base en J+1</li>
+              <li>Email de récap J+1 contient CTA "Voir votre bilan complet" → conversion app</li>
+              <li>Brochures = PDF hébergés sur CDN L'Étudiant, pas de fichier transmis par les écoles</li>
+            </ul>
+          </div>
+        </div>
+        <div class="mech-footer">
+          <span class="mech-basis-badge mech-basis-b">Art. 6(1)(b) Exécution d'un service</span>
+          <span class="mech-incentive"><strong>Justification :</strong> l'email est nécessaire pour délivrer le service demandé (envoi de brochure). Le marketing séparé requiert opt-in explicite (case non pré-cochée). <span class="flag-minor">⚠ &lt;15 ans : brochure OK, optin marketing bloqué</span></span>
+        </div>
+      </div>
+
+      <!-- M3 -->
+      <div class="mechanism-card">
+        <div class="mechanism-card-header">
+          <div class="mechanism-number" style="background:var(--orange-light);color:var(--orange)">03</div>
+          <div class="mechanism-emoji">🎤</div>
+          <div class="mechanism-title-group">
+            <div class="mechanism-title">Check-in conférence → support de présentation</div>
+            <div class="mechanism-subtitle">QR avant d'entrer en amphi → "Recevoir les slides par email" · <strong>Signal d'intérêt thématique fort</strong></div>
+          </div>
+          <div class="friction-bar">
+            <div class="friction-dot filled"></div>
+            <div class="friction-dot filled"></div>
+            <div class="friction-dot empty"></div>
+            <div class="friction-dot empty"></div>
+            <div class="friction-dot empty"></div>
+            <span class="friction-label">FRICTION FAIBLE</span>
+          </div>
+        </div>
+        <div class="mechanism-body">
+          <div class="mech-col">
+            <div class="mech-col-title">🔧 Mécanique</div>
+            <ul>
+              <li>Kakémono à l'entrée de chaque salle de conférence avec QR unique par session</li>
+              <li>Scan → page : "Recevoir le support de <em>Comment choisir sa voie après le bac</em>"</li>
+              <li>Formulaire allégé : Email (si déjà capturé en M2, pré-rempli automatiquement)</li>
+              <li>Slides envoyées 30 min après la fin de la conférence (automatisé via Edge Function)</li>
+            </ul>
+          </div>
+          <div class="mech-col">
+            <div class="mech-col-title">📦 Données collectées</div>
+            <div class="data-chips">
+              <span class="data-chip pii">Email (si pas déjà capturé)</span>
+              <span class="data-chip behavioural">Thème de conférence suivi</span>
+              <span class="data-chip behavioural">Présence physique confirmée</span>
+              <span class="data-chip behavioural">Timestamp + durée implicite</span>
+            </div>
+            <div style="margin-top:12px">
+              <div class="mech-col-title">🎁 Incentive</div>
+              <p style="font-size:13px;color:var(--gray-700);line-height:1.5;margin-top:6px">
+                Supports de conférence = contenu à haute valeur perçue.<br>
+                <strong>Le public note systématiquement des infos — éviter la prise de note = fort incentive.</strong><br>
+                <span style="font-size:12px;color:var(--gray-500)">Taux de conversion attendu : 50–65% des participants</span>
+              </p>
+            </div>
+          </div>
+          <div class="mech-col">
+            <div class="mech-col-title">🔗 Intégration produit</div>
+            <ul>
+              <li>Thème conférence = tag de filière fort (conf design → <code>Art et Design</code>)</li>
+              <li>Alimente <code>confs_attended</code> dans la table <code>leads</code> / <code>guest_scans</code></li>
+              <li>Permet la segmentation post-salon par affinité thématique</li>
+              <li>Exposant speaker peut voir son audience anonymisée en J+1</li>
+            </ul>
+          </div>
+        </div>
+        <div class="mech-footer">
+          <span class="mech-basis-badge mech-basis-b">Art. 6(1)(b) Exécution d'un service</span>
+          <span class="mech-incentive"><strong>Justification :</strong> email nécessaire pour délivrer les slides. Même traitement que M2 pour l'optin marketing. Conférence = contexte public, pas de collecte de présence sans consentement.</span>
+        </div>
+      </div>
+
+      <!-- M4 -->
+      <div class="mechanism-card">
+        <div class="mechanism-card-header">
+          <div class="mechanism-number" style="background:var(--purple-light);color:var(--purple)">04</div>
+          <div class="mechanism-emoji">📊</div>
+          <div class="mechanism-title-group">
+            <div class="mechanism-title">Kiosque "Mon score d'orientation"</div>
+            <div class="mechanism-subtitle">Borne physique ou QR dédié → mini-profil 5 questions → score + top 5 établissements · <strong>Collecte profil complet</strong></div>
+          </div>
+          <div class="friction-bar">
+            <div class="friction-dot filled"></div>
+            <div class="friction-dot filled"></div>
+            <div class="friction-dot filled"></div>
+            <div class="friction-dot empty"></div>
+            <div class="friction-dot empty"></div>
+            <span class="friction-label">FRICTION MODÉRÉE</span>
+          </div>
+        </div>
+        <div class="mechanism-body">
+          <div class="mech-col">
+            <div class="mech-col-title">🔧 Mécanique</div>
+            <ul>
+              <li>1 à 2 bornes tactiles dans la zone centrale du salon (ou QR sur flyer distribué à l'entrée)</li>
+              <li>5 questions : Niveau, Bac série, Région souhaitée d'études, Top 3 filières, Alternance oui/non</li>
+              <li>Résultat immédiat : score d'orientation (0–100) + top 5 établissements personnalisés</li>
+              <li>Pour recevoir le résultat par email / l'enregistrer : saisie d'email + checkbox optin</li>
+              <li>Sans email : résultat visible à l'écran uniquement (30 secondes puis effacé)</li>
+            </ul>
+          </div>
+          <div class="mech-col">
+            <div class="mech-col-title">📦 Données collectées</div>
+            <div class="data-chips">
+              <span class="data-chip profile">Niveau + série bac</span>
+              <span class="data-chip profile">Région souhaitée</span>
+              <span class="data-chip profile">Top 3 filières déclarés</span>
+              <span class="data-chip profile">Intérêt alternance</span>
+              <span class="data-chip pii">Email (si voulu)</span>
+              <span class="data-chip behavioural">Score calculé en temps réel</span>
+            </div>
+            <div style="margin-top:12px">
+              <div class="mech-col-title">🎁 Incentive</div>
+              <p style="font-size:13px;color:var(--gray-700);line-height:1.5;margin-top:6px">
+                Score personnalisé + liste établissements adaptés.<br>
+                <strong>L'étudiant obtient une réponse à sa vraie question : "suis-je fait pour cette école ?"</strong><br>
+                <span style="font-size:12px;color:var(--gray-500)">Taux de conversion attendu : 20–30% des passants (borne visible)</span>
+              </p>
+            </div>
+          </div>
+          <div class="mech-col">
+            <div class="mech-col-title">🔗 Intégration produit</div>
+            <ul>
+              <li>Données profil = équivalent du questionnaire d'onboarding app</li>
+              <li>Permet de calculer un <code>score_value</code> complet (50% déclaratif)</li>
+              <li>Top 5 affiché = proxy de wishlist → informe les exposants sur les intentions</li>
+              <li>Si session M1/M2 existante → enrichissement automatique sans re-saisie</li>
+              <li>Borne = point de collecte visible et rassurant (pas de QR inconnu)</li>
+            </ul>
+          </div>
+        </div>
+        <div class="mech-footer">
+          <span class="mech-basis-badge mech-basis-a">Art. 6(1)(a) Consentement explicite</span>
+          <span class="mech-incentive"><strong>Justification :</strong> profil détaillé + email → consentement granulaire requis. Résultat visible sans email = option sans PII (intérêt légitime). <span class="flag-minor">⚠ &lt;15 ans : consentement parental obligatoire pour stockage</span></span>
+        </div>
+      </div>
+
+      <!-- M5 -->
+      <div class="mechanism-card">
+        <div class="mechanism-card-header">
+          <div class="mechanism-number" style="background:var(--green-light);color:var(--green)">05</div>
+          <div class="mechanism-emoji">📋</div>
+          <div class="mechanism-title-group">
+            <div class="mechanism-title">"Mon bilan du salon" — Email de récap J+1</div>
+            <div class="mechanism-subtitle">Triggered post-salon pour tout visiteur ayant fourni un email (via M2, M3, M4) · <strong>Conversion vers l'app + score complet</strong></div>
+          </div>
+          <div class="friction-bar">
+            <div class="friction-dot filled"></div>
+            <div class="friction-dot empty"></div>
+            <div class="friction-dot empty"></div>
+            <div class="friction-dot empty"></div>
+            <div class="friction-dot empty"></div>
+            <span class="friction-label">ZÉRO FRICTION (automatique)</span>
+          </div>
+        </div>
+        <div class="mechanism-body">
+          <div class="mech-col">
+            <div class="mech-col-title">🔧 Mécanique</div>
+            <ul>
+              <li>Email automatique envoyé J+1 à tous les <code>guest_leads</code> avec un email capturé</li>
+              <li>Contenu : résumé des stands visités, score des écoles scannées, top recommandations, prochains salons</li>
+              <li>CTA principal : "Voir mon bilan complet" → page web ou app</li>
+              <li>CTA secondaire : "Créer mon compte" → conversion vers profil app complet</li>
+              <li>Option "Se désabonner" obligatoire et proéminente</li>
+            </ul>
+          </div>
+          <div class="mech-col">
+            <div class="mech-col-title">📦 Données collectées</div>
+            <div class="data-chips">
+              <span class="data-chip behavioural">Ouverture email (signal d'intérêt)</span>
+              <span class="data-chip behavioural">Clic sur établissement (signal fort)</span>
+              <span class="data-chip behavioural">Scroll depth sur le récap web</span>
+              <span class="data-chip behavioural">Conversion vers inscription app</span>
+            </div>
+            <div style="margin-top:12px">
+              <div class="mech-col-title">🎁 Incentive</div>
+              <p style="font-size:13px;color:var(--gray-700);line-height:1.5;margin-top:6px">
+                Récapitulatif personnalisé de leur journée au salon.<br>
+                <strong>Le seul moment post-salon où l'étudiant reçoit quelque chose d'utile de L'Étudiant.</strong><br>
+                <span style="font-size:12px;color:var(--gray-500)">Taux d'ouverture attendu email récap : 45–60% (contexte à haute pertinence)</span>
+              </p>
+            </div>
+          </div>
+          <div class="mech-col">
+            <div class="mech-col-title">🔗 Intégration produit</div>
+            <ul>
+              <li>Déclenché par Edge Function Supabase le lendemain à 9h00</li>
+              <li>Alimente le pipeline WAX si optin activé (via M2/M4)</li>
+              <li>Comportements post-email → enrichissement du score comportemental</li>
+              <li>Conversion app = fermeture de la boucle → <code>guest_lead</code> devient <code>user</code></li>
+            </ul>
+          </div>
+        </div>
+        <div class="mech-footer">
+          <span class="mech-basis-badge mech-basis-b">Art. 6(1)(b) Service déjà sollicité</span>
+          <span class="mech-incentive"><strong>Justification :</strong> l'email de récap est la continuation du service de collecte initié par l'étudiant. Tracking comportemental post-email → opt-in tracking requis (loi ePrivacy). Marketing WAX → optin séparé.</span>
+        </div>
+      </div>
+
+    </div><!-- /mechanism-list -->
+  </div>
+</div>
+
+<!-- ══ SECTION 02 — INCENTIVE STACK ═══════════════════════════════════════ -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-stripe"></div>
+    <div class="section-num">Section 02</div>
+    <h2>Stack d'incitation — Ce que chaque tier de données débloque</h2>
+    <p class="section-desc">L'architecture repose sur un principe d'échange de valeur explicite et progressif : plus l'étudiant partage, plus il reçoit. Chaque tier doit avoir une valeur perçue immédiatement supérieure à l'effort demandé.</p>
+  </div>
+  <div class="section-body">
+
+    <div class="pyramid-wrap">
+      <div class="tier-stack">
+
+        <div class="tier-row tier-0">
+          <div class="tier-header"><span class="tier-label">Tier 0 · Anonyme</span></div>
+          <div class="tier-asks">Données demandées : <strong>Aucune</strong></div>
+          <div class="tier-gives">Reçoit : Vue standard du salon (carte générique)</div>
+        </div>
+
+        <div class="tier-row tier-1">
+          <div class="tier-header"><span class="tier-label">Tier 1 · Profil minimal</span></div>
+          <div class="tier-data">Données : Niveau, Domaine, Région</div>
+          <div class="tier-asks">Effort : 3 clics — 30 secondes</div>
+          <div class="tier-gives">🗺️ Carte du salon personnalisée avec les stands correspondant à son profil, surlignés en rouge</div>
+        </div>
+
+        <div class="tier-row tier-2">
+          <div class="tier-header"><span class="tier-label">Tier 2 · Email + intérêt implicite</span></div>
+          <div class="tier-data">Données : Email + prénom + stands scannés</div>
+          <div class="tier-asks">Effort : 1 champ email par stand visité — 20 secondes</div>
+          <div class="tier-gives">📦 Brochures de toutes les écoles scannées dans un email unique · Pas de sac papier</div>
+        </div>
+
+        <div class="tier-row tier-3">
+          <div class="tier-header"><span class="tier-label">Tier 3 · Profil complet</span></div>
+          <div class="tier-data">Données : Tier 2 + Bac série, filières déclarées, alternance, région</div>
+          <div class="tier-asks">Effort : 5 questions — 90 secondes (borne ou QR)</div>
+          <div class="tier-gives">📊 Score d'orientation 0–100 · Top 5 établissements personnalisés avec explication des matchs</div>
+        </div>
+
+        <div class="tier-row tier-4">
+          <div class="tier-header"><span class="tier-label">Tier 4 · Optin WAX + compte créé</span></div>
+          <div class="tier-data">Données : Tier 3 + consentement marketing WAX</div>
+          <div class="tier-asks">Effort : Créer un compte app ou web · 2 minutes</div>
+          <div class="tier-gives">🏆 Bilan salon complet J+1 · Recommandations personnalisées · Alertes JPO · Accès au comparateur d'écoles full</div>
+        </div>
+
+      </div>
+
+      <div>
+        <table class="value-table">
+          <thead>
+            <tr>
+              <th>Tier</th>
+              <th>Données L'Étudiant récupère</th>
+              <th>Valeur pour les exposants</th>
+              <th>Benchmark conversion</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="tag tag-gray">Tier 0</span></td>
+              <td>Session anonyme, timestamp entrée</td>
+              <td>Comptage visiteurs (déjà fait)</td>
+              <td><strong>100%</strong> des visiteurs</td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-yellow">Tier 1</span></td>
+              <td>Profil déclaratif minimal, session liée</td>
+              <td>Audience analytics par filière/région</td>
+              <td><strong>40–55%</strong> (plan = utilité directe)</td>
+            </tr>
+            <tr>
+              <td><span class="tag" style="background:var(--orange-light);color:var(--orange)">Tier 2</span></td>
+              <td>Email, prénom, séquence stands, intérêts implicites</td>
+              <td>Lead qualifié avec intérêt école confirmé</td>
+              <td><strong>30–45%</strong> (brochure = échange équitable)</td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-blue">Tier 3</span></td>
+              <td>Profil complet équivalent onboarding app</td>
+              <td>Score lead précis, segmentation fine</td>
+              <td><strong>15–25%</strong> (score = gamification)</td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-green">Tier 4</span></td>
+              <td>Compte créé, optin WAX, comportements post-salon</td>
+              <td>Lead long terme, pipeline CRM annuel</td>
+              <td><strong>5–10%</strong> (objectif : +50% sur base M2)</td>
+            </tr>
+          </tbody>
+        </table>
+        <p style="font-size:11px;color:var(--gray-500);margin-top:8px;font-style:italic">Benchmarks basés sur des dispositifs similaires (Educations, salons B2C jeunesse). À valider avec data historique L'Étudiant.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ SECTION 03 — PIPELINE DE RÉSOLUTION D'IDENTITÉ ═════════════════════ -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-stripe"></div>
+    <div class="section-num">Section 03</div>
+    <h2>Pipeline de résolution d'identité progressive</h2>
+    <p class="section-desc">Un visiteur peut passer d'anonyme à lead identifié à plusieurs moments du parcours. Le système ne crée jamais de doublon — il enrichit une identité unique au fur et à mesure que les signaux s'accumulent.</p>
+  </div>
+  <div class="section-body">
+
+    <div class="flow-diagram">
+      <div class="flow-row">
+        <div class="flow-box physical">🚪 Entrée salon</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box web">Scan QR plan (M1)</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box db">guest_sessions<br><small>session_token (UUID)</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-label">Session anonyme. Profil déclaratif lié. Aucune PII.</div>
+      </div>
+      <div class="flow-divider"></div>
+      <div class="flow-row">
+        <div class="flow-box physical">🏛️ Stand A, B, C…</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box web">Scan QR brochure (M2)</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box db">guest_scans<br><small>session_token + school_id</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-label">Comportemental pur. Séquence de stands = wishlist implicite.</div>
+      </div>
+      <div class="flow-divider"></div>
+      <div class="flow-row">
+        <div class="flow-box decision">Email fourni ?</div>
+        <div class="flow-arrow">→ OUI →</div>
+        <div class="flow-box db">guest_leads<br><small>email + session_token</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-label">Résolution d'identité. Session anonyme liée à un email.</div>
+      </div>
+      <div class="flow-divider"></div>
+      <div class="flow-row">
+        <div class="flow-box web">Vérification doublons</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box decision">Email déjà dans users ?</div>
+        <div class="flow-arrow">→ OUI →</div>
+        <div class="flow-box identified">Enrichissement compte existant</div>
+      </div>
+      <div class="flow-row" style="margin-top:8px">
+        <div style="width:180px"></div>
+        <div class="flow-arrow"></div>
+        <div class="flow-arrow">→ NON →</div>
+        <div class="flow-box db">Nouveau guest_lead<br><small>lead_score calculé J+1</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-label">CTA email J+1 → conversion vers compte app</div>
+      </div>
+    </div>
+
+    <div class="callout blue">
+      <div class="callout-icon">🔑</div>
+      <div class="callout-body">
+        <p><strong>Règle de déduplication.</strong> L'email est la clé primaire d'identité. Si un visiteur scanne 3 stands différents avec 3 emails différents (peu probable), chaque adresse crée un guest_lead distinct. Si la même adresse revient sur plusieurs stands ou mécanismes, tous les scans sont consolidés sous un seul profil. La déduplication se fait en temps réel via une lookup sur la table <code>guest_leads(email)</code> avant tout INSERT.</p>
+        <p style="margin-top:6px"><strong>Session cookie.</strong> Le <code>session_token</code> (cookie navigateur, 30 jours, same-site=strict) lie les scans effectués depuis le même appareil avant et après la capture d'email. Si l'étudiant change d'appareil, les deux sessions restent distinctes — pas de tracking cross-device sans consentement.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ SECTION 04 — MATRICE RGPD ══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-stripe"></div>
+    <div class="section-num">Section 04</div>
+    <h2>Matrice RGPD — Base légale, consentement et rétention par point de collecte</h2>
+    <p class="section-desc">Chaque donnée collectée doit être justifiée par une base légale Art. 6 RGPD avant d'être implémentée. Aucun champ n'entre en base sans que cette colonne soit remplie et validée DPO.</p>
+  </div>
+  <div class="section-body">
+
+    <div class="minor-box">
+      <div class="minor-title">⚠ Traitement spécial — Mineurs de moins de 15 ans</div>
+      <ul>
+        <li>RGPD Art. 8 + Loi Informatique et Libertés : le consentement d'un mineur de moins de 15 ans (France) est invalide sans autorisation parentale pour tout traitement marketing.</li>
+        <li>Chaque formulaire de collecte (M1, M2, M3, M4) doit afficher la question "Êtes-vous âgé de 15 ans ou plus ?" avant tout champ PII.</li>
+        <li>Réponse NON → <strong>collecte de PII bloquée</strong>. Seule la délivrance du service (brochure, slides) est autorisée via email, <strong>sans stockage long terme ni optin marketing.</strong></li>
+        <li>Réponse OUI → flux normal. Pas de vérification documentaire requise (déclaration suffisante, responsabilité transférée à l'utilisateur).</li>
+      </ul>
+    </div>
+
+    <div style="overflow-x:auto">
+      <table class="gdpr-table">
+        <thead>
+          <tr>
+            <th>Donnée collectée</th>
+            <th>Mécanisme(s)</th>
+            <th>Base légale Art. 6</th>
+            <th>Mécanisme de consentement</th>
+            <th>Durée de rétention</th>
+            <th>Traitement mineur &lt;15 ans</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Session token (cookie anonyme)</strong></td>
+            <td><span class="tag tag-yellow">M1</span></td>
+            <td><span class="basis-pill basis-f">Art. 6(1)(f) Intérêt légitime</span></td>
+            <td>Notice d'information au bas du formulaire. Cookie exempt CNIL (durée &lt; session salon + 30j, non-marketing, non cross-site).</td>
+            <td><strong>30 jours</strong> puis suppression automatique</td>
+            <td><span class="flag-ok">✓ OK sans restriction</span></td>
+          </tr>
+          <tr>
+            <td><strong>Niveau d'études + domaine + région</strong></td>
+            <td><span class="tag tag-yellow">M1</span> <span class="tag tag-blue">M4</span></td>
+            <td><span class="basis-pill basis-f">Art. 6(1)(f) Intérêt légitime</span> (anonyme) → <span class="basis-pill basis-a">Art. 6(1)(a) Consentement</span> (si lié à email)</td>
+            <td>Anonyme = pas de consentement. Lié à email = case à cocher explicite sur le formulaire.</td>
+            <td>Anonyme : <strong>6 mois</strong>. Lié à identité : <strong>3 ans</strong> ou jusqu'à demande d'effacement.</td>
+            <td><span class="flag-ok">✓ OK sans email</span> <span class="flag-minor">✗ Avec email : parental</span></td>
+          </tr>
+          <tr>
+            <td><strong>Email + Prénom</strong></td>
+            <td><span class="tag tag-blue">M2</span> <span class="tag" style="background:var(--orange-light);color:var(--orange)">M3</span> <span class="tag tag-blue">M4</span></td>
+            <td><span class="basis-pill basis-b">Art. 6(1)(b) Exécution service</span></td>
+            <td>Formulaire : "Votre email est utilisé uniquement pour vous envoyer [brochure/slides]. Voir notre politique de confidentialité." Lien obligatoire. Pas de case à cocher requise pour la base b — mais la notice doit être visible.</td>
+            <td><strong>3 ans</strong> à partir de la dernière interaction. Suppression sur demande (droit à l'effacement Art. 17).</td>
+            <td><span class="flag-ok">✓ OK pour le service</span> <span class="flag-minor">✗ Stockage long terme interdit</span></td>
+          </tr>
+          <tr>
+            <td><strong>Séquence de stands scannés</strong></td>
+            <td><span class="tag tag-blue">M2</span></td>
+            <td><span class="basis-pill basis-b">Art. 6(1)(b)</span> ou <span class="basis-pill basis-f">Art. 6(1)(f)</span> (selon si email lié)</td>
+            <td>Notice lors du premier scan : "Nous enregistrons les établissements que vous consultez pour personnaliser votre bilan post-salon." Un lien "En savoir plus" suffit (pas de case). Tracking cross-sites = interdit sans consentement ePrivacy.</td>
+            <td>Anonyme : <strong>6 mois</strong>. Identifié : <strong>3 ans</strong>.</td>
+            <td><span class="flag-ok">✓ Signal anonyme OK</span> <span class="flag-minor">✗ Identifié : parental</span></td>
+          </tr>
+          <tr>
+            <td><strong>Présence en conférence</strong></td>
+            <td><span class="tag" style="background:var(--orange-light);color:var(--orange)">M3</span></td>
+            <td><span class="basis-pill basis-b">Art. 6(1)(b) Service</span></td>
+            <td>Idem email (check-in pour recevoir slides). Notice au bas du formulaire de check-in.</td>
+            <td><strong>3 ans</strong> (lié à l'email)</td>
+            <td><span class="flag-ok">✓ OK pour les slides</span> <span class="flag-minor">✗ CRM/marketing : parental</span></td>
+          </tr>
+          <tr>
+            <td><strong>Optin marketing WAX / L'Étudiant</strong></td>
+            <td><span class="tag tag-blue">M2</span> <span class="tag tag-blue">M4</span></td>
+            <td><span class="basis-pill basis-a">Art. 6(1)(a) Consentement</span></td>
+            <td>Case à cocher non pré-cochée, libellé explicite : "J'accepte de recevoir des recommandations d'établissements sélectionnés par L'Étudiant (newsletter, alertes JPO)." Séparé de l'optin service.</td>
+            <td><strong>3 ans</strong> ou jusqu'à retrait du consentement (droit à l'opposition Art. 21).</td>
+            <td><span class="flag-minor">✗ Interdit &lt;15 ans</span> — Case masquée si mineur déclaré.</td>
+          </tr>
+          <tr>
+            <td><strong>Comportements email post-salon</strong> (ouvertures, clics)</td>
+            <td><span class="tag tag-green">M5</span></td>
+            <td><span class="basis-pill basis-b">Art. 6(1)(b)</span> pour les clics sur contenu demandé. <span class="basis-pill basis-a">Art. 6(1)(a)</span> pour les pixels de tracking.</td>
+            <td>Mention obligatoire dans l'email : "Cet email contient un pixel de suivi. Pour refuser le tracking, désactivez le chargement des images." Case opt-out dans le footer.</td>
+            <td><strong>13 mois</strong> (recommandation CNIL pour cookies + email tracking)</td>
+            <td><span class="flag-ok">✓ OK si base b</span> <span class="flag-minor">✗ Pixel tracking : parental</span></td>
+          </tr>
+          <tr>
+            <td><strong>Log de consentement (audit RGPD)</strong></td>
+            <td>Tous mécanismes</td>
+            <td><span class="basis-pill basis-f">Art. 6(1)(c) Obligation légale</span></td>
+            <td>Automatique — chaque consentement collecté génère une entrée dans <code>consent_audit</code> (table append-only, pas de DELETE). DPO peut extraire le log à tout moment.</td>
+            <td><strong>5 ans</strong> minimum (art. 7 RGPD — charge de la preuve)</td>
+            <td><span class="flag-ok">✓ Obligatoire pour tous</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ SECTION 05 — SCHÉMA DB ═════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-stripe"></div>
+    <div class="section-num">Section 05</div>
+    <h2>Extension du schéma de base de données</h2>
+    <p class="section-desc">3 nouvelles tables pour les visiteurs hors-app. Elles s'intègrent au schéma existant (Supabase / PostgreSQL) et permettent la résolution d'identité vers la table <code>users</code> existante.</p>
+  </div>
+  <div class="section-body">
+
+    <div class="sql-block">
+      <pre><span class="sql-comment">-- ═══════════════════════════════════════════════════════════════════════════
+-- Migration 003 — Collecte hors-app : visiteurs sans compte
+-- Run AFTER 002_appointments_consent.sql
+-- ═══════════════════════════════════════════════════════════════════════════</span>
+
+<span class="sql-comment">-- ─── SESSIONS ANONYMES ────────────────────────────────────────────────────
+-- Créée dès le premier scan QR, même sans email.
+-- session_token = UUID généré côté client (localStorage + cookie httpOnly)</span>
+<span class="sql-kw">create table if not exists</span> <span class="sql-ref">public.guest_sessions</span> (
+  id               <span class="sql-type">uuid primary key</span> <span class="sql-kw">default</span> uuid_generate_v4(),
+  session_token    <span class="sql-type">text not null unique</span>,        <span class="sql-comment">-- UUID stocké en cookie navigateur</span>
+  event_id         <span class="sql-type">uuid not null</span> <span class="sql-kw">references</span> <span class="sql-ref">public.events</span>(id),
+  is_minor         <span class="sql-type">boolean default false</span>,         <span class="sql-comment">-- déclaré via question d'âge</span>
+  declared_level   <span class="sql-type">text</span>,                           <span class="sql-comment">-- Terminale / BTS / Licence…</span>
+  declared_domain  <span class="sql-type">text</span>,                           <span class="sql-comment">-- domaine d'intérêt M1</span>
+  declared_region  <span class="sql-type">text</span>,                           <span class="sql-comment">-- département / région M1</span>
+  device_hint      <span class="sql-type">text</span>,                           <span class="sql-comment">-- hash du user-agent (non PII)</span>
+  first_seen_at    <span class="sql-type">timestamptz default now()</span>,
+  last_seen_at     <span class="sql-type">timestamptz default now()</span>,
+  resolved_user_id <span class="sql-type">uuid references</span> <span class="sql-ref">public.users</span>(id)  <span class="sql-comment">-- rempli si identité résolue</span>
+);
+
+<span class="sql-comment">-- ─── SCANS DES VISITEURS HORS-APP ─────────────────────────────────────────
+-- Chaque stand scanné par un visiteur sans app crée une ligne ici.</span>
+<span class="sql-kw">create table if not exists</span> <span class="sql-ref">public.guest_scans</span> (
+  id               <span class="sql-type">uuid primary key</span> <span class="sql-kw">default</span> uuid_generate_v4(),
+  session_id       <span class="sql-type">uuid not null references</span> <span class="sql-ref">public.guest_sessions</span>(id) <span class="sql-kw">on delete cascade</span>,
+  event_id         <span class="sql-type">uuid not null references</span> <span class="sql-ref">public.events</span>(id),
+  school_id        <span class="sql-type">uuid references</span> <span class="sql-ref">public.schools</span>(id),  <span class="sql-comment">-- null si conf générale</span>
+  session_conf_id  <span class="sql-type">uuid references</span> <span class="sql-ref">public.sessions</span>(id), <span class="sql-comment">-- null si stand</span>
+  mechanism        <span class="sql-type">text check</span> (mechanism <span class="sql-kw">in</span> (<span class="sql-str">'map_qr'</span>, <span class="sql-str">'brochure_qr'</span>, <span class="sql-str">'conf_checkin'</span>, <span class="sql-str">'kiosk'</span>)),
+  incentive_served <span class="sql-type">text</span>,                           <span class="sql-comment">-- ex: 'brochure_ensad_2026.pdf'</span>
+  email_captured   <span class="sql-type">boolean default false</span>,
+  scanned_at       <span class="sql-type">timestamptz default now()</span>
+);
+
+<span class="sql-comment">-- ─── LEADS HORS-APP IDENTIFIÉS (email collecté) ───────────────────────────
+-- Créé dès qu'un email est fourni via M2, M3 ou M4.
+-- Peut coexister avec un users.id si l'email matche un compte existant.</span>
+<span class="sql-kw">create table if not exists</span> <span class="sql-ref">public.guest_leads</span> (
+  id                   <span class="sql-type">uuid primary key</span> <span class="sql-kw">default</span> uuid_generate_v4(),
+  session_id           <span class="sql-type">uuid references</span> <span class="sql-ref">public.guest_sessions</span>(id),
+  email                <span class="sql-type">text not null</span>,
+  first_name           <span class="sql-type">text</span>,
+  is_minor             <span class="sql-type">boolean default false</span>,
+  optin_letudiant      <span class="sql-type">boolean default false</span>,    <span class="sql-comment">-- marketing L'Étudiant</span>
+  optin_wax            <span class="sql-type">boolean default false</span>,    <span class="sql-comment">-- recommandations WAX</span>
+  consent_ip_hash      <span class="sql-type">text</span>,                       <span class="sql-comment">-- SHA-256 de l'IP (non PII)</span>
+  consent_date         <span class="sql-type">timestamptz default now()</span>,
+  consent_version      <span class="sql-type">text not null default</span> <span class="sql-str">'1.0'</span>,
+  declared_level       <span class="sql-type">text</span>,
+  declared_bac_series  <span class="sql-type">text</span>,
+  declared_domains     <span class="sql-type">text[] default</span> <span class="sql-str">'{}'</span>,
+  declared_region      <span class="sql-type">text</span>,
+  wants_alternance     <span class="sql-type">boolean</span>,
+  orientation_score    <span class="sql-type">integer</span>,                   <span class="sql-comment">-- calculé en J+1 post-salon</span>
+  recap_email_sent_at  <span class="sql-type">timestamptz</span>,
+  resolved_user_id     <span class="sql-type">uuid references</span> <span class="sql-ref">public.users</span>(id), <span class="sql-comment">-- si conversion vers compte</span>
+  created_at           <span class="sql-type">timestamptz default now()</span>,
+  <span class="sql-kw">unique</span>(email, session_id)
+);
+
+<span class="sql-comment">-- ─── INDEX ────────────────────────────────────────────────────────────────</span>
+<span class="sql-kw">create index if not exists</span> idx_guest_sessions_token   <span class="sql-kw">on</span> <span class="sql-ref">public.guest_sessions</span>(session_token);
+<span class="sql-kw">create index if not exists</span> idx_guest_sessions_event   <span class="sql-kw">on</span> <span class="sql-ref">public.guest_sessions</span>(event_id);
+<span class="sql-kw">create index if not exists</span> idx_guest_scans_session    <span class="sql-kw">on</span> <span class="sql-ref">public.guest_scans</span>(session_id);
+<span class="sql-kw">create index if not exists</span> idx_guest_scans_school     <span class="sql-kw">on</span> <span class="sql-ref">public.guest_scans</span>(school_id);
+<span class="sql-kw">create index if not exists</span> idx_guest_leads_email      <span class="sql-kw">on</span> <span class="sql-ref">public.guest_leads</span>(email);
+<span class="sql-kw">create index if not exists</span> idx_guest_leads_resolved   <span class="sql-kw">on</span> <span class="sql-ref">public.guest_leads</span>(resolved_user_id) <span class="sql-kw">where</span> resolved_user_id <span class="sql-kw">is not null</span>;
+
+<span class="sql-comment">-- ─── RLS ──────────────────────────────────────────────────────────────────
+-- Tables publiques en INSERT (non authentifié = scan QR)
+-- SELECT réservé service_role (admin / backend)</span>
+<span class="sql-kw">alter table</span> <span class="sql-ref">public.guest_sessions</span> <span class="sql-kw">enable row level security</span>;
+<span class="sql-kw">alter table</span> <span class="sql-ref">public.guest_scans</span> <span class="sql-kw">enable row level security</span>;
+<span class="sql-kw">alter table</span> <span class="sql-ref">public.guest_leads</span> <span class="sql-kw">enable row level security</span>;
+
+<span class="sql-kw">create policy</span> <span class="sql-str">"Anyone can create a guest session"</span>
+  <span class="sql-kw">on</span> <span class="sql-ref">public.guest_sessions</span> <span class="sql-kw">for insert with check</span> (<span class="sql-kw">true</span>);
+
+<span class="sql-kw">create policy</span> <span class="sql-str">"Anyone can record a guest scan"</span>
+  <span class="sql-kw">on</span> <span class="sql-ref">public.guest_scans</span> <span class="sql-kw">for insert with check</span> (<span class="sql-kw">true</span>);
+
+<span class="sql-kw">create policy</span> <span class="sql-str">"Anyone can create a guest lead"</span>
+  <span class="sql-kw">on</span> <span class="sql-ref">public.guest_leads</span> <span class="sql-kw">for insert with check</span> (<span class="sql-kw">true</span>);</pre>
+    </div>
+
+    <div class="callout green">
+      <div class="callout-icon">🔄</div>
+      <div class="callout-body">
+        <p><strong>Job de résolution d'identité (Edge Function Supabase — J+1, 6h00).</strong> La nuit suivant le salon, une Edge Function effectue trois opérations : (1) pour chaque <code>guest_lead</code>, vérifier si l'email existe dans <code>users</code> — si oui, créer les <code>scans</code> et <code>leads</code> correspondants sur le compte existant et marquer <code>resolved_user_id</code> ; (2) calculer le <code>orientation_score</code> à partir des <code>guest_scans</code> et du profil déclaré ; (3) déclencher l'envoi de l'email de récap M5 pour tous les <code>guest_leads</code> sans compte app. Les données anonymes non résolues sont conservées 6 mois puis purgées par un CRON job.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ SECTION 06 — ROADMAP ════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-stripe"></div>
+    <div class="section-num">Section 06</div>
+    <h2>Roadmap d'implémentation — 3 phases</h2>
+    <p class="section-desc">Le déploiement est ordonné par valeur/effort. La Phase 1 est jouable avant le Salon de Paris (18 avril). Les Phases 2 et 3 peuvent alimenter Lyon (9 mai) et Bordeaux (23 mai).</p>
+  </div>
+  <div class="section-body">
+
+    <div class="roadmap">
+      <div class="road-card p1">
+        <div class="road-phase">Phase 1 · Avant Paris</div>
+        <div class="road-title">Infrastructure QR + Capture email</div>
+        <div class="road-date">⏱ 8 jours · D'ici le 17 avril</div>
+        <ul class="road-items">
+          <li>Schéma DB : tables <code>guest_sessions</code>, <code>guest_scans</code>, <code>guest_leads</code></li>
+          <li>API Supabase : routes POST non authentifiées pour chaque table</li>
+          <li>Page web M1 : plan personnalisé (3 questions)</li>
+          <li>Page web M2 : brochure exchange (email + school_id)</li>
+          <li>QR codes générés (1 entrée + 1 par stand participant)</li>
+          <li>Email transactionnel Brevo/Sendgrid : template brochure</li>
+          <li>Vérification d'âge intégrée à chaque formulaire</li>
+          <li>Notice RGPD visible sur chaque formulaire (lien politique)</li>
+        </ul>
+      </div>
+      <div class="road-card p2">
+        <div class="road-phase">Phase 2 · Après Paris</div>
+        <div class="road-title">Kiosque + Conférences + Récap J+1</div>
+        <div class="road-date">⏱ 12 jours · D'ici le 6 mai</div>
+        <ul class="road-items">
+          <li>Page web M3 : check-in conférence (QR salle)</li>
+          <li>Page web M4 : kiosque score d'orientation (5 questions)</li>
+          <li>Edge Function : job nuit J+1 (résolution identité + score)</li>
+          <li>Template email récap M5 (bilan salon personnalisé)</li>
+          <li>Dashboard admin : vue <code>guest_leads</code> avec scores</li>
+          <li>Export CSV exposant : leads qualifiés par stand</li>
+          <li>Consent audit : toutes les actions de consentement logguées</li>
+        </ul>
+      </div>
+      <div class="road-card p3">
+        <div class="road-phase">Phase 3 · Scale</div>
+        <div class="road-title">Optimisation + A/B + WAX pipeline</div>
+        <div class="road-date">⏱ En continu · Post-Lyon</div>
+        <ul class="road-items">
+          <li>A/B test des incentives M1 vs M2 (taux de capture)</li>
+          <li>Raccordement <code>guest_leads</code> → pipeline WAX (optin seulement)</li>
+          <li>PWA offline pour les zones sans WiFi (service worker)</li>
+          <li>Analytics : entonnoir de conversion par mécanisme</li>
+          <li>NFC en remplacement QR sur les stands premium</li>
+          <li>Portail DPO : export données sur demande (Art. 20 portabilité)</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ SECTION 07 — KPIs ═══════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-stripe"></div>
+    <div class="section-num">Section 07</div>
+    <h2>KPIs de succès — Comment mesurer l'efficacité du dispositif</h2>
+    <p class="section-desc">Ces métriques permettent à L'Étudiant de piloter le dispositif en temps réel pendant le salon et d'en évaluer le ROI pour les exposants en J+1.</p>
+  </div>
+  <div class="section-body">
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon">📊</div>
+        <div class="kpi-name">Taux de capture M1</div>
+        <div class="kpi-target">≥ 40%</div>
+        <div class="kpi-desc">Des entrées scanner le QR plan personnalisé. Mesure l'attractivité du premier point de contact.</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">📧</div>
+        <div class="kpi-name">Emails capturés / visiteur</div>
+        <div class="kpi-target">30–45%</div>
+        <div class="kpi-desc">Des visiteurs hors-app fournissant un email via M2 ou M3. Objectif principal du dispositif.</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">🏛️</div>
+        <div class="kpi-name">Scans / email capturé</div>
+        <div class="kpi-target">≥ 2,5</div>
+        <div class="kpi-desc">Nombre moyen d'établissements scannés par visiteur identifié. Indique la richesse du signal comportemental.</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">📬</div>
+        <div class="kpi-name">Taux ouverture récap J+1</div>
+        <div class="kpi-target">≥ 45%</div>
+        <div class="kpi-desc">Ouverture de l'email de bilan. Signal de pertinence perçue du contenu généré.</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">📱</div>
+        <div class="kpi-name">Conversion vers app</div>
+        <div class="kpi-target">5–10%</div>
+        <div class="kpi-desc">Des <code>guest_leads</code> créant un compte app après le récap J+1. Clôture la boucle hors-app → app.</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">🎯</div>
+        <div class="kpi-name">Opt-in WAX hors-app</div>
+        <div class="kpi-target">≥ 15%</div>
+        <div class="kpi-desc">Des <code>guest_leads</code> activant le marketing WAX. Valeur commerciale directe pour L'Étudiant.</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">📐</div>
+        <div class="kpi-name">Profil complétude moyenne</div>
+        <div class="kpi-target">≥ 65%</div>
+        <div class="kpi-desc">Score de complétude du profil <code>guest_lead</code> (7 champs). Détermine la qualité du score d'orientation calculable.</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">⚖️</div>
+        <div class="kpi-name">Taux refus marketing</div>
+        <div class="kpi-target">Monitorer</div>
+        <div class="kpi-desc">% des formulaires où l'optin WAX est laissé décoché. Signal de friction perçue ou de manque de confiance.</div>
+      </div>
+    </div>
+
+    <div class="callout orange">
+      <div class="callout-icon">📋</div>
+      <div class="callout-body">
+        <p><strong>Questions à valider avec l'équipe L'Étudiant le 19 avril.</strong></p>
+        <p>① Les exposants sont-ils prêts à fournir leurs brochures en PDF optimisé hébergeable sur le CDN L'Étudiant (contrainte logistique M2) ?</p>
+        <p>② La salle de conférence a-t-elle un accès WiFi fiable pour tous les scans simultanés en entrée (contrainte infra M3) ?</p>
+        <p>③ Quelle est la politique actuelle de L'Étudiant sur le tracking email (pixels) — certains ESP bloquent nativement les pixels sur mobile iOS 15+ ?</p>
+        <p>④ Est-ce qu'un DPO a déjà validé la base Art. 6(1)(f) pour les sessions anonymes ? Si non, quel délai de validation interne ?</p>
+        <p>⑤ Les bornes physiques (M4) — budget disponible pour location/achat avant le 18 avril ?</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /page-wrap -->
+
+<div class="stripe-rule" style="position:fixed;bottom:0;left:0;right:0;z-index:50"></div>
+
+</body>
+</html>
