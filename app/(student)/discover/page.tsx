@@ -6,8 +6,7 @@ import TinderCard from 'react-tinder-card';
 import Tag from '@/components/ui/Tag';
 import Button from '@/components/ui/Button';
 import StripeRule from '@/components/ui/StripeRule';
-import { getSchools } from '@/lib/supabase/database';
-import { upsertMatch } from '@/lib/supabase/database';
+import { getSchools, upsertMatch, refreshIntentScore } from '@/lib/supabase/database';
 import { useAuth } from '@/hooks/useAuth';
 import type { SchoolRow } from '@/lib/supabase/types';
 
@@ -384,6 +383,10 @@ export default function DiscoverPage() {
       const next = rightCount + 1;
       setRightCount(next);
       showToast(`Match avec ${school.name} !`);
+      // Fire-and-forget intent score refresh after swipe right
+      if (user) {
+        refreshIntentScore(user.id).catch(() => {})
+      }
     }
   };
 

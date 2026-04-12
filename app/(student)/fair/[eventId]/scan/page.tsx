@@ -1,30 +1,33 @@
-'use client';
-
-import { useEffect, useRef, useState } from 'react';
-import { use } from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
-import Button from '@/components/ui/Button';
-import Tag from '@/components/ui/Tag';
+'use client'
+export const dynamic = 'force-dynamic'
+import { useEffect, useRef, useState } from 'react'
+import { use } from 'react'
+import { Html5QrcodeScanner } from 'html5-qrcode'
+import { getSupabase } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/useAuth'
+import Button from '@/components/ui/Button'
+import Tag from '@/components/ui/Tag'
 
 interface ScanResult {
-  standId: string;
-  standName: string;
-  registered: boolean;
+  standId: string
+  standName: string
+  registered: boolean
 }
 
 export default function ScanPage({
   params,
 }: {
-  params: Promise<{ eventId: string }>;
+  params: Promise<{ eventId: string }>
 }) {
-  const { eventId } = use(params);
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
-  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [scanning, setScanning] = useState(true);
+  const { eventId } = use(params)
+  const { user, loading: authLoading } = useAuth()
+  const scannerRef = useRef<Html5QrcodeScanner | null>(null)
+  const [scanResult, setScanResult] = useState<ScanResult | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [scanning, setScanning] = useState(true)
 
   useEffect(() => {
-    if (!scanning) return;
+    if (!scanning || authLoading) return
 
     const scanner = new Html5QrcodeScanner(
       'qr-reader',
@@ -37,32 +40,46 @@ export default function ScanPage({
         defaultZoomValueIfSupported: 2,
       },
       false
-    );
+    )
 
-    scannerRef.current = scanner;
+    scannerRef.current = scanner
 
     scanner.render(
       async (decodedText: string) => {
-        // Stop scanner
+        // Stop scanner immediately
         try {
-          await scanner.clear();
+          await scanner.clear()
         } catch {
           // ignore cleanup errors
         }
-        setScanning(false);
+        setScanning(false)
 
-        // Parse standId from QR
-        const standId = decodedText.trim();
-        const STAND_NAMES: Record<string, string> = {
-          hec: 'HEC Paris',
-          sciencespo: 'Sciences Po',
-          insa: 'INSA Lyon',
-          essec: 'ESSEC Business School',
-          polytechnique: 'École Polytechnique',
-          centrale: 'Centrale Paris',
-        };
-        const standName = STAND_NAMES[standId] || `Stand ${standId}`;
+        // Parse QR payload — can be JSON { standId, type } or a raw standId string
+        let standId = decodedText.trim()
+        let channel: 'stand' | 'conference' = 'stand'
+        try {
+          const parsed = JSON.parse(decodedText)
+          if (parsed.standId) standId = parsed.standId
+          if (parsed.type === 'conference') channel = 'conference'
+        } catch {
+          // not JSON — treat raw string as standId
+        }
 
+        // Look up stand / school name from DB
+        let standName = `Stand ${standId}`
+        try {
+          const supabase = getSupabase()
+          const { data } = await supabase
+            .from('schools')
+            .select('name')
+            .eq('id', standId)
+            .maybeSingle()
+          if (data?.name) standName = data.name
+        } catch {
+          // non-fatal — use fallback name
+        }
+
+        // POST scan to API — auth is extracted server-side from cookie
         try {
           const res = await fetch('/api/scans', {
             method: 'POST',
@@ -70,49 +87,47 @@ export default function ScanPage({
             body: JSON.stringify({
               standId,
               eventId,
-              scannedAt: new Date().toISOString(),
-              userId: 'student_emma_aubert_2026',
+              channel,
+              sessionId: null,
+              dwellEstimate: null,
             }),
-          });
+          })
 
-          setScanResult({
-            standId,
-            standName,
-            registered: res.ok,
-          });
+          setScanResult({ standId, standName, registered: res.ok })
+
+          if (!res.ok) {
+            const body = await res.json().catch(() => ({}))
+            setError(body?.error ?? 'Erreur lors de l\'enregistrement')
+          }
         } catch {
           // Network error — still show success locally
-          setScanResult({
-            standId,
-            standName,
-            registered: false,
-          });
-          setError('Connexion limitée — scan enregistré localement');
+          setScanResult({ standId, standName, registered: false })
+          setError('Connexion limitée — scan enregistré localement')
         }
       },
       (errorMessage: string) => {
-        // Ignore frequent scan failures (no QR in view)
+        // Ignore frequent "no QR in view" messages
         if (!errorMessage.includes('No MultiFormat Readers')) {
-          console.warn('Scan error:', errorMessage);
+          console.warn('Scan error:', errorMessage)
         }
       }
-    );
+    )
 
     return () => {
       if (scannerRef.current) {
         scannerRef.current.clear().catch(() => {
           // ignore cleanup errors on unmount
-        });
-        scannerRef.current = null;
+        })
+        scannerRef.current = null
       }
-    };
-  }, [eventId, scanning]);
+    }
+  }, [eventId, scanning, authLoading])
 
   const handleRescan = () => {
-    setScanResult(null);
-    setError(null);
-    setScanning(true);
-  };
+    setScanResult(null)
+    setError(null)
+    setScanning(true)
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: '#1A1A1A', display: 'flex', flexDirection: 'column' }}>
@@ -147,13 +162,47 @@ export default function ScanPage({
         <div>
           <h1 style={{ color: '#fff', fontWeight: 700, fontSize: 20, margin: 0 }}>Scanner un stand</h1>
           <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, margin: 0 }}>
-            Salon de Paris • 15 avril 2026
+            {user ? `Connecté · ${user.email}` : 'Salon L\'Étudiant'}
           </p>
         </div>
       </div>
 
-      {/* Success state */}
-      {scanResult ? (
+      {/* Auth guard */}
+      {!authLoading && !user ? (
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 32,
+            gap: 16,
+            textAlign: 'center',
+          }}
+        >
+          <span style={{ fontSize: 48 }}>🔒</span>
+          <h2 style={{ color: '#fff', fontWeight: 700, fontSize: 20, margin: 0 }}>Connexion requise</h2>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14, margin: 0 }}>
+            Connectez-vous pour scanner les stands et enregistrer votre parcours.
+          </p>
+          <a
+            href="/login"
+            style={{
+              background: '#E3001B',
+              color: '#fff',
+              borderRadius: 12,
+              padding: '12px 24px',
+              fontWeight: 600,
+              textDecoration: 'none',
+              fontSize: 15,
+            }}
+          >
+            Se connecter
+          </a>
+        </div>
+      ) : scanResult ? (
+        /* Success state */
         <div
           style={{
             flex: 1,
@@ -260,62 +309,24 @@ export default function ScanPage({
             }}
           >
             {/* Corner decorations */}
-            <div
-              style={{
-                position: 'absolute',
-                top: -4,
-                left: -4,
-                width: 32,
-                height: 32,
-                borderTop: '3px solid #E3001B',
-                borderLeft: '3px solid #E3001B',
-                borderRadius: '4px 0 0 0',
-                zIndex: 10,
-                pointerEvents: 'none',
-              }}
-            />
-            <div
-              style={{
-                position: 'absolute',
-                top: -4,
-                right: -4,
-                width: 32,
-                height: 32,
-                borderTop: '3px solid #E3001B',
-                borderRight: '3px solid #E3001B',
-                borderRadius: '0 4px 0 0',
-                zIndex: 10,
-                pointerEvents: 'none',
-              }}
-            />
-            <div
-              style={{
-                position: 'absolute',
-                bottom: -4,
-                left: -4,
-                width: 32,
-                height: 32,
-                borderBottom: '3px solid #E3001B',
-                borderLeft: '3px solid #E3001B',
-                borderRadius: '0 0 0 4px',
-                zIndex: 10,
-                pointerEvents: 'none',
-              }}
-            />
-            <div
-              style={{
-                position: 'absolute',
-                bottom: -4,
-                right: -4,
-                width: 32,
-                height: 32,
-                borderBottom: '3px solid #E3001B',
-                borderRight: '3px solid #E3001B',
-                borderRadius: '0 0 4px 0',
-                zIndex: 10,
-                pointerEvents: 'none',
-              }}
-            />
+            {[
+              { top: -4, left: -4, borderTop: '3px solid #E3001B', borderLeft: '3px solid #E3001B', borderRadius: '4px 0 0 0' },
+              { top: -4, right: -4, borderTop: '3px solid #E3001B', borderRight: '3px solid #E3001B', borderRadius: '0 4px 0 0' },
+              { bottom: -4, left: -4, borderBottom: '3px solid #E3001B', borderLeft: '3px solid #E3001B', borderRadius: '0 0 0 4px' },
+              { bottom: -4, right: -4, borderBottom: '3px solid #E3001B', borderRight: '3px solid #E3001B', borderRadius: '0 0 4px 0' },
+            ].map((s, i) => (
+              <div
+                key={i}
+                style={{
+                  position: 'absolute',
+                  width: 32,
+                  height: 32,
+                  zIndex: 10,
+                  pointerEvents: 'none',
+                  ...s,
+                }}
+              />
+            ))}
 
             {/* QR scanner div */}
             <div
@@ -355,5 +366,5 @@ export default function ScanPage({
         </div>
       )}
     </div>
-  );
+  )
 }

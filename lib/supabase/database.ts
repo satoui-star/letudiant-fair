@@ -197,6 +197,64 @@ export async function getStudentAppointmentForSchool(
   return data
 }
 
+// ─── Intent Level ─────────────────────────────────────────────────────────────
+
+/**
+ * Recompute and persist intent_score + intent_level for a student.
+ * Called after any significant action (scan, swipe, appointment).
+ */
+export async function refreshIntentScore(userId: string): Promise<void> {
+  const { computeIntentScore, computeIntentLevel } = await import('@/lib/scoring/intentScore')
+  const supabase = getSupabase()
+
+  const [userRes, scansRes, matchesRes, appointmentsRes] = await Promise.all([
+    supabase.from('users').select('email, education_level').eq('id', userId).single(),
+    supabase.from('scans').select('channel').eq('user_id', userId),
+    supabase.from('matches').select('student_swipe').eq('student_id', userId),
+    supabase.from('appointments').select('id').eq('student_id', userId).neq('status', 'cancelled').limit(1),
+  ])
+
+  const user        = userRes.data
+  const scans       = scansRes.data ?? []
+  const matches     = matchesRes.data ?? []
+  const hasAppt     = (appointmentsRes.data?.length ?? 0) > 0
+
+  const score = computeIntentScore({
+    hasEducationLevel: !!user?.education_level,
+    hasRealEmail:      !!user?.email && !user.email.includes('@group.letudiant-salons.fr'),
+    standScanCount:    scans.filter(s => s.channel === 'stand').length,
+    swipeRightCount:   matches.filter(m => m.student_swipe === 'right').length,
+    appointmentBooked: hasAppt,
+    conferenceCount:   scans.filter(s => s.channel === 'conference').length,
+  })
+
+  const level = computeIntentLevel(score)
+
+  await supabase
+    .from('users')
+    .update({ intent_score: score, intent_level: level })
+    .eq('id', userId)
+}
+
+// ─── Pre-Registrations ────────────────────────────────────────────────────────
+
+export async function getPreRegistrations(eventId: string) {
+  const { data } = await getSupabase()
+    .from('pre_registrations')
+    .select('*')
+    .eq('event_id', eventId)
+    .order('registered_at', { ascending: false })
+  return data ?? []
+}
+
+export async function resolvePreRegistration(email: string, userId: string): Promise<void> {
+  await getSupabase()
+    .from('pre_registrations')
+    .update({ resolved_user_id: userId, resolved_at: new Date().toISOString() })
+    .eq('email', email.toLowerCase())
+    .is('resolved_user_id', null)
+}
+
 // ─── Auth helpers ─────────────────────────────────────────────────────────────
 
 export async function getAdminStats(eventId: string) {

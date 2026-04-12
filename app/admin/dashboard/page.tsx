@@ -21,11 +21,17 @@ interface Stats {
   scoreTiers: { exploring: number; comparing: number; deciding: number }
 }
 
+interface AdminExtraStats {
+  preReg: { total: number; resolved: number; unresolved: number; resolutionPct: number }
+  intentLevels: { low: number; medium: number; high: number }
+}
+
 export default function AdminDashboard() {
   const [tab, setTab] = useState<Tab>('avant')
   const [events, setEvents] = useState<EventRow[]>([])
   const [selectedEvent, setSelectedEvent] = useState<EventRow | null>(null)
   const [stats, setStats] = useState<Stats | null>(null)
+  const [extraStats, setExtraStats] = useState<AdminExtraStats | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -95,6 +101,13 @@ export default function AdminDashboard() {
       filiereBreakdown,
       scoreTiers,
     })
+
+    // Fetch extra stats from service-role API (pre-registrations + intent levels)
+    try {
+      const extra = await fetch(`/api/admin/stats?eventId=${eventId}`).then(r => r.json())
+      setExtraStats(extra)
+    } catch { /* non-fatal */ }
+
     setLoading(false)
   }
 
@@ -141,11 +154,42 @@ export default function AdminDashboard() {
         {tab === 'avant' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
-              {kpi('Inscrits', stats?.totalRegistered ?? 0)}
+              {kpi('Inscrits app', stats?.totalRegistered ?? 0)}
               {kpi('Groupes enseignants', stats?.totalGroups ?? 0, undefined, '#003C8F')}
               {kpi('Élèves en groupe', stats?.groupMembers ?? 0, undefined, '#003C8F')}
-              {kpi('Établissements au salon', events.length > 0 ? '—' : 0, undefined, '#6B6B6B')}
+              {kpi('Pré-inscrits Eventmaker', extraStats?.preReg.total ?? '—', undefined, '#6B6B6B')}
             </div>
+
+            {/* Pre-registration resolution panel */}
+            {extraStats && (
+              <div style={{ background: '#fff', borderRadius: 16, padding: 20 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>Pré-inscriptions Eventmaker → App</h3>
+                  <span style={{ fontSize: '0.75rem', color: '#6B6B6B', background: '#F4F4F4', padding: '4px 10px', borderRadius: 8 }}>
+                    Taux de conversion : <strong style={{ color: '#E3001B' }}>{extraStats.preReg.resolutionPct}%</strong>
+                  </span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 16 }}>
+                  {[
+                    { label: 'Pré-inscrits', value: extraStats.preReg.total, color: '#6B6B6B', bg: '#F4F4F4' },
+                    { label: 'Ont téléchargé l\'app', value: extraStats.preReg.resolved, color: '#22c55e', bg: '#DCFCE7' },
+                    { label: 'Pas encore sur l\'app', value: extraStats.preReg.unresolved, color: '#f59e0b', bg: '#FFF7E0' },
+                  ].map(s => (
+                    <div key={s.label} style={{ background: s.bg, borderRadius: 12, padding: '14px 16px' }}>
+                      <p style={{ margin: '0 0 4px', fontSize: '0.75rem', color: s.color, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.label}</p>
+                      <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: s.color }}>{s.value}</p>
+                    </div>
+                  ))}
+                </div>
+                {/* Resolution progress bar */}
+                <div style={{ height: 8, background: '#F0F0F0', borderRadius: 99, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${extraStats.preReg.resolutionPct}%`, background: 'linear-gradient(90deg,#E3001B,#22c55e)', borderRadius: 99, transition: 'width 0.6s ease' }} />
+                </div>
+                <p style={{ margin: '8px 0 0', fontSize: '0.75rem', color: '#9B9B9B' }}>
+                  Objectif : 80% de résolution avant J-2 du salon (envoi email de rappel automatique pour les non-résolus)
+                </p>
+              </div>
+            )}
             <div style={{ background: '#fff', borderRadius: 16, padding: 20 }}>
               <h3 style={{ margin: '0 0 16px', fontSize: '1rem', fontWeight: 700 }}>Filières les plus demandées</h3>
               {loading ? <SkeletonList count={5} variant="line" /> : stats?.filiereBreakdown.length === 0 ? (
@@ -223,6 +267,34 @@ export default function AdminDashboard() {
               {kpi('Décideurs (SC3)', stats?.decidingLeads ?? 0, `${stats ? Math.round((stats.decidingLeads / Math.max(stats.totalLeads, 1)) * 100) : 0}% du total`, '#22c55e')}
               {kpi('Taux de conversion', stats && stats.totalScanned > 0 ? `${Math.round((stats.totalLeads / stats.totalScanned) * 100)}%` : '—')}
             </div>
+
+            {/* Intent level distribution */}
+            {extraStats && (
+              <div style={{ background: '#fff', borderRadius: 16, padding: 20 }}>
+                <h3 style={{ margin: '0 0 4px', fontSize: '1rem', fontWeight: 700 }}>Niveaux d&apos;intention (intent_level)</h3>
+                <p style={{ margin: '0 0 16px', fontSize: '0.8125rem', color: '#6B6B6B' }}>Calculés depuis les signaux comportementaux — non déclarés par les étudiants</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+                  {[
+                    { label: 'Démarrage', key: 'low' as const, color: '#1d4ed8', bg: '#EFF6FF', emoji: '🔵' },
+                    { label: 'En exploration', key: 'medium' as const, color: '#92400e', bg: '#FFFBE6', emoji: '🟡' },
+                    { label: 'Très actif', key: 'high' as const, color: '#15803d', bg: '#DCFCE7', emoji: '🟢' },
+                  ].map(tier => {
+                    const count = extraStats.intentLevels[tier.key]
+                    const total = extraStats.intentLevels.low + extraStats.intentLevels.medium + extraStats.intentLevels.high || 1
+                    return (
+                      <div key={tier.key} style={{ background: tier.bg, borderRadius: 14, padding: '16px 18px' }}>
+                        <p style={{ margin: '0 0 6px', fontSize: '0.8125rem', fontWeight: 700, color: tier.color }}>{tier.emoji} {tier.label}</p>
+                        <p style={{ margin: '0 0 8px', fontSize: '1.75rem', fontWeight: 800, color: tier.color }}>{count}</p>
+                        <div style={{ height: 4, background: 'rgba(0,0,0,0.08)', borderRadius: 99 }}>
+                          <div style={{ height: '100%', width: `${(count / total) * 100}%`, background: tier.color, borderRadius: 99 }} />
+                        </div>
+                        <p style={{ margin: '6px 0 0', fontSize: '0.75rem', color: tier.color }}>{Math.round((count / total) * 100)}%</p>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Score tier breakdown */}
             <div style={{ background: '#fff', borderRadius: 16, padding: 20 }}>

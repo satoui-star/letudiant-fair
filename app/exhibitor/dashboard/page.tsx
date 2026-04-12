@@ -1,341 +1,342 @@
-"use client";
+'use client'
+export const dynamic = 'force-dynamic'
 
-import Link from "next/link";
-import SectionLabel from "@/components/ui/SectionLabel";
-import Tag from "@/components/ui/Tag";
-import OrientationBadge from "@/components/ui/OrientationBadge";
-import Button from "@/components/ui/Button";
+import { useEffect, useRef, useState } from 'react'
+import QRCode from 'qrcode'
+import Link from 'next/link'
+import { getSupabase } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/useAuth'
+import SectionLabel from '@/components/ui/SectionLabel'
+import Tag from '@/components/ui/Tag'
+import Button from '@/components/ui/Button'
+import { Skeleton } from '@/components/ui/Skeleton'
 
-const KPI_DATA = [
-  {
-    label: "Visiteurs au stand",
-    value: "127",
-    delta: "+12 vs hier",
-    up: true,
-  },
-  { label: "Matches", value: "34", delta: "+5 vs hier", up: true },
-  { label: "Rendez-vous", value: "12", delta: "−1 vs hier", up: false },
-  { label: "Leads exportés", value: "8", delta: "+3 vs hier", up: true },
-];
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-const FUNNEL = [
-  { label: "Stand visit", count: 127, color: "#E3001B" },
-  { label: "Match", count: 34, color: "#003C8F" },
-  { label: "RDV", count: 12, color: "#FFD100" },
-  { label: "Export", count: 8, color: "#6B6B6B" },
-];
-
-const INTERESTS = [
-  { label: "Business", pct: 45, color: "#E3001B" },
-  { label: "Finance", pct: 30, color: "#003C8F" },
-  { label: "Management", pct: 25, color: "#FFD100" },
-];
-
-const LEADS = [
-  {
-    id: 1,
-    name: "Étudiant •••••",
-    score: 82,
-    signals: "Visite stand + swipe + conf",
-    tier: 82,
-  },
-  {
-    id: 2,
-    name: "Étudiant •••••",
-    score: 74,
-    signals: "Visite stand + swipe",
-    tier: 74,
-  },
-  {
-    id: 3,
-    name: "Étudiant •••••",
-    score: 61,
-    signals: "Visite stand + conf",
-    tier: 61,
-  },
-  {
-    id: 4,
-    name: "Étudiant •••••",
-    score: 38,
-    signals: "Visite stand",
-    tier: 38,
-  },
-  {
-    id: 5,
-    name: "Étudiant •••••",
-    score: 22,
-    signals: "Swipe",
-    tier: 22,
-  },
-];
-
-function KpiCard({
-  label,
-  value,
-  delta,
-  up,
-}: {
-  label: string;
-  value: string;
-  delta: string;
-  up: boolean;
-}) {
-  return (
-    <div className="kpi-card">
-      <p className="kpi-label">{label}</p>
-      <p className="kpi-value">{value}</p>
-      <p className={`kpi-delta ${up ? "positive" : "negative"}`}>
-        {up ? "▲" : "▼"} {delta}
-      </p>
-    </div>
-  );
+interface DashboardStats {
+  totalScans:     number
+  todayScans:     number
+  swipeRights:    number
+  appointments:   number
+  decidingPct:    number
+  comparingPct:   number
+  exploringPct:   number
+  topBranches:    { label: string; pct: number }[]
 }
 
-function FunnelBar({
-  label,
-  count,
-  max,
-  color,
-}: {
-  label: string;
-  count: number;
-  max: number;
-  color: string;
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function KpiCard({ label, value, sub, color = '#E3001B' }: {
+  label: string; value: string | number; sub?: string; color?: string
 }) {
-  const pct = Math.round((count / max) * 100);
+  return (
+    <div style={{ background: '#fff', borderRadius: 14, padding: '18px 20px', boxShadow: '0 1px 6px rgba(0,0,0,0.05)' }}>
+      <p style={{ margin: '0 0 6px', fontSize: '0.75rem', color: '#6B6B6B', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 700 }}>{label}</p>
+      <p style={{ margin: '0 0 3px', fontSize: '1.75rem', fontWeight: 800, color }}>{value}</p>
+      {sub && <p style={{ margin: 0, fontSize: '0.75rem', color: '#9B9B9B' }}>{sub}</p>}
+    </div>
+  )
+}
+
+function BarRow({ label, pct, color }: { label: string; pct: number; color: string }) {
   return (
     <div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginBottom: "6px",
-        }}
-      >
-        <span style={{ fontSize: "13px", fontWeight: 600, color: "#3D3D3D" }}>
-          {label}
-        </span>
-        <span style={{ fontSize: "13px", color: "#6B6B6B", fontWeight: 600 }}>
-          {count}
-        </span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: '#3D3D3D' }}>{label}</span>
+        <span style={{ fontSize: 13, color: '#6B6B6B', fontWeight: 600 }}>{pct}%</span>
       </div>
-      <div
-        style={{
-          height: "10px",
-          background: "#E8E8E8",
-          borderRadius: "5px",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            height: "100%",
-            width: `${pct}%`,
-            background: color,
-            borderRadius: "5px",
-            transition: "width 0.4s ease",
-          }}
-        />
+      <div style={{ height: 10, background: '#E8E8E8', borderRadius: 5, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 5, transition: 'width 0.4s ease' }} />
       </div>
     </div>
-  );
+  )
 }
 
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default function ExhibitorDashboard() {
+  const { user, profile } = useAuth()
+
+  const [schoolId,  setSchoolId]  = useState<string | null>(null)
+  const [schoolName,setSchoolName]= useState('Mon établissement')
+  const [stats,     setStats]     = useState<DashboardStats | null>(null)
+  const [eventName, setEventName] = useState('Salon en cours')
+  const [loading,   setLoading]   = useState(true)
+  const [qrReady,   setQrReady]   = useState(false)
+  const [scanCount, setScanCount] = useState(0)
+
+  const standQrRef = useRef<HTMLCanvasElement>(null)
+
+  // ── Load data ────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!user) return
+    async function load() {
+      const supabase = getSupabase()
+
+      // Find exhibitor's school
+      const { data: schoolData } = await supabase
+        .from('schools')
+        .select('id, name')
+        .eq('user_id', user!.id)
+        .maybeSingle()
+
+      const sId   = schoolData?.id   ?? null
+      const sName = schoolData?.name ?? profile?.name ?? 'Mon établissement'
+      setSchoolId(sId)
+      setSchoolName(sName)
+
+      // Next / ongoing event
+      const { data: eventData } = await supabase
+        .from('events')
+        .select('id, name, event_date')
+        .gte('event_date', new Date().toISOString().slice(0, 10))
+        .order('event_date')
+        .limit(1)
+        .maybeSingle()
+
+      if (eventData) setEventName(`${eventData.name} — ${new Date(eventData.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`)
+
+      if (!sId) { setLoading(false); return }
+
+      // ── Aggregate scans for this school ──────────────────────────────────────
+      // Students who scanned the school stand QR
+      const today = new Date().toISOString().slice(0, 10)
+      const [scansRes, todayScansRes, swipesRes, apptRes] = await Promise.all([
+        supabase.from('scans').select('id', { count: 'exact', head: true })
+          .eq('school_id', sId).eq('channel', 'stand'),
+        supabase.from('scans').select('id', { count: 'exact', head: true })
+          .eq('school_id', sId).eq('channel', 'stand').gte('created_at', today),
+        supabase.from('matches').select('id', { count: 'exact', head: true })
+          .eq('school_id', sId).eq('student_swipe', 'right'),
+        supabase.from('appointments').select('id', { count: 'exact', head: true })
+          .eq('school_id', sId).neq('status', 'cancelled'),
+      ])
+
+      const total    = scansRes.count    ?? 0
+      const todayCt  = todayScansRes.count ?? 0
+      const swipes   = swipesRes.count   ?? 0
+      const appts    = apptRes.count     ?? 0
+      setScanCount(total)
+
+      // ── Intent distribution (aggregate % only) ────────────────────────────
+      // Join scans → users → intent_level, count per level
+      const { data: intentRows } = await supabase
+        .from('scans')
+        .select('users!inner(intent_level)')
+        .eq('school_id', sId)
+        .eq('channel', 'stand')
+
+      const intentCounts = { low: 0, medium: 0, high: 0 }
+      ;(intentRows ?? []).forEach((row: any) => {
+        const lvl = row.users?.intent_level ?? 'low'
+        if (lvl in intentCounts) intentCounts[lvl as keyof typeof intentCounts]++
+      })
+      const intentTotal = intentCounts.low + intentCounts.medium + intentCounts.high || 1
+
+      // ── Top interest branches (aggregate) ─────────────────────────────────
+      const { data: branchRows } = await supabase
+        .from('scans')
+        .select('users!inner(education_branches)')
+        .eq('school_id', sId)
+        .eq('channel', 'stand')
+
+      const branchMap: Record<string, number> = {}
+      ;(branchRows ?? []).forEach((row: any) => {
+        const branches: string[] = row.users?.education_branches ?? []
+        branches.forEach((b: string) => { branchMap[b] = (branchMap[b] ?? 0) + 1 })
+      })
+      const branchTotal = Object.values(branchMap).reduce((a, b) => a + b, 1)
+      const topBranches = Object.entries(branchMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 4)
+        .map(([label, count]) => ({ label, pct: Math.round((count / branchTotal) * 100) }))
+
+      setStats({
+        totalScans:   total,
+        todayScans:   todayCt,
+        swipeRights:  swipes,
+        appointments: appts,
+        decidingPct:  Math.round((intentCounts.high   / intentTotal) * 100),
+        comparingPct: Math.round((intentCounts.medium / intentTotal) * 100),
+        exploringPct: Math.round((intentCounts.low    / intentTotal) * 100),
+        topBranches,
+      })
+
+      setLoading(false)
+    }
+    load()
+  }, [user, profile])
+
+  // ── Generate stand QR once schoolId is known ─────────────────────────────────
+  useEffect(() => {
+    if (!schoolId || !standQrRef.current) return
+    const payload = JSON.stringify({ schoolId, type: 'school_stand', app: 'letudiant-salons' })
+    QRCode.toCanvas(standQrRef.current, payload, {
+      width: 180, margin: 2,
+      color: { dark: '#1A1A1A', light: '#FFFFFF' },
+    }).then(() => setQrReady(true)).catch(console.error)
+  }, [schoolId])
+
+  // ── Download stand QR ────────────────────────────────────────────────────────
+  function downloadQR() {
+    const canvas = standQrRef.current
+    if (!canvas) return
+    const link = document.createElement('a')
+    link.download = `qr-stand-${schoolName.replace(/\s+/g, '-').toLowerCase()}.png`
+    link.href = canvas.toDataURL('image/png')
+    link.click()
+  }
+
+  // ── Render ───────────────────────────────────────────────────────────────────
   return (
-    <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
-      {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          marginBottom: "32px",
-          flexWrap: "wrap",
-          gap: "12px",
-        }}
-      >
+    <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <SectionLabel>Tableau de bord</SectionLabel>
-          <h1 className="le-h1" style={{ marginTop: "10px" }}>
-            HEC Paris
+          <h1 className="le-h1" style={{ marginTop: 10 }}>
+            {loading ? '…' : schoolName}
           </h1>
-          <p className="le-body">Salon de Paris — 15 avril 2026</p>
+          <p className="le-body" style={{ color: '#6B6B6B' }}>{eventName}</p>
         </div>
         <Tag variant="blue">En cours</Tag>
       </div>
 
-      {/* KPI row */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-          gap: "16px",
-          marginBottom: "32px",
-        }}
-      >
-        {KPI_DATA.map((k) => (
-          <KpiCard key={k.label} {...k} />
-        ))}
+      {/* ── GDPR policy notice ─────────────────────────────────────────────── */}
+      <div style={{ background: '#FFFBE6', border: '1px solid #FFD100', borderRadius: 12, padding: '12px 16px', marginBottom: 24, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+        <span style={{ fontSize: 18, flexShrink: 0 }}>🔒</span>
+        <p style={{ margin: 0, fontSize: 13, color: '#92400e', lineHeight: 1.5 }}>
+          <strong>Données 100 % agrégées.</strong> Conformément au RGPD, les profils individuels des visiteurs appartiennent à L&apos;Étudiant et ne sont pas accessibles ici. Vous recevez le rapport nominatif complet J+1 après le salon.
+        </p>
       </div>
 
-      {/* Charts row */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "24px",
-          marginBottom: "32px",
-        }}
-      >
-        {/* Funnel */}
-        <div
-          className="le-card le-card-padded"
-          style={{ display: "flex", flexDirection: "column", gap: "16px" }}
-        >
-          <SectionLabel>Entonnoir de conversion</SectionLabel>
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            {FUNNEL.map((f) => (
-              <FunnelBar
-                key={f.label}
-                label={f.label}
-                count={f.count}
-                max={FUNNEL[0].count}
-                color={f.color}
-              />
-            ))}
+      {loading ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 14 }}>
+            {[1,2,3,4].map(i => <Skeleton key={i} variant="kpi" />)}
           </div>
+          <Skeleton height={240} borderRadius={14} />
         </div>
+      ) : (
+        <>
+          {/* ── KPI row ──────────────────────────────────────────────────── */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 14, marginBottom: 28 }}>
+            <KpiCard label="Scans au stand" value={stats?.totalScans ?? 0} sub="total salon" color="#E3001B" />
+            <KpiCard label="Scans aujourd'hui" value={stats?.todayScans ?? 0} sub="journée en cours" color="#003C8F" />
+            <KpiCard label="Intérêts confirmés" value={stats?.swipeRights ?? 0} sub="swipes droite dans l'app" color="#15803d" />
+            <KpiCard label="Rendez-vous" value={stats?.appointments ?? 0} sub="confirmés" color="#7C3AED" />
+          </div>
 
-        {/* Interests */}
-        <div
-          className="le-card le-card-padded"
-          style={{ display: "flex", flexDirection: "column", gap: "16px" }}
-        >
-          <SectionLabel>Domaines d&apos;intérêt</SectionLabel>
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            {INTERESTS.map((item) => (
-              <div key={item.label}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: "6px",
-                  }}
-                >
-                  <span
-                    style={{ fontSize: "13px", fontWeight: 600, color: "#3D3D3D" }}
-                  >
-                    {item.label}
-                  </span>
-                  <span
-                    style={{ fontSize: "13px", color: "#6B6B6B", fontWeight: 600 }}
-                  >
-                    {item.pct}%
-                  </span>
+          {/* ── Charts + Stand QR (2-column) ──────────────────────────── */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24, marginBottom: 28, alignItems: 'start' }}>
+
+            {/* Left: funnel + interests */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+              {/* Entonnoir d'engagement */}
+              <div className="le-card le-card-padded" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <SectionLabel>Entonnoir d&apos;engagement</SectionLabel>
+                {[
+                  { label: 'Scan stand',        count: stats?.totalScans   ?? 0, color: '#E3001B' },
+                  { label: 'Swipe app',          count: stats?.swipeRights  ?? 0, color: '#003C8F' },
+                  { label: 'Rendez-vous pris',   count: stats?.appointments ?? 0, color: '#FFD100' },
+                ].map(f => {
+                  const max = stats?.totalScans || 1
+                  const pct = Math.round((f.count / max) * 100)
+                  return (
+                    <div key={f.label}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: '#3D3D3D' }}>{f.label}</span>
+                        <span style={{ fontSize: 13, color: '#6B6B6B', fontWeight: 600 }}>{f.count}</span>
+                      </div>
+                      <div style={{ height: 10, background: '#E8E8E8', borderRadius: 5, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${pct}%`, background: f.color, borderRadius: 5, transition: 'width 0.4s ease' }} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Niveau d'intention (aggregate %) */}
+              <div className="le-card le-card-padded" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <SectionLabel>Niveau d&apos;intention des visiteurs</SectionLabel>
+                <BarRow label="🔴 Décideur"    pct={stats?.decidingPct  ?? 0} color="#E3001B" />
+                <BarRow label="🟡 Comparateur" pct={stats?.comparingPct ?? 0} color="#FFD100" />
+                <BarRow label="🔵 Explorateur" pct={stats?.exploringPct ?? 0} color="#003C8F" />
+                <p style={{ margin: 0, fontSize: 12, color: '#9B9B9B', lineHeight: 1.4 }}>
+                  Calculé sur les signaux comportementaux agrégés — aucune donnée individuelle.
+                </p>
+              </div>
+
+              {/* Top domaines d'intérêt */}
+              {stats && stats.topBranches.length > 0 && (
+                <div className="le-card le-card-padded" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <SectionLabel>Domaines d&apos;intérêt des visiteurs</SectionLabel>
+                  {stats.topBranches.map(b => (
+                    <BarRow key={b.label} label={b.label} pct={b.pct} color="#003C8F" />
+                  ))}
                 </div>
-                <div
-                  style={{
-                    height: "10px",
-                    background: "#E8E8E8",
-                    borderRadius: "5px",
-                    overflow: "hidden",
-                  }}
-                >
-                  <div
-                    style={{
-                      height: "100%",
-                      width: `${item.pct}%`,
-                      background: item.color,
-                      borderRadius: "5px",
-                    }}
+              )}
+            </div>
+
+            {/* Right: school stand QR */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'sticky', top: 20 }}>
+
+              <div className="le-card le-card-padded" style={{ textAlign: 'center' }}>
+                <SectionLabel style={{ marginBottom: 12 }}>QR Code de votre stand</SectionLabel>
+
+                <div style={{ display: 'inline-block', padding: 12, background: '#fff', borderRadius: 12, border: '1.5px solid #E8E8E8', marginBottom: 12 }}>
+                  <canvas
+                    ref={standQrRef}
+                    style={{ display: 'block', opacity: qrReady ? 1 : 0.2, transition: 'opacity 0.3s', borderRadius: 6 }}
                   />
                 </div>
+
+                <p style={{ margin: '0 0 4px', fontWeight: 700, fontSize: '0.875rem', color: '#1A1A1A' }}>
+                  {schoolName}
+                </p>
+                <p style={{ margin: '0 0 16px', fontSize: '0.75rem', color: '#6B6B6B', lineHeight: 1.4 }}>
+                  Affichez ce QR à votre stand. Les étudiants le scannent depuis l&apos;app pour enregistrer leur visite.
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <Button variant="primary" size="sm" onClick={downloadQR} style={{ width: '100%' }}>
+                    ⬇ Télécharger pour impression
+                  </Button>
+                  <Link href="/exhibitor/leads" style={{ display: 'block', textAlign: 'center', fontSize: '0.8125rem', color: '#E3001B', fontWeight: 600, textDecoration: 'none', padding: '8px 0' }}>
+                    Voir les statistiques détaillées →
+                  </Link>
+                </div>
+
+                <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8, background: '#F4F4F4', borderRadius: 8, padding: '8px 12px', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '1rem' }}>📲</span>
+                  <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#3D3D3D' }}>
+                    {scanCount} scan{scanCount !== 1 ? 's' : ''} enregistré{scanCount !== 1 ? 's' : ''}
+                  </span>
+                </div>
               </div>
-            ))}
+
+              {/* J+1 data product teaser */}
+              <div style={{ background: 'linear-gradient(135deg,#003C8F,#0056CC)', borderRadius: 14, padding: '20px 18px', color: '#fff' }}>
+                <p style={{ margin: '0 0 6px', fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', opacity: 0.8 }}>Rapport post-salon</p>
+                <p style={{ margin: '0 0 10px', fontSize: '1rem', fontWeight: 800, lineHeight: 1.3 }}>
+                  Recevez le rapport nominatif J+1
+                </p>
+                <p style={{ margin: '0 0 14px', fontSize: '0.8125rem', opacity: 0.85, lineHeight: 1.5 }}>
+                  Profils complets, scores d&apos;intention, parcours de visite — livré par L&apos;Étudiant le lendemain du salon.
+                </p>
+                <a
+                  href="mailto:data@letudiant.fr?subject=Rapport%20post-salon"
+                  style={{ display: 'inline-block', background: '#fff', color: '#003C8F', fontWeight: 700, fontSize: '0.8125rem', padding: '8px 14px', borderRadius: 8, textDecoration: 'none' }}
+                >
+                  Demander mon rapport →
+                </a>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-
-      {/* Leads table */}
-      <div className="le-card" style={{ padding: "24px" }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "20px",
-            flexWrap: "wrap",
-            gap: "10px",
-          }}
-        >
-          <SectionLabel>Derniers leads</SectionLabel>
-          <Link
-            href="/exhibitor/leads"
-            style={{
-              fontSize: "13px",
-              color: "#E3001B",
-              fontWeight: 600,
-              textDecoration: "none",
-            }}
-          >
-            Voir tous les leads →
-          </Link>
-        </div>
-
-        {/* Table header */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 120px 1fr auto",
-            gap: "12px",
-            padding: "8px 0",
-            borderBottom: "1.5px solid #E8E8E8",
-            marginBottom: "4px",
-          }}
-        >
-          {["Étudiant", "Score", "Signaux", "Action"].map((h) => (
-            <span
-              key={h}
-              style={{
-                fontSize: "11px",
-                fontWeight: 700,
-                color: "#6B6B6B",
-                textTransform: "uppercase",
-                letterSpacing: "0.06em",
-              }}
-            >
-              {h}
-            </span>
-          ))}
-        </div>
-
-        {/* Rows */}
-        {LEADS.map((lead) => (
-          <div
-            key={lead.id}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 120px 1fr auto",
-              gap: "12px",
-              padding: "14px 0",
-              borderBottom: "1px solid #F4F4F4",
-              alignItems: "center",
-            }}
-          >
-            <span style={{ fontWeight: 600, color: "#1A1A1A", fontSize: "14px" }}>
-              {lead.name}
-            </span>
-            <OrientationBadge score={lead.score} />
-            <span style={{ fontSize: "13px", color: "#6B6B6B" }}>
-              {lead.signals}
-            </span>
-            <Button href={`/exhibitor/leads`} variant="ghost" size="sm">
-              Voir
-            </Button>
-          </div>
-        ))}
-      </div>
+        </>
+      )}
     </div>
-  );
+  )
 }

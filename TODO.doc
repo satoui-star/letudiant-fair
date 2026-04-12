@@ -1,0 +1,455 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<!--[if gte mso 9]>
+<xml>
+  <w:WordDocument>
+    <w:View>Print</w:View>
+    <w:Zoom>100</w:Zoom>
+    <w:DoNotOptimizeForBrowser/>
+  </w:WordDocument>
+</xml>
+<![endif]-->
+<style>
+  @page {
+    margin: 2cm 2.5cm;
+    mso-page-orientation: portrait;
+  }
+  body {
+    font-family: Calibri, Arial, sans-serif;
+    font-size: 11pt;
+    color: #1A1A1A;
+    margin: 2cm 2.5cm;
+    line-height: 1.5;
+  }
+  h1 {
+    font-family: Calibri, Arial, sans-serif;
+    font-size: 22pt;
+    font-weight: bold;
+    color: #E3001B;
+    margin-bottom: 4pt;
+    margin-top: 0;
+    border-bottom: 2px solid #E3001B;
+    padding-bottom: 8pt;
+    mso-style-name: "Title";
+  }
+  .subtitle {
+    font-family: Calibri, Arial, sans-serif;
+    font-size: 11pt;
+    color: #6B7280;
+    margin-bottom: 20pt;
+    margin-top: 4pt;
+  }
+  h2 {
+    font-family: Calibri, Arial, sans-serif;
+    font-size: 14pt;
+    font-weight: bold;
+    color: #003C8F;
+    margin-top: 24pt;
+    margin-bottom: 8pt;
+    border-bottom: 1px solid #BFDBFE;
+    padding-bottom: 4pt;
+    mso-style-name: "Heading 1";
+  }
+  h3 {
+    font-family: Calibri, Arial, sans-serif;
+    font-size: 12pt;
+    font-weight: bold;
+    color: #1E3A5F;
+    margin-top: 14pt;
+    margin-bottom: 6pt;
+    mso-style-name: "Heading 2";
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 14pt;
+    font-family: Calibri, Arial, sans-serif;
+    font-size: 10pt;
+  }
+  th {
+    background-color: #F3F4F6;
+    border: 1px solid #D1D5DB;
+    padding: 6pt 8pt;
+    font-weight: bold;
+    text-align: left;
+    color: #374151;
+    font-size: 10pt;
+  }
+  td {
+    border: 1px solid #D1D5DB;
+    padding: 5pt 8pt;
+    vertical-align: top;
+    font-size: 10pt;
+  }
+  tr:nth-child(even) td {
+    background-color: #F9FAFB;
+  }
+  .done {
+    color: #065F46;
+    font-weight: bold;
+  }
+  .status-done {
+    color: #065F46;
+    font-weight: bold;
+  }
+  .num-col {
+    width: 28pt;
+    text-align: center;
+    color: #6B7280;
+  }
+  .status-col {
+    width: 70pt;
+  }
+  .file-col {
+    width: 160pt;
+    font-family: Courier New, monospace;
+    font-size: 9pt;
+    color: #374151;
+  }
+  ul.checklist {
+    list-style: none;
+    padding-left: 12pt;
+    margin: 4pt 0 8pt 0;
+  }
+  ul.checklist li {
+    padding: 2pt 0;
+    font-size: 10.5pt;
+  }
+  ul.checklist li::before {
+    content: "\2610  ";
+    font-size: 11pt;
+    color: #6B7280;
+  }
+  ul.checklist.sub {
+    padding-left: 24pt;
+    margin-top: 2pt;
+  }
+  ul.checklist.sub li {
+    font-size: 10pt;
+  }
+  ol.principles {
+    padding-left: 18pt;
+    margin: 4pt 0;
+  }
+  ol.principles li {
+    margin-bottom: 10pt;
+    font-size: 10.5pt;
+    line-height: 1.6;
+  }
+  ol.principles li strong {
+    color: #003C8F;
+  }
+  .section-divider {
+    border: none;
+    border-top: 1px solid #E5E7EB;
+    margin: 18pt 0 14pt 0;
+  }
+  .tag-done {
+    background-color: #D1FAE5;
+    color: #065F46;
+    font-size: 9pt;
+    font-weight: bold;
+    padding: 1pt 5pt;
+    border-radius: 3pt;
+  }
+  .intro-note {
+    background-color: #EFF6FF;
+    border-left: 4px solid #003C8F;
+    padding: 8pt 12pt;
+    margin: 10pt 0 18pt 0;
+    font-size: 10.5pt;
+    color: #1E3A5F;
+  }
+</style>
+</head>
+<body>
+
+<h1>L'Étudiant Salons — Sprint Master TODO</h1>
+<p class="subtitle">Architecture v2 &nbsp;·&nbsp; 700 000 visiteurs / 130+ salons &nbsp;·&nbsp; Mis à jour : avril 2026</p>
+
+<!-- ══════════════════════════════════════════
+     SECTION 1 — TERMINÉ
+══════════════════════════════════════════ -->
+<h2>&#10003; TERMINÉ — Corrections architecture (sprint actuel)</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th class="num-col">#</th>
+      <th>Tâche</th>
+      <th class="file-col">Fichier(s)</th>
+      <th class="status-col">Statut</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="num-col">1</td>
+      <td>Exhibitor leads — 100% agrégé, RGPD compliant, QR stand canvas</td>
+      <td class="file-col">app/exhibitor/leads/page.tsx</td>
+      <td class="status-done">&#10003; Terminé</td>
+    </tr>
+    <tr>
+      <td class="num-col">2</td>
+      <td>Exhibitor dashboard — KPIs réels, remove student leads, school QR + J+1 CTA</td>
+      <td class="file-col">app/exhibitor/dashboard/page.tsx</td>
+      <td class="status-done">&#10003; Terminé</td>
+    </tr>
+    <tr>
+      <td class="num-col">3</td>
+      <td>API scans — exit channel + dwell_minutes (entry→exit delta)</td>
+      <td class="file-col">app/api/scans/route.ts</td>
+      <td class="status-done">&#10003; Terminé</td>
+    </tr>
+    <tr>
+      <td class="num-col">4</td>
+      <td>RDV gating — bloquer booking jusqu'au scan entrée du jour</td>
+      <td class="file-col">app/(student)/schools/[schoolId]/page.tsx</td>
+      <td class="status-done">&#10003; Terminé</td>
+    </tr>
+    <tr>
+      <td class="num-col">5</td>
+      <td>QR page — step 4 scan sortie + badge statut entrée</td>
+      <td class="file-col">app/(student)/qr/page.tsx</td>
+      <td class="status-done">&#10003; Terminé</td>
+    </tr>
+    <tr>
+      <td class="num-col">6</td>
+      <td>Score Booth page — kiosque plein écran, 3 champs, QR &lt;60s</td>
+      <td class="file-col">app/booth/register/page.tsx</td>
+      <td class="status-done">&#10003; Terminé</td>
+    </tr>
+    <tr>
+      <td class="num-col">7</td>
+      <td>Booth API — createAdminClient(), email auto @booth.letudiant-salons.fr</td>
+      <td class="file-col">app/api/booth/register/route.ts</td>
+      <td class="status-done">&#10003; Terminé</td>
+    </tr>
+    <tr>
+      <td class="num-col">8</td>
+      <td>Teacher dashboard — pipeline collecte données, partage pré-salon, WhatsApp/email</td>
+      <td class="file-col">app/teacher/dashboard/page.tsx</td>
+      <td class="status-done">&#10003; Terminé</td>
+    </tr>
+    <tr>
+      <td class="num-col">9</td>
+      <td>Onboarding teacher — validation step 1, fix empty fields bug</td>
+      <td class="file-col">app/onboarding/page.tsx</td>
+      <td class="status-done">&#10003; Terminé</td>
+    </tr>
+    <tr>
+      <td class="num-col">10</td>
+      <td>Login — redirect par rôle (teacher/exhibitor/admin/parent), liens inscription séparés</td>
+      <td class="file-col">app/(auth)/login/page.tsx</td>
+      <td class="status-done">&#10003; Terminé</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ══════════════════════════════════════════
+     SECTION 2 — SEMAINE 1
+══════════════════════════════════════════ -->
+<h2>&#128295; SEMAINE 1 — Infrastructure &amp; Capture</h2>
+
+<h3>Supabase Schema</h3>
+<ul class="checklist">
+  <li>Créer les migrations SQL (supabase/migrations/)</li>
+  <li>Table <strong>users</strong> : id, email, name, role, education_level, bac_series, intent_score, intent_level, last_dwell_minutes, is_booth_registered, parent_email, education_branches</li>
+  <li>Table <strong>events</strong> : id, name, city, event_date, venue_id</li>
+  <li>Table <strong>schools</strong> : id, name, type, city, user_id, target_fields[], parcoursup, apprenticeship, scholarship_allowed</li>
+  <li>Table <strong>formations</strong> : id, school_id, name, level, duration, cost, rncp_code</li>
+  <li>Table <strong>scans</strong> : id, user_id, event_id, stand_id, session_id, channel, dwell_estimate, created_at</li>
+  <li>Table <strong>matches</strong> : id, student_id, school_id, student_swipe, school_interest</li>
+  <li>Table <strong>appointments</strong> : id, student_id, school_id, event_id, slot_time, student_notes, status</li>
+  <li>Table <strong>groups</strong> : id, teacher_id, school_name, fair_id, invite_link, invite_link_expiry, member_uids[]</li>
+  <li>RLS policies par rôle (student / exhibitor / teacher / admin / service_role)</li>
+</ul>
+
+<h3>Score Booth</h3>
+<ul class="checklist">
+  <li>Tester POST /api/booth/register end-to-end avec Supabase réel</li>
+  <li>Vérifier que le QR généré est scannable par /fair/[id]/scan</li>
+  <li>Tester auto-reset countdown 30s kiosque</li>
+</ul>
+
+<h3>Auth</h3>
+<ul class="checklist">
+  <li>Tester flow register enseignant complet (validation + redirect /teacher/dashboard)</li>
+  <li>Tester group-invite/[token] → join group → QR actif</li>
+  <li>Vérifier redirect login par rôle (6 rôles)</li>
+</ul>
+
+<!-- ══════════════════════════════════════════
+     SECTION 3 — SEMAINE 2
+══════════════════════════════════════════ -->
+<h2>&#128295; SEMAINE 2 — Parcours &amp; Scoring</h2>
+
+<h3>QR Scanner caméra</h3>
+<ul class="checklist">
+  <li>app/(student)/fair/[eventId]/scan/page.tsx — intégrer html5-qrcode</li>
+  <li>Décoder payload {uid, app} → POST /api/scans channel:entry</li>
+  <li>Décoder payload stand {schoolId, type:'school_stand'} → POST /api/scans channel:stand</li>
+  <li>Gérer scan de sortie → POST /api/scans channel:exit → dwell_minutes calculé</li>
+  <li>Tester flux complet : entrée → stand×3 → sortie → dwell_minutes correct</li>
+</ul>
+
+<h3>Intent Score Pipeline</h3>
+<ul class="checklist">
+  <li>Vérifier computeIntentScore() produit les bons niveaux (0–39 / 40–69 / 70–100)</li>
+  <li>Tester refresh fire-and-forget après chaque scan</li>
+  <li>Badge intent sur /profile se met à jour après scan</li>
+</ul>
+
+<h3>RDV</h3>
+<ul class="checklist">
+  <li>Tester gate : sans scan entrée → message verrouillé visible</li>
+  <li>Tester après scan entrée → booking accessible</li>
+  <li>Tester annulation RDV → slot libéré pour un autre visiteur</li>
+</ul>
+
+<h3>Swipe Deck</h3>
+<ul class="checklist">
+  <li>app/(student)/discover/page.tsx — intégrer react-tinder-card</li>
+  <li>Swipe right → INSERT match(student_swipe:'right') → +30 pts intent score</li>
+  <li>Swipe left → INSERT match(student_swipe:'left')</li>
+</ul>
+
+<h3>Webhook EventMaker</h3>
+<ul class="checklist">
+  <li>app/api/webhooks/eventmaker/route.ts</li>
+  <li>Receive POST → lookup email dans table users</li>
+  <li>Match exact → lier uid existant au profil EventMaker</li>
+  <li>Pas de match → créer profil provisoire + flag needs_review</li>
+  <li>Tester avec mock : app/api/mock/eventmaker/route.ts</li>
+</ul>
+
+<!-- ══════════════════════════════════════════
+     SECTION 4 — SEMAINE 3
+══════════════════════════════════════════ -->
+<h2>&#128295; SEMAINE 3 — Dashboards &amp; Démo</h2>
+
+<h3>Admin Dashboard</h3>
+<ul class="checklist">
+  <li>app/admin/dashboard/page.tsx</li>
+  <li>KPIs salon : total visiteurs, scans/stand, taux conversion</li>
+  <li>Heatmap stands (top 10 par scan count)</li>
+  <li>Courbe fréquentation par heure (entry scans groupés par heure)</li>
+</ul>
+
+<h3>Recap Post-salon</h3>
+<ul class="checklist">
+  <li>app/(student)/recap/[eventId]/page.tsx</li>
+  <li>Timeline des scans (stands visités + heures)</li>
+  <li>Intent score final + badge (Explorateur / Comparateur / Décideur)</li>
+  <li>Schools swipées à droite</li>
+  <li>Bouton télécharger parcours PDF</li>
+</ul>
+
+<h3>Module Parent</h3>
+<ul class="checklist">
+  <li>app/parent/home/page.tsx — lecture seule enfant</li>
+  <li>Pas d'accès aux données comportementales</li>
+</ul>
+
+<h3>Seed &amp; Demo</h3>
+<ul class="checklist">
+  <li>scripts/seed.ts — données démo cohérentes</li>
+  <li>1 event : "Salon de Paris — 15 avril 2026"</li>
+  <li>5 schools : HEC, Sciences Po, ESIEE, ESCP, Paris School of Business</li>
+  <li>20 students : mix terminale/BTS/licence, intent scores variés</li>
+  <li>50 scans : spread 9h–12h, dwell times 45–180 min</li>
+  <li>5 appointments : 3 confirmés + 2 à venir</li>
+</ul>
+
+<h3>Build &amp; Deploy</h3>
+<ul class="checklist">
+  <li>Variables Vercel : NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_ANON_KEY + SUPABASE_SERVICE_ROLE_KEY</li>
+  <li>npm run build sans erreur prerender</li>
+  <li>Test déploiement Vercel staging</li>
+</ul>
+
+<!-- ══════════════════════════════════════════
+     SECTION 5 — PRINCIPES ARCHITECTURE
+══════════════════════════════════════════ -->
+<h2>&#128208; PRINCIPES ARCHITECTURE (immuables)</h2>
+
+<ol class="principles">
+  <li>
+    <strong>RGPD — Modèle exposant :</strong> L'exposant ne voit JAMAIS de données individuelles. Les profils appartiennent à L'Étudiant. Le rapport nominatif est livré J+1 comme produit data payant.
+  </li>
+  <li>
+    <strong>Score Booth :</strong> 3 champs max. Email optionnel. QR en &lt; 3 secondes. Auto-reset 30s. Même format QR que l'app : { uid, app: 'letudiant-salons' }
+  </li>
+  <li>
+    <strong>Groupe scolaire :</strong> Le but est de COLLECTER les profils individuels des 15% de visiteurs en groupe. Le prof voit uniquement le nombre d'élèves inscrits avant / le jour J. Rien d'autre.
+  </li>
+  <li>
+    <strong>RDV Gating :</strong> Impossible de réserver sans proof of physical presence (scan channel:'entry' ce jour-là). Élimine structurellement les no-shows.
+  </li>
+  <li>
+    <strong>Exit Scan :</strong> dwell_minutes = (exit.created_at − entry.created_at) / 60 000. Stocké sur users.last_dwell_minutes.
+  </li>
+  <li>
+    <strong>Intent Score :</strong> 0–39 Explorateur · 40–69 Comparateur · 70–100 Décideur. Recalculé après chaque scan stand/conference/exit.
+  </li>
+</ol>
+
+<!-- ══════════════════════════════════════════
+     SECTION 6 — FICHIERS CLÉS
+══════════════════════════════════════════ -->
+<h2>&#128193; FICHIERS CLÉS</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th class="file-col">Fichier</th>
+      <th>Rôle</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="file-col">lib/supabase/client.ts</td>
+      <td>getSupabase() — client-side avec guard env vars</td>
+    </tr>
+    <tr>
+      <td class="file-col">lib/supabase/server.ts</td>
+      <td>createServerSupabaseClient() + createAdminClient()</td>
+    </tr>
+    <tr>
+      <td class="file-col">lib/scoring/intentScore.ts</td>
+      <td>computeIntentScore() + computeIntentLevel()</td>
+    </tr>
+    <tr>
+      <td class="file-col">hooks/useAuth.ts</td>
+      <td>user + profile + loading</td>
+    </tr>
+    <tr>
+      <td class="file-col">app/api/scans/route.ts</td>
+      <td>POST scan — entry/stand/conference/exit + dwell</td>
+    </tr>
+    <tr>
+      <td class="file-col">app/api/booth/register/route.ts</td>
+      <td>POST booth — createAdminClient → userId → QR</td>
+    </tr>
+    <tr>
+      <td class="file-col">app/booth/register/page.tsx</td>
+      <td>Score Booth kiosque — UI plein écran tactile</td>
+    </tr>
+    <tr>
+      <td class="file-col">app/(auth)/login/page.tsx</td>
+      <td>Login + redirect par rôle</td>
+    </tr>
+    <tr>
+      <td class="file-col">app/onboarding/page.tsx</td>
+      <td>Register student/teacher/parent avec validation</td>
+    </tr>
+    <tr>
+      <td class="file-col">components/ui/</td>
+      <td>Design system Saguez &amp; Partners complet</td>
+    </tr>
+  </tbody>
+</table>
+
+</body>
+</html>

@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import type { Database } from './types'
 
@@ -74,6 +75,19 @@ export async function createServiceClient() {
           )
         } catch {}
       },
+    },
+  })
+}
+
+// ─── Admin client (service role + auth.admin API) ─────────────────────────────
+// Uses createClient directly (not SSR) to expose auth.admin.createUser() etc.
+// ⚠️  Server-side only — never import in 'use client' files.
+export function createAdminClient() {
+  const { url, serviceKey } = requireServiceEnv()
+  return createClient<Database>(url, serviceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession:   false,
     },
   })
 }

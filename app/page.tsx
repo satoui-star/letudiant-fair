@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = 'force-dynamic'
 
 import Logo from "@/components/ui/Logo";
 import StripeRule from "@/components/ui/StripeRule";

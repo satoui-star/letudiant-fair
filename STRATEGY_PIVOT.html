@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>L'Étudiant Salons — Pivot Stratégique · Architecture Solution vs Problème</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --red:#E3001B;--red-dark:#B0001A;--red-light:#FDE8EB;
+  --blue:#003C8F;--blue-light:#E6ECF8;
+  --yellow:#FFD100;--yellow-light:#FFFBE6;
+  --green:#1B7F3A;--green-light:#E8F5EC;
+  --orange:#C25A00;--orange-light:#FFF0E0;
+  --purple:#6B21A8;--purple-light:#F3E8FF;
+  --gray-900:#1A1A1A;--gray-700:#3D3D3D;--gray-500:#6B6B6B;
+  --gray-300:#C8C8C8;--gray-200:#E8E8E8;--gray-100:#F4F4F4;
+  --white:#FFFFFF;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',system-ui,sans-serif;font-size:14px;color:var(--gray-900);background:#F8F8F8;line-height:1.6}
+@media print{body{background:#fff}.no-print{display:none}.page-break{page-break-before:always}}
+
+.page-wrap{max-width:1160px;margin:0 auto;padding:0 32px 100px}
+.stripe{height:5px;background:linear-gradient(90deg,var(--red) 60%,var(--blue) 60% 80%,var(--yellow) 80%)}
+
+/* HEADER */
+.doc-header{background:#fff;border-bottom:1px solid var(--gray-200);padding:0 32px;margin-bottom:40px}
+.doc-header-inner{max-width:1160px;margin:0 auto;padding:32px 0 24px;display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+.kicker{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:6px}
+.doc-header h1{font-size:28px;font-weight:800;line-height:1.2;letter-spacing:-.5px;margin-bottom:8px}
+.doc-header .sub{font-size:14px;color:var(--gray-500);max-width:580px;line-height:1.6}
+.meta{text-align:right;font-size:12px;color:var(--gray-500);line-height:1.9}
+.meta strong{color:var(--gray-700)}
+.badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:4px;margin-top:4px}
+.badge-draft{background:var(--orange-light);color:var(--orange);border:1px solid #e09040}
+.badge-validate{background:var(--blue-light);color:var(--blue);border:1px solid #bed0ec}
+
+/* SECTION */
+.section{background:#fff;border:1px solid var(--gray-200);border-radius:8px;margin-bottom:28px;overflow:hidden}
+.section-head{padding:20px 28px 14px;border-bottom:1px solid var(--gray-200)}
+.sec-stripe{height:4px;background:linear-gradient(90deg,var(--red) 60%,var(--blue) 60% 80%,var(--yellow) 80%);margin-bottom:14px}
+.sec-num{font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:4px}
+.section-head h2{font-size:19px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px}
+.section-head .desc{font-size:13px;color:var(--gray-500);max-width:820px}
+.section-body{padding:26px 28px}
+
+/* PROBLEM/SOLUTION GRID */
+.ps-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:8px}
+@media(max-width:860px){.ps-grid{grid-template-columns:1fr}}
+.ps-card{border-radius:8px;border:1.5px solid;padding:18px;display:flex;flex-direction:column;gap:10px}
+.ps-card.problem{border-color:#f5b0bb;background:var(--red-light)}
+.ps-card.solution{border-color:#a8d5b5;background:var(--green-light)}
+.ps-label{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase}
+.ps-card.problem .ps-label{color:var(--red)}
+.ps-card.solution .ps-label{color:var(--green)}
+.ps-title{font-size:15px;font-weight:800;color:var(--gray-900);line-height:1.3}
+.ps-body{font-size:13px;color:var(--gray-700);line-height:1.55}
+.ps-body ul{list-style:none;display:flex;flex-direction:column;gap:5px;margin-top:6px}
+.ps-body li{display:flex;gap:8px;align-items:flex-start}
+.ps-body li::before{content:'→';font-size:11px;flex-shrink:0;margin-top:2px}
+.ps-card.problem .ps-body li::before{color:var(--red)}
+.ps-card.solution .ps-body li::before{color:var(--green)}
+
+/* CALLOUT */
+.callout{border-radius:6px;padding:14px 16px;margin-bottom:18px;display:flex;gap:12px;align-items:flex-start;border:1px solid;border-left-width:4px}
+.callout.blue{background:var(--blue-light);border-color:#bed0ec;border-left-color:var(--blue)}
+.callout.orange{background:var(--orange-light);border-color:#ffc87a;border-left-color:var(--orange)}
+.callout.red{background:var(--red-light);border-color:#f5b0bb;border-left-color:var(--red)}
+.callout.green{background:var(--green-light);border-color:#a8d5b5;border-left-color:var(--green)}
+.callout.purple{background:var(--purple-light);border-color:#d8b4fe;border-left-color:var(--purple)}
+.callout-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.callout p{font-size:13px;color:var(--gray-700);line-height:1.55;margin-bottom:4px}
+.callout p:last-child{margin-bottom:0}
+.callout strong{color:var(--gray-900)}
+
+/* PERSONA GRID */
+.persona-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:8px}
+@media(max-width:960px){.persona-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.persona-grid{grid-template-columns:1fr}}
+.persona-card{border-radius:10px;overflow:hidden;border:1.5px solid var(--gray-200)}
+.persona-card-top{padding:16px;color:#fff}
+.persona-card-top.student-high{background:linear-gradient(135deg,#1A0A0E,#4a0012)}
+.persona-card-top.student-med{background:linear-gradient(135deg,#1a1206,#5a3a00)}
+.persona-card-top.student-low{background:linear-gradient(135deg,#1a1a1a,#3d3d3d)}
+.persona-card-top.teacher{background:linear-gradient(135deg,#00274d,#003C8F)}
+.persona-card-top.parent{background:linear-gradient(135deg,#1B4332,#1B7F3A)}
+.persona-card-top.group{background:linear-gradient(135deg,#3B0764,#6B21A8)}
+.persona-name{font-size:16px;font-weight:800;margin-bottom:4px}
+.persona-archetype{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;opacity:.7;margin-bottom:8px}
+.intent-bar{display:flex;gap:4px;align-items:center;margin-top:8px}
+.intent-dot{width:10px;height:10px;border-radius:50%}
+.intent-dot.on{background:#fff}
+.intent-dot.off{background:rgba(255,255,255,.2)}
+.intent-label{font-size:10px;color:rgba(255,255,255,.65);margin-left:4px;letter-spacing:.5px;text-transform:uppercase;font-weight:700}
+.persona-card-body{padding:14px 16px;background:#fff}
+.persona-card-body .trait{font-size:12px;color:var(--gray-700);margin-bottom:6px;line-height:1.45}
+.persona-card-body .gap{font-size:12px;color:var(--red-dark);font-weight:600;display:flex;gap:6px}
+.persona-card-body .gap::before{content:'Gap:';font-weight:800;color:var(--red);flex-shrink:0}
+.persona-card-body .engagement{font-size:12px;color:var(--green);font-weight:600;display:flex;gap:6px;margin-top:4px}
+.persona-card-body .engagement::before{content:'Levier:';font-weight:800;flex-shrink:0}
+
+/* DATA FLOW */
+.flow-wrap{background:var(--gray-100);border-radius:8px;padding:24px;margin-bottom:18px;overflow-x:auto}
+.flow-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:nowrap;min-width:700px}
+.flow-row:last-child{margin-bottom:0}
+.flow-node{padding:10px 14px;border-radius:6px;font-size:12px;font-weight:700;text-align:center;white-space:nowrap;border:2px solid}
+.fn-actor{background:var(--gray-900);color:#fff;border-color:var(--gray-700)}
+.fn-system{background:var(--blue-light);color:var(--blue);border-color:#bed0ec}
+.fn-letudiant{background:var(--red-light);color:var(--red-dark);border-color:#f5b0bb}
+.fn-gdpr{background:var(--yellow-light);color:#7a5c00;border-color:#ffe066;border-style:dashed}
+.fn-output{background:var(--green-light);color:var(--green);border-color:#a8d5b5}
+.fn-eventmaker{background:var(--purple-light);color:var(--purple);border-color:#d8b4fe}
+.flow-arrow{color:var(--gray-400);font-size:16px;flex-shrink:0}
+.flow-label{font-size:10px;color:var(--gray-500);font-style:italic;flex-shrink:0;max-width:100px;line-height:1.3;text-align:center}
+.flow-divider{height:1px;background:var(--gray-200);margin:8px 0}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{background:var(--gray-900);color:#fff;padding:10px 14px;text-align:left;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px}
+.data-table td{padding:11px 14px;border-bottom:1px solid var(--gray-200);vertical-align:top;line-height:1.5}
+.data-table tr:hover td{background:var(--gray-100)}
+.data-table tr:last-child td{border-bottom:none}
+
+/* PILL */
+.pill{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.3px;white-space:nowrap}
+.pill-red{background:var(--red-light);color:var(--red-dark)}
+.pill-green{background:var(--green-light);color:var(--green)}
+.pill-blue{background:var(--blue-light);color:var(--blue)}
+.pill-yellow{background:var(--yellow-light);color:#7a5c00}
+.pill-gray{background:var(--gray-200);color:var(--gray-700)}
+.pill-purple{background:var(--purple-light);color:var(--purple)}
+.pill-orange{background:var(--orange-light);color:var(--orange)}
+
+/* TIMELINE */
+.timeline{display:flex;flex-direction:column;gap:0}
+.tl-row{display:flex;gap:16px;align-items:flex-start;padding:16px 0;border-bottom:1px solid var(--gray-200)}
+.tl-row:last-child{border-bottom:none}
+.tl-step{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;margin-top:2px}
+.tl-step.red{background:var(--red);color:#fff}
+.tl-step.blue{background:var(--blue);color:#fff}
+.tl-step.green{background:var(--green);color:#fff}
+.tl-step.gray{background:var(--gray-300);color:var(--gray-700)}
+.tl-content{flex:1}
+.tl-title{font-size:14px;font-weight:800;margin-bottom:4px;color:var(--gray-900)}
+.tl-body{font-size:13px;color:var(--gray-700);line-height:1.55}
+.tl-body ul{list-style:none;margin-top:6px;display:flex;flex-direction:column;gap:4px}
+.tl-body li{display:flex;gap:7px}
+.tl-body li::before{content:'·';font-weight:800;color:var(--gray-500);flex-shrink:0}
+
+/* OPEN QUESTIONS */
+.oq-list{display:flex;flex-direction:column;gap:10px}
+.oq-item{display:flex;gap:14px;align-items:flex-start;padding:14px;background:var(--yellow-light);border:1px solid #ffe066;border-left:4px solid var(--yellow);border-radius:6px}
+.oq-num{width:24px;height:24px;border-radius:50%;background:var(--yellow);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#7a5c00;flex-shrink:0;margin-top:1px}
+.oq-body{flex:1;font-size:13px;color:var(--gray-700);line-height:1.55}
+.oq-body strong{color:var(--gray-900)}
+
+/* SUMMARY TABLE */
+.sum-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:8px}
+@media(max-width:900px){.sum-grid{grid-template-columns:repeat(2,1fr)}}
+.sum-card{border:1px solid var(--gray-200);border-radius:8px;padding:16px;background:#fff}
+.sum-card .sum-icon{font-size:22px;margin-bottom:6px}
+.sum-card .sum-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--gray-500);margin-bottom:4px}
+.sum-card .sum-val{font-size:20px;font-weight:800;letter-spacing:-.5px}
+.sum-card .sum-desc{font-size:11px;color:var(--gray-500);margin-top:4px;line-height:1.4}
+.sum-card.keep .sum-val{color:var(--green)}
+.sum-card.change .sum-val{color:var(--red)}
+.sum-card.add .sum-val{color:var(--blue)}
+.sum-card.validate .sum-val{color:var(--orange)}
+</style>
+</head>
+<body>
+<div class="stripe"></div>
+
+<!-- HEADER -->
+<div class="doc-header">
+  <div class="doc-header-inner">
+    <div>
+      <div class="kicker">L'Étudiant Salons · PM + Data Strategy</div>
+      <h1>Pivot Stratégique — Architecture Solution vs Problème</h1>
+      <p class="sub">Refonte du modèle de collecte, des personas, du pipeline Eventmaker et du rôle de l'enseignant dans le parcours de l'étudiant. Document de validation — aucun code à ce stade.</p>
+    </div>
+    <div class="meta">
+      <div><strong>Version</strong> 1.0 — Brouillon</div>
+      <div><strong>Date</strong> 10 avril 2026</div>
+      <div><strong>Statut</strong></div>
+      <div class="badge badge-validate">À VALIDER</div>
+    </div>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+<!-- ÉTAT DES LIEUX -->
+<div class="section">
+  <div class="section-head">
+    <div class="sec-stripe"></div>
+    <div class="sec-num">Section 00</div>
+    <h2>État des lieux — Ce que nous changeons et pourquoi</h2>
+    <p class="desc">Cinq problèmes structurels identifiés dans la stratégie actuelle. Chacun est traité dans ce document avec une solution architecturée.</p>
+  </div>
+  <div class="section-body">
+    <div class="sum-grid">
+      <div class="sum-card change">
+        <div class="sum-icon">🚫</div>
+        <div class="sum-label">À supprimer</div>
+        <div class="sum-val">2</div>
+        <div class="sum-desc">Scan QR exposant sur étudiant · Exit-scan dwell time</div>
+      </div>
+      <div class="sum-card add">
+        <div class="sum-icon">✦</div>
+        <div class="sum-label">À ajouter</div>
+        <div class="sum-val">4</div>
+        <div class="sum-desc">Pipeline enseignant · Variable intent · Eventmaker API · Modèle lead owned</div>
+      </div>
+      <div class="sum-card keep">
+        <div class="sum-icon">✓</div>
+        <div class="sum-label">À conserver</div>
+        <div class="sum-val">5</div>
+        <div class="sum-desc">Formulaire déclaratif · Score d'orientation · RDV pré-salon · WAX optin · RGPD Art. 6</div>
+      </div>
+      <div class="sum-card validate">
+        <div class="sum-icon">?</div>
+        <div class="sum-label">À valider</div>
+        <div class="sum-val">6</div>
+        <div class="sum-desc">Questions ouvertes en Section 07 — réponses attendues avant de coder</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROBLÈME 1 : QR EXPOSANT -->
+<div class="section">
+  <div class="section-head">
+    <div class="sec-stripe"></div>
+    <div class="sec-num">Section 01 — Problème critique</div>
+    <h2>La collecte au stand : conflit entre le modèle commercial de L'Étudiant et le flux actuel</h2>
+    <p class="desc">Le scan QR étudiant → exposant court-circuite le modèle de revente de leads de L'Étudiant. Il faut une architecture où L'Étudiant reste propriétaire de la donnée.</p>
+  </div>
+  <div class="section-body">
+    <div class="ps-grid">
+      <div class="ps-card problem">
+        <div class="ps-label">🔴 Problème</div>
+        <div class="ps-title">Si l'exposant scanne le QR de l'étudiant, il obtient directement la donnée</div>
+        <div class="ps-body">
+          <ul>
+            <li>L'école reçoit le profil étudiant <strong>sans passer par L'Étudiant</strong></li>
+            <li>L'Étudiant perd toute valeur commerciale sur ce lead</li>
+            <li>L'étudiant n'a pas consenti à partager ses données avec cette école en particulier</li>
+            <li>Aucun enrichissement possible si la donnée va directement à l'exposant</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ps-card solution">
+        <div class="ps-label">🟢 Solution — Modèle "Lead Owned"</div>
+        <div class="ps-title">L'Étudiant est l'unique intermédiaire de données entre l'étudiant et l'école</div>
+        <div class="ps-body">
+          <ul>
+            <li><strong>QR codes aux stands = propriété de L'Étudiant</strong>, pas de l'école</li>
+            <li>L'étudiant scanne → page L'Étudiant → signal d'intérêt enregistré côté L'Étudiant</li>
+            <li>L'école ne voit jamais le profil individuel en temps réel au salon</li>
+            <li>En J+1 : L'Étudiant exporte un fichier de leads enrichis + scorés à l'école → c'est là le produit vendu</li>
+            <li>L'étudiant peut activer un "je consens à être contacté par [école]" → opt-in explicite</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout blue">
+      <div class="callout-icon">💡</div>
+      <div>
+        <p><strong>Principe fondateur du nouveau modèle.</strong> L'Étudiant n'est pas un outil de mise en relation directe. C'est un média-data : il collecte, enrichit, score, et revend des leads qualifiés aux établissements. Le salon est le moment de collecte — pas de distribution. La distribution se fait en aval, via le CRM des exposants, alimenté par l'export L'Étudiant.</p>
+      </div>
+    </div>
+
+    <div style="overflow-x:auto">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Action au stand</th>
+            <th>Ancien modèle ❌</th>
+            <th>Nouveau modèle ✅</th>
+            <th>Bénéfice L'Étudiant</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Exposant veut capter un lead</td>
+            <td>Scanne le QR de l'étudiant → reçoit profil direct</td>
+            <td>Reçoit un fichier de leads scorés en J+1 via export L'Étudiant</td>
+            <td>Valeur commerciale préservée · Données enrichies</td>
+          </tr>
+          <tr>
+            <td>Étudiant visite un stand</td>
+            <td>Son QR est scanné par l'exposant (subi)</td>
+            <td>Scanne le QR L'Étudiant au stand (actif) → signal enregistré</td>
+            <td>Consentement actif · Signal comportemental capturé</td>
+          </tr>
+          <tr>
+            <td>Étudiant intéressé</td>
+            <td>Aucun signal capturé si QR non scanné par exposant</td>
+            <td>Bouton "Je suis intéressé" dans l'app / web page L'Étudiant</td>
+            <td>Signal d'intérêt fort · Alimenté au score lead</td>
+          </tr>
+          <tr>
+            <td>Brochure école</td>
+            <td>Papier ou aucun digital</td>
+            <td>QR stand → page L'Étudiant → brochure PDF envoyée à l'étudiant <em>(email capturé)</em></td>
+            <td>Email collecté · Intérêt implicite enregistré</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- PROBLÈME 2 : GROUPES ENSEIGNANTS -->
+<div class="section">
+  <div class="section-head">
+    <div class="sec-stripe"></div>
+    <div class="sec-num">Section 02 — Segment sous-exploité (15%)</div>
+    <h2>Pipeline enseignant → groupe élèves : un flux de données structuré et RGPD-compliant</h2>
+    <p class="desc">Les groupes scolaires représentent 15% des visites mais génèrent actuellement 0% de donnée structurée. L'enseignant est le nœud clé — il est déjà responsable de la donnée de ses élèves.</p>
+  </div>
+  <div class="section-body">
+
+    <div class="ps-grid">
+      <div class="ps-card problem">
+        <div class="ps-label">🔴 Problème</div>
+        <div class="ps-title">Les groupes arrivent en masse, repartent sans laisser de trace exploitable</div>
+        <div class="ps-body">
+          <ul>
+            <li>L'enseignant est le seul point de contact organisé — mais il n'est pas intégré au flux</li>
+            <li>Les élèves d'un groupe ont souvent un intent faible (voyage scolaire imposé)</li>
+            <li>Collecte de données mineurs sans consentement parental individuel = risque RGPD</li>
+            <li>Aucun lien entre les comportements des élèves et leur enseignant ou leur classe</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ps-card solution">
+        <div class="ps-label">🟢 Solution — Pipeline Teacher-First</div>
+        <div class="ps-title">L'enseignant crée le groupe, collecte les consentements, et les élèves rejoignent via lien</div>
+        <div class="ps-body">
+          <ul>
+            <li><strong>Étape 1 (avant le salon) :</strong> L'enseignant s'inscrit → crée un groupe → reçoit un lien d'invitation unique</li>
+            <li><strong>Étape 2 (dans l'établissement) :</strong> Il partage le lien aux élèves → ils rejoignent via navigateur (no app required)</li>
+            <li><strong>Étape 3 (jour J) :</strong> Les élèves scannent avec leur compte groupe → activités liées à la classe</li>
+            <li><strong>Étape 4 (après) :</strong> L'enseignant voit un dashboard agrégé des intérêts de sa classe (anonymisé)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout orange">
+      <div class="callout-icon">⚖️</div>
+      <div>
+        <p><strong>RGPD — Base légale pour le pipeline enseignant.</strong> L'établissement scolaire est co-responsable de traitement (Art. 26 RGPD). La visite scolaire est une mission d'intérêt public (Art. 6(1)(e)) ou une mission légitime de l'établissement (Art. 6(1)(b)). Le consentement parental individuel peut être délégué à l'établissement via le formulaire de sortie scolaire déjà signé par les parents. L'enseignant n'a pas besoin de collecter un consentement RGPD séparé pour chaque mineur — l'autorisation de sortie couvre la finalité pédagogique. <strong>La collecte marketing WAX reste soumise à consentement explicite même dans ce cadre.</strong></p>
+      </div>
+    </div>
+
+    <div style="overflow-x:auto">
+      <div class="flow-wrap">
+        <p style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--gray-500);margin-bottom:16px">Flux de données — Pipeline enseignant (avant / pendant / après le salon)</p>
+        <div class="flow-row">
+          <div class="flow-node fn-actor">👩‍🏫 Enseignant</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node fn-system">App / Web : Création groupe</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node fn-letudiant">Lien invite unique généré</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node fn-gdpr">RGPD : mission établissement Art. 6(1)(b)</div>
+        </div>
+        <div class="flow-divider"></div>
+        <div class="flow-row">
+          <div class="flow-node fn-actor">👨‍🎓 Élèves (avant salon)</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node fn-system">Rejoignent via lien (navigateur)</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node fn-letudiant">Profil léger créé (pseudo + filière)</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-gdpr">
+          <div class="flow-node fn-gdpr">Consentement individuel : profil + optin WAX</div>
+          </div>
+        </div>
+        <div class="flow-divider"></div>
+        <div class="flow-row">
+          <div class="flow-node fn-actor">Jour J — Salon</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node fn-system">Scans stands / confs</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node fn-letudiant">Signaux comportementaux liés au groupe</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node fn-output">Score lead calculé par élève</div>
+        </div>
+        <div class="flow-divider"></div>
+        <div class="flow-row">
+          <div class="flow-node fn-actor">J+1</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node fn-system">Dashboard enseignant</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node fn-output">Top filières du groupe (agrégé, anonymisé)</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node fn-letudiant">Rapport de classe exportable</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- PROBLÈME 3 : PERSONAS ET INTENT -->
+<div class="section">
+  <div class="section-head">
+    <div class="sec-stripe"></div>
+    <div class="sec-num">Section 03 — Personas redessinées</div>
+    <h2>6 personas avec variable d'intent explicite — et une stratégie d'engagement pour chaque</h2>
+    <p class="desc">La variable <strong>intent_level</strong> (low / medium / high) s'ajoute à chaque profil. Elle détermine le flux d'engagement, pas seulement le contenu affiché.</p>
+  </div>
+  <div class="section-body">
+
+    <div class="callout purple">
+      <div class="callout-icon">📐</div>
+      <div>
+        <p><strong>Définition de la variable intent_level.</strong> Ce n'est pas une question posée à l'étudiant — c'est une valeur <em>inférée</em> à partir de ses comportements (scans, swipes, RDV, complétion du profil). Elle démarre à <strong>low</strong> pour tout nouveau visiteur, et monte en <strong>medium</strong> puis <strong>high</strong> au fur et à mesure des signaux comportementaux collectés.</p>
+      </div>
+    </div>
+
+    <div class="persona-grid">
+
+      <div class="persona-card">
+        <div class="persona-card-top student-high">
+          <div class="persona-archetype">Lycéen · Intent élevé</div>
+          <div class="persona-name">Emma, Terminale G</div>
+          <div class="intent-bar">
+            <div class="intent-dot on"></div><div class="intent-dot on"></div><div class="intent-dot on"></div>
+            <span class="intent-label">HIGH</span>
+          </div>
+        </div>
+        <div class="persona-card-body">
+          <div class="trait">A une liste de 5 écoles cibles. Vient valider un choix déjà fait. Compare les prépas vs admissions directes.</div>
+          <div class="gap">L'app ne capitalise pas sur sa décision avancée — elle reçoit les mêmes recommandations qu'un profil "exploring".</div>
+          <div class="engagement">Accéder à un comparateur avancé + agenda personnalisé de conférences pertinentes.</div>
+        </div>
+      </div>
+
+      <div class="persona-card">
+        <div class="persona-card-top student-med">
+          <div class="persona-archetype">Lycéen · Intent moyen</div>
+          <div class="persona-name">Mehdi, Première</div>
+          <div class="intent-bar">
+            <div class="intent-dot on"></div><div class="intent-dot on"></div><div class="intent-dot off"></div>
+            <span class="intent-label">MEDIUM</span>
+          </div>
+        </div>
+        <div class="persona-card-body">
+          <div class="trait">Sait qu'il aime l'informatique mais ne connaît pas les formations disponibles. Curieux mais non décidé.</div>
+          <div class="gap">Sans guide, il erre et repart sans avoir fait de signaux exploitables pour les exposants.</div>
+          <div class="engagement">Quiz "Quel parcours pour moi ?" + plan du salon filtré + suggestions de conférences.</div>
+        </div>
+      </div>
+
+      <div class="persona-card">
+        <div class="persona-card-top student-low">
+          <div class="persona-archetype">Lycéen / Collégien · Intent faible</div>
+          <div class="persona-name">Hugo, 2nde (groupe scolaire)</div>
+          <div class="intent-bar">
+            <div class="intent-dot on"></div><div class="intent-dot off"></div><div class="intent-dot off"></div>
+            <span class="intent-label">LOW</span>
+          </div>
+        </div>
+        <div class="persona-card-body">
+          <div class="trait">Venu en sortie scolaire imposée. Ne sait pas pourquoi il est là. N'a pas téléchargé l'app.</div>
+          <div class="gap">Invisible aujourd'hui — aucun signal collecté, aucun lead généré, aucune valeur créée.</div>
+          <div class="engagement">Gamification légère (badge "J'ai découvert X écoles") + format court (reels 30s) + lien groupe enseignant.</div>
+        </div>
+      </div>
+
+      <div class="persona-card">
+        <div class="persona-card-top teacher">
+          <div class="persona-archetype">Enseignant · Décideur de groupe</div>
+          <div class="persona-name">Mme Tran, Prof principale</div>
+          <div class="intent-bar">
+            <div class="intent-dot on"></div><div class="intent-dot on"></div><div class="intent-dot on"></div>
+            <span class="intent-label">HIGH (organisatrice)</span>
+          </div>
+        </div>
+        <div class="persona-card-body">
+          <div class="trait">Organise la sortie scolaire pour 28 élèves. Veut un outil qui l'aide à valoriser la visite auprès de l'administration.</div>
+          <div class="gap">Aujourd'hui : aucun outil dédié. Elle reçoit le même onboarding qu'un étudiant.</div>
+          <div class="engagement">Dashboard enseignant séparé + rapport de classe exportable + invitation groupe en 2 clics.</div>
+        </div>
+      </div>
+
+      <div class="persona-card">
+        <div class="persona-card-top parent">
+          <div class="persona-archetype">Parent · Accompagnateur</div>
+          <div class="persona-name">M. Okafor, père de Terminale</div>
+          <div class="intent-bar">
+            <div class="intent-dot on"></div><div class="intent-dot on"></div><div class="intent-dot off"></div>
+            <span class="intent-label">MEDIUM</span>
+          </div>
+        </div>
+        <div class="persona-card-body">
+          <div class="trait">Venu avec sa fille. Inquiet du coût des études, de l'insertion professionnelle, des débouchés.</div>
+          <div class="gap">L'app est orientée étudiant — le parent ne trouve pas les informations qui lui sont pertinentes (frais, taux d'insertion).</div>
+          <div class="engagement">Vue "Parent" dans l'app : coût moyen, taux insertion, aides financières — filtrée sur le profil de l'enfant.</div>
+        </div>
+      </div>
+
+      <div class="persona-card">
+        <div class="persona-card-top group">
+          <div class="persona-archetype">Étudiant post-bac · Reconversion</div>
+          <div class="persona-name">Inès, Bac+2 en réorientation</div>
+          <div class="intent-bar">
+            <div class="intent-dot on"></div><div class="intent-dot on"></div><div class="intent-dot off"></div>
+            <span class="intent-label">MEDIUM (anxieuse)</span>
+          </div>
+        </div>
+        <div class="persona-card-body">
+          <div class="trait">A un DUT, veut se réorienter en design. Ne sait pas si elle peut postuler. Passerelles inconnues.</div>
+          <div class="gap">Le formulaire actuel ne capture pas le parcours antérieur → mauvaises recommandations.</div>
+          <div class="engagement">Filtre "J'ai déjà un Bac+2" dans l'onboarding + parcours "Réorientation" dans le comparateur.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="callout green">
+      <div class="callout-icon">📊</div>
+      <div>
+        <p><strong>Comment l'intent_level est calculé (logique métier, pas IA).</strong> Départ : <code>low</code>. Chaque signal ajoute des points : profil complet (+20) · 1er scan stand (+10) · swipe right (+15) · RDV réservé (+25) · conférence attendue (+15) · email fourni (+10). Seuils : 0–30 = low · 31–65 = medium · 66+ = high. Le tier alimente le score lead et le type de recommandations affichées.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROBLÈME 4 : EVENTMAKER -->
+<div class="section">
+  <div class="section-head">
+    <div class="sec-stripe"></div>
+    <div class="sec-num">Section 04 — Intégration tierce partie</div>
+    <h2>Eventmaker API — Récupérer les inscrits sans dupliquer l'onboarding</h2>
+    <p class="desc">Eventmaker gère l'inscription aux salons. L'app doit consommer son API pour enrichir les profils des étudiants déjà inscrits et éviter de leur demander deux fois la même information.</p>
+  </div>
+  <div class="section-body">
+
+    <div class="ps-grid">
+      <div class="ps-card problem">
+        <div class="ps-label">🔴 Problème</div>
+        <div class="ps-title">Deux sources de données déconnectées : Eventmaker et l'app L'Étudiant</div>
+        <div class="ps-body">
+          <ul>
+            <li>Un étudiant s'inscrit sur Eventmaker (email, profil) → arrive au salon → refait tout l'onboarding dans l'app</li>
+            <li>Double saisie = friction = abandon = données perdues</li>
+            <li>L'Étudiant ne sait pas qui est déjà inscrit avant le salon</li>
+            <li>Aucune préparation possible (no pre-fair journey) si l'app ignore les inscrits Eventmaker</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ps-card solution">
+        <div class="ps-label">🟢 Solution — Eventmaker comme source of truth pré-salon</div>
+        <div class="ps-title">L'app consomme l'API Eventmaker pour pré-remplir les profils et déclencher le pré-salon</div>
+        <div class="ps-body">
+          <ul>
+            <li><strong>Avant le salon :</strong> Cron job quotidien → pull des inscrits via Eventmaker API → créer/enrichir profil dans Supabase (si consentement)</li>
+            <li><strong>À l'inscription :</strong> Email de bienvenue L'Étudiant avec lien "Complétez votre profil" (1 clic → profil pré-rempli)</li>
+            <li><strong>Jour J :</strong> Étudiant scanne le QR d'entrée → identifié via token Eventmaker → session créée instantanément</li>
+            <li><strong>Données Eventmaker utiles :</strong> Email, prénom, niveau (déjà renseigné dans le formulaire ci-dessous), filières d'intérêt</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout orange">
+      <div class="callout-icon">⚠️</div>
+      <div>
+        <p><strong>RGPD — Condition préalable.</strong> L'utilisation des données Eventmaker par L'Étudiant nécessite soit (a) un accord de traitement conjoint des données (Art. 26) entre L'Étudiant et Eventmaker, soit (b) un transfert de données sur la base du consentement de l'inscrit (Art. 6(1)(a)) collecté <em>au moment de l'inscription Eventmaker</em>. <strong>Action requise avant implémentation : vérifier les CGU Eventmaker et le contrat B2B entre L'Étudiant et Eventmaker.</strong></p>
+      </div>
+    </div>
+
+    <div style="overflow-x:auto">
+      <div class="flow-wrap">
+        <p style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--gray-500);margin-bottom:16px">Flux Eventmaker → L'Étudiant app</p>
+        <div class="flow-row">
+          <div class="flow-node fn-actor">👤 Étudiant</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node fn-eventmaker">Eventmaker — Inscription salon</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node fn-gdpr">Consentement partage données L'Étudiant</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node fn-eventmaker">API Eventmaker (webhook ou polling)</div>
+        </div>
+        <div class="flow-divider"></div>
+        <div class="flow-row">
+          <div class="flow-node fn-eventmaker">Eventmaker Webhook / GET /attendees</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node fn-letudiant">Supabase : upsert users (email comme clé)</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node fn-system">Email pré-salon "Préparez votre visite"</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node fn-output">Profil pré-rempli · Intent = medium d'emblée</div>
+        </div>
+        <div class="flow-divider"></div>
+        <div class="flow-row">
+          <div class="flow-node fn-actor">Jour J — Entrée salon</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node fn-eventmaker">QR d'entrée Eventmaker scanné</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node fn-letudiant">Session créée · Profil reconnu</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node fn-output">Parcours personnalisé activé immédiatement</div>
+        </div>
+      </div>
+    </div>
+
+    <p style="font-size:13px;font-weight:700;margin-bottom:10px">Mapping des champs — Formulaire actuel Eventmaker → Profil L'Étudiant</p>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Champ formulaire Eventmaker</th>
+          <th>Valeur(s) disponibles</th>
+          <th>Champ Supabase app</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Vous êtes</td>
+          <td>Collégien · Lycéen · Étudiant · En recherche d'emploi · Parent · Professionnel secondaire · Professionnel supérieur</td>
+          <td><code>users.role</code> + <code>users.education_level</code></td>
+          <td><span class="pill pill-green">✓ Mappé directement</span></td>
+        </tr>
+        <tr>
+          <td>En quelle classe es-tu ?</td>
+          <td>Bac+1 · Bac+2 · Bac+3 · Bac+4 · Bac+5+</td>
+          <td><code>users.education_level</code></td>
+          <td><span class="pill pill-green">✓ Mappé</span></td>
+        </tr>
+        <tr>
+          <td>Filières d'intérêt</td>
+          <td>Multi-select (valeurs Eventmaker à confirmer)</td>
+          <td><code>users.education_branches</code> <code>users.study_wishes</code></td>
+          <td><span class="pill pill-yellow">⚠ Vérifier les valeurs exactes Eventmaker</span></td>
+        </tr>
+        <tr>
+          <td>Attestation 15 ans / autorisation parentale</td>
+          <td>Booléen</td>
+          <td><code>users.is_minor</code> (inversé) · <code>users.parent_approved</code></td>
+          <td><span class="pill pill-green">✓ Mappé</span></td>
+        </tr>
+        <tr>
+          <td>Email</td>
+          <td>Texte</td>
+          <td><code>users.email</code> — clé de déduplication</td>
+          <td><span class="pill pill-green">✓ Clé primaire d'identité</span></td>
+        </tr>
+        <tr>
+          <td><em>intent_level</em></td>
+          <td>—</td>
+          <td><code>users.orientation_stage</code> → démarré à <strong>exploring</strong> si inscrit Eventmaker</td>
+          <td><span class="pill pill-blue">+ Ajouté par l'app (non Eventmaker)</span></td>
+        </tr>
+        <tr>
+          <td><em>Département / Région</em></td>
+          <td>Non collecté actuellement</td>
+          <td><code>users.postal_code</code></td>
+          <td><span class="pill pill-red">✗ Gap — À ajouter au formulaire Eventmaker</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+</div>
+
+<!-- SECTION 05 : DATA COLLECTION REDESIGN -->
+<div class="section">
+  <div class="section-head">
+    <div class="sec-stripe"></div>
+    <div class="sec-num">Section 05 — Collecte de données</div>
+    <h2>Architecture de collecte redessinée — Before / During / After</h2>
+    <p class="desc">Chaque point de collecte est maintenant source-owned (L'Étudiant possède la donnée), RGPD-justifié, et lié à un déclencheur d'intent.</p>
+  </div>
+  <div class="section-body">
+
+    <div class="timeline">
+
+      <div class="tl-row">
+        <div class="tl-step red">①</div>
+        <div class="tl-content">
+          <div class="tl-title">AVANT — Inscription Eventmaker → pré-remplissage profil</div>
+          <div class="tl-body">
+            L'étudiant s'inscrit au salon via Eventmaker. L'API transfère les données déclaratives vers Supabase (avec consentement).
+            <ul>
+              <li>Données captées : rôle, niveau, filières, email, âge</li>
+              <li>Action déclenchée : email pré-salon "Préparez votre visite" avec lien profil</li>
+              <li>Intent de départ : <span class="pill pill-yellow">low → medium</span> dès inscription Eventmaker</li>
+              <li>RGPD : <span class="pill pill-blue">Art. 6(1)(b) service + Art. 6(1)(a) optin WAX</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-step red">②</div>
+        <div class="tl-content">
+          <div class="tl-title">AVANT — Création groupe enseignant</div>
+          <div class="tl-body">
+            L'enseignant crée son groupe dans l'app. Les élèves rejoignent via lien (web, pas d'app obligatoire). Profil minimal : pseudo, filière, niveau.
+            <ul>
+              <li>Données captées : filière, niveau, email (optionnel), appartenance groupe</li>
+              <li>RGPD : <span class="pill pill-blue">Art. 6(1)(b) mission établissement</span> · Marketing nécessite opt-in élève individuel</li>
+              <li>Intent de départ : <span class="pill pill-gray">low</span> (groupe scolaire = imposé)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-step blue">③</div>
+        <div class="tl-content">
+          <div class="tl-title">PENDANT — QR stands (appartenant à L'Étudiant, pas aux écoles)</div>
+          <div class="tl-body">
+            Chaque stand dispose d'un QR L'Étudiant. L'étudiant scanne → page web L'Étudiant pour cette école. Aucun accès direct de l'école à la donnée.
+            <ul>
+              <li>Données captées : school_id scanné · timestamp · email si brochure demandée</li>
+              <li>Signal d'intérêt capturé → contribue au score lead</li>
+              <li>Bouton "Je suis intéressé" → signal fort capturé · opt-in contact école possible</li>
+              <li>RGPD : <span class="pill pill-blue">Art. 6(1)(b) service</span> pour brochure · <span class="pill pill-green">Art. 6(1)(a) consentement</span> pour opt-in contact école</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-step blue">④</div>
+        <div class="tl-content">
+          <div class="tl-title">PENDANT — Conférences / Sessions</div>
+          <div class="tl-body">
+            Check-in conférence via QR L'Étudiant à l'entrée de chaque salle. Signal d'intérêt thématique fort.
+            <ul>
+              <li>Données captées : session_id · thème · email pour recevoir slides</li>
+              <li>Thème conférence = tag de filière automatique sur le profil étudiant</li>
+              <li>RGPD : <span class="pill pill-blue">Art. 6(1)(b)</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-step green">⑤</div>
+        <div class="tl-content">
+          <div class="tl-title">APRÈS — Score lead calculé · Export aux exposants · Email récap étudiant</div>
+          <div class="tl-body">
+            En J+1, le système calcule les scores leads pour tous les étudiants identifiés. L'Étudiant exporte les leads enrichis aux écoles (produit commercial). L'étudiant reçoit son bilan personnalisé.
+            <ul>
+              <li>Lead export : score + tier + filières + signaux comportementaux (PII anonymisé dans l'export si non-optin contact)</li>
+              <li>Email récap étudiant : stands visités, top recommandations, prochains salons</li>
+              <li>Dashboard enseignant : top filières du groupe, taux d'engagement (agrégé)</li>
+              <li>RGPD : lead export → <span class="pill pill-green">Art. 6(1)(a) consentement</span> si PII nominatif · <span class="pill pill-yellow">Art. 6(1)(f) intérêt légitime</span> si données agrégées anonymes</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 06 : ENGAGEMENT LOW-INTENT -->
+<div class="section">
+  <div class="section-head">
+    <div class="sec-stripe"></div>
+    <div class="sec-num">Section 06 — Stratégie d'engagement</div>
+    <h2>Comment inciter un profil "low-intent" à interagir ?</h2>
+    <p class="desc">Le visiteur low-intent (Hugo, sorti scolaire) n'est pas motivé par l'orientation. Le seul levier est la valeur immédiate et la friction zéro.</p>
+  </div>
+  <div class="section-body">
+
+    <div class="ps-grid">
+      <div class="ps-card problem">
+        <div class="ps-label">🔴 Problème</div>
+        <div class="ps-title">Un étudiant low-intent ne cherche pas d'orientation — il cherche à passer le temps</div>
+        <div class="ps-body">
+          <ul>
+            <li>Lui présenter un onboarding de 5 questions = abandon immédiat</li>
+            <li>Lui demander de télécharger une app = refus</li>
+            <li>Lui montrer des listes d'écoles = indifférence</li>
+            <li>Résultat : 0 signal, 0 lead, visiteur invisible</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ps-card solution">
+        <div class="ps-label">🟢 Solution — Micro-engagement à friction zéro</div>
+        <div class="ps-title">Attirer d'abord, collecter ensuite — l'intent se construit par l'usage</div>
+        <div class="ps-body">
+          <ul>
+            <li><strong>Reels 30 secondes</strong> : vidéos courtes par école (vie étudiante, projets, lieux) — format TikTok · aucun compte requis</li>
+            <li><strong>Gamification "explorer"</strong> : badge "J'ai visité 5 stands" visible sur son téléphone · collecte passive</li>
+            <li><strong>Lien groupe enseignant</strong> : rejoindre en 1 clic → profil minimal créé → intent commence à monter</li>
+            <li><strong>Quiz "Quel métier te correspond ?"</strong> : 3 questions fun → résultat + lien vers 2 formations · email optionnel pour recevoir résultat</li>
+            <li><strong>Parent trigger</strong> : si le parent est présent, son engagement (swipes, questions) peut "activer" l'intent de l'enfant via le profil familial</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout blue">
+      <div class="callout-icon">📈</div>
+      <div>
+        <p><strong>Objectif de conversion d'intent.</strong> Cible : convertir <strong>30% des profils low-intent</strong> en medium avant la fin du salon (= au moins 1 scan de stand + 1 signal actif). Pour le pipeline groupe enseignant, cible plus ambitieuse : <strong>50%</strong> car le contexte organisé par l'enseignant crée une pression sociale positive.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SECTION 07 : QUESTIONS OUVERTES -->
+<div class="section">
+  <div class="section-head">
+    <div class="sec-stripe"></div>
+    <div class="sec-num">Section 07 — Questions à valider avant de coder</div>
+    <h2>6 questions ouvertes — Réponses requises pour avancer</h2>
+    <p class="desc">Ces points bloquants doivent être tranchés lors de la session de validation du 19 avril. Sans réponse, certains modules ne peuvent pas être implémentés.</p>
+  </div>
+  <div class="section-body">
+    <div class="oq-list">
+
+      <div class="oq-item">
+        <div class="oq-num">1</div>
+        <div class="oq-body">
+          <strong>Eventmaker API — accès et contrat.</strong> L'Étudiant a-t-il un accès API Eventmaker actif ? Quels champs l'API expose-t-elle exactement (documentation) ? Le contrat B2B autorise-t-il L'Étudiant à réutiliser les données inscrits dans sa propre application ? Un DPA (Data Processing Agreement) est-il en place entre L'Étudiant et Eventmaker ?
+        </div>
+      </div>
+
+      <div class="oq-item">
+        <div class="oq-num">2</div>
+        <div class="oq-body">
+          <strong>Modèle commercial leads — validation business.</strong> La direction L'Étudiant confirme-t-elle que les leads sont vendus aux écoles en J+1 (pas en temps réel) ? Quel est le format de livraison attendu par les écoles (CSV, API, dashboard ?) ? Le prix du lead est-il fixe ou dépend-il du score / de l'intent level ?
+        </div>
+      </div>
+
+      <div class="oq-item">
+        <div class="oq-num">3</div>
+        <div class="oq-body">
+          <strong>QR codes au salon — qui les génère et les imprime ?</strong> Les QR stands L'Étudiant doivent-ils remplacer les supports actuels des exposants (signalétique existante) ? Qui est responsable de l'impression et de la pose avant le Salon de Paris (18 avril) ? Y a-t-il des contraintes de charte graphique imposées par le Palais des Congrès ?
+        </div>
+      </div>
+
+      <div class="oq-item">
+        <div class="oq-num">4</div>
+        <div class="oq-body">
+          <strong>Pipeline enseignant — accord avec les établissements scolaires.</strong> L'Étudiant a-t-il un accord existant avec des établissements pour partager les données d'élèves ? La base légale Art. 6(1)(b) est-elle suffisante ou faut-il un consentement parental individuel pour chaque élève mineur ? La CNIL a-t-elle déjà validé un dispositif similaire dans le contexte des salons de l'orientation ?
+        </div>
+      </div>
+
+      <div class="oq-item">
+        <div class="oq-num">5</div>
+        <div class="oq-body">
+          <strong>Opt-in contact école — mécanisme exact.</strong> Quand un étudiant clique "Je consens à être contacté par [École X]", qu'est-ce que l'école reçoit exactement ? Son email seulement, ou tout son profil déclaratif ? Y a-t-il un délai légal entre le consentement et l'utilisation par l'école ? Ce opt-in est-il révocable depuis l'app après le salon ?
+        </div>
+      </div>
+
+      <div class="oq-item">
+        <div class="oq-num">6</div>
+        <div class="oq-body">
+          <strong>intent_level — variable inférée ou déclarée ?</strong> La proposition actuelle est d'inférer l'intent via les comportements. Est-ce que L'Étudiant souhaite aussi poser explicitement la question ("Êtes-vous plutôt en phase d'exploration ou de décision ?") à l'onboarding ? Une variable auto-déclarée et une variable comportementale seraient plus précises mais plus complexes à maintenir. Quel niveau de complexité est acceptable pour la V1 ?
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 08 : CE QUI NE CHANGE PAS -->
+<div class="section">
+  <div class="section-head">
+    <div class="sec-stripe"></div>
+    <div class="sec-num">Section 08 — Continuité</div>
+    <h2>Ce qui est conservé de la stratégie existante</h2>
+  </div>
+  <div class="section-body">
+    <table class="data-table">
+      <thead>
+        <tr><th>Élément</th><th>Statut</th><th>Raison</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Formulaire déclaratif Eventmaker (rôle, niveau, filières, âge)</td>
+          <td><span class="pill pill-green">✓ Conservé</span></td>
+          <td>Base solide — données de qualité. Ajouter seulement le champ postal_code.</td>
+        </tr>
+        <tr>
+          <td>Score d'orientation 0–100 (50% déclaratif + 50% comportemental)</td>
+          <td><span class="pill pill-green">✓ Conservé</span></td>
+          <td>Formule validée. L'intent_level vient enrichir le comportemental, pas le remplacer.</td>
+        </tr>
+        <tr>
+          <td>Prise de RDV pré-salon comme signal d'intent fort</td>
+          <td><span class="pill pill-green">✓ Conservé</span></td>
+          <td>Signal le plus fort et réaliste. Reste à 0.35 dans la formule de scoring.</td>
+        </tr>
+        <tr>
+          <td>Opt-in WAX séparé de l'opt-in service</td>
+          <td><span class="pill pill-green">✓ Conservé</span></td>
+          <td>Conforme RGPD. Nécessaire pour commercialisation WAX.</td>
+        </tr>
+        <tr>
+          <td>consent_audit table (append-only, 5 ans de rétention)</td>
+          <td><span class="pill pill-green">✓ Conservé</span></td>
+          <td>Obligation légale Art. 7 RGPD.</td>
+        </tr>
+        <tr>
+          <td>Tables guest_sessions / guest_scans / guest_leads (hors-app)</td>
+          <td><span class="pill pill-green">✓ Conservé + étendu</span></td>
+          <td>Toujours pertinent pour les visiteurs sans compte. Le pipeline enseignant vient en complément.</td>
+        </tr>
+        <tr>
+          <td>Email de récap J+1 (bilan salon personnalisé)</td>
+          <td><span class="pill pill-green">✓ Conservé</span></td>
+          <td>Meilleur moment pour convertir un étudiant vers l'app.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /page-wrap -->
+<div class="stripe" style="position:fixed;bottom:0;left:0;right:0;z-index:50"></div>
+</body>
+</html>

@@ -30,10 +30,30 @@ export type UserRow = {
   group_id: string | null
   orientation_score: number
   orientation_stage: 'exploring' | 'comparing' | 'deciding'
+  // intent level — computed from behavioral signals (migration 004)
+  intent_score: number
+  intent_level: 'low' | 'medium' | 'high'
   client_id_btoc: string | null
   eventmaker_ids: string[]
   created_at: string
   updated_at: string
+}
+
+export type PreRegistrationRow = {
+  id: string
+  email: string
+  first_name: string
+  last_name: string
+  education_level: string | null
+  bac_series: string | null
+  postal_code: string | null
+  declared_domains: string[]
+  event_id: string
+  eventmaker_registration_id: string | null
+  registered_at: string
+  resolved_user_id: string | null
+  resolved_at: string | null
+  created_at: string
 }
 
 export type EventRow = {
@@ -229,6 +249,11 @@ export type Database = {
         Row: GroupRow
         Insert: Partial<GroupRow> & { teacher_id: string; school_name: string; fair_id: string; invite_link: string; invite_link_expiry: string }
         Update: Partial<GroupRow>
+      }
+      pre_registrations: {
+        Row: PreRegistrationRow
+        Insert: Partial<PreRegistrationRow> & { email: string; first_name: string; last_name: string; event_id: string }
+        Update: Partial<PreRegistrationRow>
       }
     }
     Views: Record<string, never>

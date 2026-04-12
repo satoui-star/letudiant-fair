@@ -20,6 +20,7 @@ export default function SchoolDetailPage({ params }: { params: Promise<{ schoolI
   const [bookingSlot, setBookingSlot] = useState<string | null>(null)
   const [bookingNote, setBookingNote] = useState('')
   const [bookingLoading, setBookingLoading] = useState(false)
+  const [hasEntryScanned, setHasEntryScanned] = useState(false)
 
   useEffect(() => {
     track('school_view', { school_id: schoolId, source: 'direct' })
@@ -44,6 +45,17 @@ export default function SchoolDetailPage({ params }: { params: Promise<{ schoolI
           const existing = await getStudentAppointmentForSchool(user.id, schoolId, events[0].id)
           setAppointment(existing)
         }
+        // Gate RDV: check if student has scanned entry today
+        const today = new Date().toISOString().slice(0, 10)
+        const { data: entryScan } = await supabase
+          .from('scans')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('channel', 'entry')
+          .gte('created_at', today)
+          .limit(1)
+          .maybeSingle()
+        setHasEntryScanned(!!entryScan)
       }
       setLoading(false)
     }
@@ -187,17 +199,44 @@ export default function SchoolDetailPage({ params }: { params: Promise<{ schoolI
         )}
 
         {activeTab === 'rdv' && (
-          <RdvTab
-            school={school}
-            appointment={appointment}
-            bookingSlot={bookingSlot}
-            bookingNote={bookingNote}
-            bookingLoading={bookingLoading}
-            onSelectSlot={setBookingSlot}
-            onNoteChange={setBookingNote}
-            onBook={handleBook}
-            onCancel={handleCancel}
-          />
+          !hasEntryScanned ? (
+            /* ── Entry scan gate ─────────────────────────────────────────── */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ background: '#FFF7E0', border: '1.5px solid #FFD100', borderRadius: 14, padding: 24, textAlign: 'center' }}>
+                <p style={{ fontSize: 40, margin: '0 0 12px' }}>🔒</p>
+                <p style={{ margin: '0 0 8px', fontWeight: 800, fontSize: '1rem', color: '#92400e' }}>
+                  Rendez-vous réservés aux visiteurs présents
+                </p>
+                <p style={{ margin: '0 0 16px', fontSize: '0.875rem', color: '#78350f', lineHeight: 1.5 }}>
+                  Pour éviter les no-shows, les rendez-vous sont disponibles uniquement une fois votre présence confirmée au salon.
+                </p>
+                <a
+                  href="/qr"
+                  style={{ display: 'inline-block', background: '#E3001B', color: '#fff', fontWeight: 700, fontSize: '0.9375rem', padding: '12px 24px', borderRadius: 12, textDecoration: 'none' }}
+                >
+                  Scanne ton QR à l&apos;entrée →
+                </a>
+              </div>
+              <div style={{ background: '#F4F4F4', borderRadius: 12, padding: '12px 16px', display: 'flex', gap: 10, alignItems: 'center' }}>
+                <span style={{ fontSize: 18 }}>💡</span>
+                <p style={{ margin: 0, fontSize: '0.8125rem', color: '#6B6B6B', lineHeight: 1.4 }}>
+                  Présente ton QR code au staff à l&apos;entrée du salon. Une fois scanné, reviens ici pour réserver ton créneau.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <RdvTab
+              school={school}
+              appointment={appointment}
+              bookingSlot={bookingSlot}
+              bookingNote={bookingNote}
+              bookingLoading={bookingLoading}
+              onSelectSlot={setBookingSlot}
+              onNoteChange={setBookingNote}
+              onBook={handleBook}
+              onCancel={handleCancel}
+            />
+          )
         )}
 
         {activeTab === 'stats' && (

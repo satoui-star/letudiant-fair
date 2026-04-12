@@ -88,6 +88,19 @@ function OnboardingInner() {
           orientation_stage: 'exploring',
           orientation_score: 0,
         })
+
+        // Resolve pre-registration if this email was synced from Eventmaker
+        if (role === 'student') {
+          try {
+            await supabase
+              .from('pre_registrations')
+              .update({ resolved_user_id: data.user.id, resolved_at: new Date().toISOString() })
+              .eq('email', email.toLowerCase())
+              .is('resolved_user_id', null)
+          } catch {
+            // Non-fatal — don't block account creation
+          }
+        }
       }
 
       toast('✓ Compte créé avec succès !', 'success')
@@ -257,36 +270,50 @@ function OnboardingInner() {
           <>
             {step === 1 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <h2 style={{ margin: '0 0 8px', fontSize: '1.375rem', fontWeight: 800 }}>Espace enseignant</h2>
-                {[['Prénom', 'firstName'], ['Nom', 'lastName'], ['Établissement', 'schoolName']].map(([label, key]) => (
+                <h2 style={{ margin: '0 0 4px', fontSize: '1.375rem', fontWeight: 800 }}>Espace enseignant</h2>
+                <p style={{ margin: '0 0 8px', color: '#6B6B6B', fontSize: '0.875rem' }}>Créez votre compte pour gérer votre groupe</p>
+                {[['Prénom', 'firstName'], ['Nom', 'lastName'], ['Établissement scolaire', 'schoolName']].map(([label, key]) => (
                   <div key={key}>
-                    <label style={labelStyle}>{label}</label>
+                    <label style={labelStyle}>{label} <span style={{ color: '#E3001B' }}>*</span></label>
                     <input style={inputStyle} value={form[key as keyof typeof form] as string} onChange={e => update(key, e.target.value)} placeholder={label} />
                   </div>
                 ))}
                 <div>
-                  <label style={labelStyle}>Email professionnel</label>
+                  <label style={labelStyle}>Email professionnel <span style={{ color: '#E3001B' }}>*</span></label>
                   <input style={inputStyle} type="email" value={form.teacherEmail} onChange={e => update('teacherEmail', e.target.value)} placeholder="prenom.nom@etablissement.fr" />
                 </div>
                 <div>
-                  <label style={labelStyle}>Mot de passe</label>
+                  <label style={labelStyle}>Mot de passe <span style={{ color: '#E3001B' }}>*</span></label>
                   <input style={inputStyle} type="password" value={form.password} onChange={e => update('password', e.target.value)} placeholder="8 caractères minimum" />
                 </div>
-                <button style={btnPrimary} onClick={() => setStep(2)}>Continuer →</button>
+                <button style={btnPrimary} onClick={() => {
+                  if (!form.firstName.trim()) { toast('Prénom requis', 'warning'); return }
+                  if (!form.lastName.trim())  { toast('Nom requis', 'warning'); return }
+                  if (!form.schoolName.trim()) { toast('Nom de l\'établissement requis', 'warning'); return }
+                  if (!form.teacherEmail.includes('@')) { toast('Email professionnel invalide', 'warning'); return }
+                  if (form.password.length < 8) { toast('Le mot de passe doit faire au moins 8 caractères', 'warning'); return }
+                  setStep(2)
+                }}>Continuer →</button>
               </div>
             )}
             {step === 2 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <h2 style={{ margin: '0 0 8px', fontSize: '1.375rem', fontWeight: 800 }}>Choisissez votre salon</h2>
-                {fairs.map(f => (
+                <p style={{ margin: '0 0 4px', color: '#6B6B6B', fontSize: '0.875rem' }}>Sélectionnez le salon auquel vous participez</p>
+                {fairs.length === 0 ? (
+                  <p style={{ color: '#9B9B9B', fontSize: '0.875rem', padding: '12px 0' }}>Chargement des salons…</p>
+                ) : fairs.map(f => (
                   <button key={f.id} onClick={() => update('selectedFair', f.id)} style={{ padding: '14px 16px', border: `2px solid ${form.selectedFair === f.id ? '#E3001B' : '#E0E0E0'}`, borderRadius: 12, background: form.selectedFair === f.id ? '#FFF0F0' : '#fff', textAlign: 'left', cursor: 'pointer' }}>
                     <p style={{ margin: '0 0 3px', fontWeight: 700, color: form.selectedFair === f.id ? '#E3001B' : '#1A1A1A' }}>{f.name}</p>
-                    <p style={{ margin: 0, fontSize: '0.8125rem', color: '#6B6B6B' }}>{f.city}</p>
+                    <p style={{ margin: 0, fontSize: '0.8125rem', color: '#6B6B6B' }}>{f.city} · {new Date(f.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}</p>
                   </button>
                 ))}
                 <div style={{ display: 'flex', gap: 10 }}>
                   <button style={{ ...btnPrimary, background: '#F0F0F0', color: '#4B4B4B', width: 'auto', padding: '14px 24px' }} onClick={() => setStep(1)}>← Retour</button>
-                  <button style={btnPrimary} onClick={() => setStep(3)}>Continuer →</button>
+                  <button style={btnPrimary} onClick={() => {
+                    if (!form.selectedFair) { toast('Sélectionnez un salon pour continuer', 'warning'); return }
+                    setStep(3)
+                  }}>Continuer →</button>
                 </div>
               </div>
             )}

@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = 'force-dynamic'
 
 import SectionLabel from "@/components/ui/SectionLabel";
 import Button from "@/components/ui/Button";

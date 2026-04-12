@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { getSupabase } from '@/lib/supabase/client'
 import { trackPageView } from '@/lib/analytics/track'
+import { getIntentNudge } from '@/lib/scoring/intentScore'
 import { Skeleton, SkeletonCard } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import StudentBottomNav from '@/components/layouts/StudentBottomNav'
@@ -36,10 +37,16 @@ export default function StudentHomePage() {
   const stageLabel: Record<string, string> = { exploring: 'Exploration', comparing: 'Comparaison', deciding: 'Décision' }
   const stageColor: Record<string, string> = { exploring: '#003C8F', comparing: '#f59e0b', deciding: '#22c55e' }
 
-  const nextEvent = events[0]
-  const daysUntil = nextEvent
+  const nextEvent    = events[0]
+  const daysUntil    = nextEvent
     ? Math.max(0, Math.ceil((new Date(nextEvent.event_date).getTime() - Date.now()) / 86400000))
     : null
+
+  const intentScore  = (profile as any)?.intent_score ?? 0
+  const nudge        = getIntentNudge(intentScore, nextEvent?.id)
+
+  const nudgeBg:    Record<string, string> = { low: '#EFF6FF', medium: '#FFFBE6', high: '#F0FFF4' }
+  const nudgeColor: Record<string, string> = { low: '#1d4ed8', medium: '#92400e', high: '#15803d' }
 
   return (
     <div style={{ minHeight: '100vh', background: '#F7F7F7', paddingBottom: 100, fontFamily: 'system-ui, sans-serif' }}>
@@ -81,6 +88,26 @@ export default function StudentHomePage() {
             )}
           </div>
         ) : null}
+
+        {/* Intent nudge */}
+        {!authLoading && (
+          <div style={{ background: nudgeBg[nudge.level], borderRadius: 14, padding: '14px 18px', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: '0 0 4px', fontSize: '0.8125rem', color: nudgeColor[nudge.level], fontWeight: 700 }}>
+                {nudge.level === 'low' ? '🔵 Démarrage' : nudge.level === 'medium' ? '🟡 En exploration' : '🟢 Très actif(ve)'}
+              </p>
+              <p style={{ margin: 0, fontSize: '0.8125rem', color: '#3D3D3D', lineHeight: 1.5 }}>{nudge.message}</p>
+              <div style={{ background: 'rgba(0,0,0,0.08)', borderRadius: 99, height: 3, marginTop: 8, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${nudge.progressPercent}%`, background: nudgeColor[nudge.level], borderRadius: 99, transition: 'width 0.6s ease' }} />
+              </div>
+            </div>
+            {nudge.cta && nudge.ctaHref && (
+              <a href={nudge.ctaHref} style={{ background: nudgeColor[nudge.level], color: '#fff', borderRadius: 10, padding: '8px 14px', fontSize: '0.8125rem', fontWeight: 600, textDecoration: 'none', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                {nudge.cta}
+              </a>
+            )}
+          </div>
+        )}
 
         {/* Quick actions */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 24 }}>

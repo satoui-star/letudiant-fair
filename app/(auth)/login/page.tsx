@@ -1,4 +1,5 @@
 'use client'
+export const dynamic = 'force-dynamic'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signInWithEmail, signInWithGoogle } from '@/lib/supabase/auth'
@@ -18,7 +19,20 @@ export default function LoginPage() {
     setError('')
     try {
       await signInWithEmail(email, password)
-      router.push('/student/home')
+      // Redirect based on role stored in users table
+      const { getSupabase } = await import('@/lib/supabase/client')
+      const supabase = getSupabase()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from('users').select('role').eq('id', user.id).maybeSingle()
+        const role = profile?.role ?? user.user_metadata?.role ?? 'student'
+        if (role === 'teacher')   { router.push('/teacher/dashboard'); return }
+        if (role === 'exhibitor') { router.push('/exhibitor/dashboard'); return }
+        if (role === 'admin')     { router.push('/admin/dashboard'); return }
+        if (role === 'parent')    { router.push('/parent/home'); return }
+      }
+      router.push('/home')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erreur de connexion')
     } finally {
@@ -109,12 +123,19 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-center text-sm text-le-gray-500 mt-6">
-            Pas encore de compte ?{' '}
-            <a href="/onboarding" className="text-le-red font-medium hover:underline">
-              Créer mon espace
-            </a>
-          </p>
+          <div className="mt-6 text-center">
+            <p className="text-sm text-le-gray-500 mb-2">
+              Pas encore de compte ?
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <a href="/onboarding?role=student" style={{ display: 'block', padding: '10px 16px', background: '#E3001B', color: '#fff', borderRadius: 10, fontWeight: 600, fontSize: 14, textDecoration: 'none', textAlign: 'center' }}>
+                Créer mon espace étudiant
+              </a>
+              <a href="/onboarding?role=teacher" style={{ display: 'block', padding: '10px 16px', background: '#003C8F', color: '#fff', borderRadius: 10, fontWeight: 600, fontSize: 14, textDecoration: 'none', textAlign: 'center' }}>
+                Espace enseignant →
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>

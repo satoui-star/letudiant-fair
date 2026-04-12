@@ -1,28 +1,28 @@
 {
   "name": "L'Étudiant Salons",
   "short_name": "L'Étudiant",
-  "description": "Votre compagnon pour les salons de l'orientation",
-  "start_url": "/student/home",
+  "description": "Votre compagnon de salon d'orientation — QR, RDV, découverte des formations",
+  "start_url": "/home",
   "display": "standalone",
-  "background_color": "#FFFFFF",
-  "theme_color": "#E3001B",
   "orientation": "portrait",
+  "theme_color": "#E3001B",
+  "background_color": "#FFFFFF",
   "icons": [
-    {
-      "src": "/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
     {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "categories": ["education"],
+  "lang": "fr",
+  "dir": "ltr",
+  "prefer_related_applications": false
 }
