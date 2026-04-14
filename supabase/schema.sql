@@ -25,7 +25,7 @@ exception when duplicate_object then null; end $$;
 
 -- ─── USERS ────────────────────────────────────────────────────────────────────
 create table if not exists public.users (
-  id uuid primary key references auth.users(id) on delete cascade,
+  id uuid primary key,
   email text not null unique,
   name text not null default '',
   role user_role not null default 'student',

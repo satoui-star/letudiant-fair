@@ -63,7 +63,7 @@ alter table public.scans
 --    Parent is identified by parent_email matching their own email.
 --    We allow them to read the student row where parent_email = their email.
 
-create policy if not exists "Parent reads linked student profile"
+create policy "Parent reads linked student profile"
   on public.users for select
   using (
     parent_email = (select email from public.users where id = auth.uid())
