@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Logo from "@/components/ui/Logo";
 import Input from "@/components/ui/Input";
@@ -68,7 +68,7 @@ function decodePrefill(raw: string | null): {
   }
 }
 
-export default function RegisterPage() {
+function RegisterInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -597,5 +597,18 @@ export default function RegisterPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
+        <div style={{ width: 36, height: 36, border: '3px solid #E3001B', borderTop: '3px solid transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+      </div>
+    }>
+      <RegisterInner />
+    </Suspense>
   );
 }
