@@ -23,7 +23,7 @@ interface GroupMember {
 
 // ── Stat card ─────────────────────────────────────────────────────────────────
 
-function StatCard({ label, value, sub, color = '#E3001B' }: {
+function StatCard({ label, value, sub, color = '#EC1F27' }: {
   label: string; value: string | number; sub?: string; color?: string
 }) {
   return (
@@ -172,7 +172,7 @@ export default function TeacherDashboard() {
             {profile?.name ?? 'Enseignant(e)'} — {group ? group.school_name : 'Mon établissement'}
           </h1>
           <p style={{ margin: 0, color: '#6B6B6B', fontSize: '0.9rem', lineHeight: 1.5 }}>
-            Les groupes scolaires représentent <strong style={{ color: '#E3001B' }}>~15 % des visiteurs du salon</strong>.<br />
+            Les groupes scolaires représentent <strong style={{ color: '#EC1F27' }}>~15 % des visiteurs du salon</strong>.<br />
             L&apos;objectif : collecter les profils individuels de chaque élève — idéalement avant le salon.
           </p>
         </div>
@@ -186,7 +186,7 @@ export default function TeacherDashboard() {
           /* ── No group yet ─────────────────────────────────────────────── */
           <div>
             {/* Why this matters */}
-            <div style={{ background: 'linear-gradient(135deg,#003C8F,#0056CC)', borderRadius: 16, padding: '24px 28px', color: '#fff', marginBottom: 20 }}>
+            <div style={{ background: 'linear-gradient(135deg,#0066CC,#0056CC)', borderRadius: 16, padding: '24px 28px', color: '#fff', marginBottom: 20 }}>
               <p style={{ margin: '0 0 8px', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', opacity: 0.8 }}>Pourquoi collecter ces données ?</p>
               <p style={{ margin: '0 0 12px', fontSize: '1.0625rem', fontWeight: 800, lineHeight: 1.3 }}>
                 Sur 700 000 visiteurs / an, les groupes scolaires arrivent en anonymes
@@ -212,8 +212,8 @@ export default function TeacherDashboard() {
           <>
             {/* ── KPIs ────────────────────────────────────────────────────── */}
             <div style={{ display: 'flex', gap: 14, marginBottom: 24, flexWrap: 'wrap' }}>
-              <StatCard label="Élèves inscrits" value={totalJoined}     sub="profils collectés"        color="#E3001B" />
-              <StatCard label="Avant le salon"  value={`${preFairRate}%`} sub={`${preFairCount} élèves pré-inscrits`} color="#003C8F" />
+              <StatCard label="Élèves inscrits" value={totalJoined}     sub="profils collectés"        color="#EC1F27" />
+              <StatCard label="Avant le salon"  value={`${preFairRate}%`} sub={`${preFairCount} élèves pré-inscrits`} color="#0066CC" />
               <StatCard label="Profil complet"  value={withProfile}     sub="niveau d'études renseigné" color="#15803d" />
             </div>
 
@@ -221,10 +221,10 @@ export default function TeacherDashboard() {
             <div style={{ background: '#fff', borderRadius: 14, padding: '18px 20px', marginBottom: 24, boxShadow: '0 1px 6px rgba(0,0,0,0.05)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                 <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#1A1A1A' }}>Inscriptions avant le salon</span>
-                <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: preFairRate >= 70 ? '#15803d' : '#E3001B' }}>{preFairCount} / {totalJoined}</span>
+                <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: preFairRate >= 70 ? '#15803d' : '#EC1F27' }}>{preFairCount} / {totalJoined}</span>
               </div>
               <div style={{ height: 10, background: '#E8E8E8', borderRadius: 5, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${preFairRate}%`, background: preFairRate >= 70 ? '#22c55e' : '#E3001B', borderRadius: 5, transition: 'width 0.5s ease' }} />
+                <div style={{ height: '100%', width: `${preFairRate}%`, background: preFairRate >= 70 ? '#22c55e' : '#EC1F27', borderRadius: 5, transition: 'width 0.5s ease' }} />
               </div>
               <p style={{ margin: '8px 0 0', fontSize: '0.75rem', color: '#6B6B6B' }}>
                 {preFairRate >= 70
@@ -298,7 +298,7 @@ export default function TeacherDashboard() {
                     </button>
                     <button
                       onClick={shareEmail}
-                      style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#003C8F', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 18px', fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#0066CC', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 18px', fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer' }}
                     >
                       <span style={{ fontSize: '1.125rem' }}>✉️</span> Email
                     </button>
@@ -339,7 +339,7 @@ export default function TeacherDashboard() {
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <span style={{ width: 32, height: 32, borderRadius: '50%', background: '#E6ECF8', color: '#003C8F', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8125rem', fontWeight: 700, flexShrink: 0 }}>
+                          <span style={{ width: 32, height: 32, borderRadius: '50%', background: '#E6F0FF', color: '#0066CC', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8125rem', fontWeight: 700, flexShrink: 0 }}>
                             {m.name.charAt(0).toUpperCase()}
                           </span>
                           <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#1A1A1A' }}>{m.name}</span>

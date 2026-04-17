@@ -6,7 +6,7 @@ export default function ParentLayout({ children }: { children: React.ReactNode }
     <div className="min-h-screen bg-[#F4F4F4]">
       <div
         style={{
-          background: "#E3001B",
+          background: "#EC1F27",
           padding: "12px 20px",
           display: "flex",
           alignItems: "center",

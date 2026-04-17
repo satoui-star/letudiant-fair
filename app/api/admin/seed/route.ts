@@ -66,50 +66,54 @@ export async function GET(request: Request) {
     const studentData = []
     for (let i = 0; i < 100; i++) {
       studentData.push({
-        id: `student-${i}`,
         email: `student${i}@test.fr`,
         name: `Étudiant ${i}`,
         role: 'student',
-        is_booth_registered: Math.random() > 0.5,
-        dob: new Date(2005 + Math.floor(Math.random() * 3), Math.floor(Math.random() * 12), 1).toISOString(),
-        orientation_stage: ['exploring', 'comparing', 'deciding'][Math.floor(Math.random() * 3)],
       })
     }
-    await supabase.from('users').insert(studentData).select()
+    const { data: students } = await supabase.from('users').insert(studentData).select()
 
     // 4. Create test scans
     const scanData = []
     const channels = ['entry', 'booth', 'conference', 'exit']
-    for (let i = 0; i < scanCount; i++) {
-      const studentId = `student-${Math.floor(Math.random() * 100)}`
-      const schoolId = schools[Math.floor(Math.random() * schools.length)]?.id
-      scanData.push({
-        user_id: studentId,
-        event_id: events[0].id,
-        school_id: schoolId,
-        channel: channels[Math.floor(Math.random() * channels.length)],
-        scanned_at: new Date(
-          now.getTime() - Math.random() * 24 * 60 * 60 * 1000
-        ).toISOString(),
-        dwell_minutes: Math.floor(Math.random() * 120),
-      })
-    }
-    // Insert in batches of 100
-    for (let i = 0; i < scanData.length; i += 100) {
-      await supabase.from('scans').insert(scanData.slice(i, i + 100)).select()
+    if (students && students.length > 0 && schools.length > 0) {
+      for (let i = 0; i < scanCount; i++) {
+        const student = students[Math.floor(Math.random() * students.length)]
+        const school = schools[Math.floor(Math.random() * schools.length)]
+        scanData.push({
+          user_id: student.id,
+          event_id: events[0].id,
+          stand_id: school.id,
+          channel: channels[Math.floor(Math.random() * channels.length)],
+          dwell_estimate: Math.floor(Math.random() * 120),
+          created_at: new Date(
+            now.getTime() - Math.random() * 24 * 60 * 60 * 1000
+          ).toISOString(),
+        })
+      }
+      // Insert in batches of 100
+      for (let i = 0; i < scanData.length; i += 100) {
+        await supabase.from('scans').insert(scanData.slice(i, i + 100)).select()
+      }
     }
 
-    // 5. Create test matches
-    const matchData = []
-    for (let i = 0; i < 50; i++) {
-      matchData.push({
-        student_id: `student-${Math.floor(Math.random() * 100)}`,
-        school_id: schools[Math.floor(Math.random() * schools.length)]?.id,
-        student_swipe: Math.random() > 0.3 ? 'right' : 'left',
-        school_interest: Math.random() > 0.5,
-      })
+    // 5. Create test matches (optional - may not have this table)
+    try {
+      const matchData = []
+      if (students && students.length > 0 && schools.length > 0) {
+        for (let i = 0; i < 50; i++) {
+          matchData.push({
+            student_id: students[Math.floor(Math.random() * students.length)].id,
+            school_id: schools[Math.floor(Math.random() * schools.length)].id,
+            student_swipe: Math.random() > 0.3 ? 'right' : 'left',
+            school_interest: Math.random() > 0.5,
+          })
+        }
+        await supabase.from('matches').insert(matchData).select()
+      }
+    } catch (matchErr) {
+      console.log('Matches table not available, skipping')
     }
-    await supabase.from('matches').insert(matchData).select()
 
     return NextResponse.json({
       success: true,

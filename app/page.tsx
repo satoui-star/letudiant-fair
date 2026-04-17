@@ -40,7 +40,7 @@ export default function LandingPage() {
       {/* Hero — full-screen red gradient */}
       <section
         style={{
-          background: "linear-gradient(150deg, #E3001B 0%, #C5001A 40%, #8B0016 70%, #003C8F 100%)",
+          background: "linear-gradient(150deg, #EC1F27 0%, #C5001A 40%, #8B0016 70%, #0066CC 100%)",
           minHeight: "100vh",
           display: "flex",
           flexDirection: "column",
@@ -76,7 +76,7 @@ export default function LandingPage() {
           >
             Votre compagnon des salons
             <br />
-            <span style={{ color: "#FFD100" }}>de l&apos;orientation</span>
+            <span style={{ color: "#FCD716" }}>de l&apos;orientation</span>
           </h1>
 
           <p
@@ -120,7 +120,7 @@ export default function LandingPage() {
                 onMouseEnter={(e) => {
                   const el = e.currentTarget;
                   el.style.boxShadow = "0 8px 32px rgba(227,0,27,0.18)";
-                  el.style.borderColor = "#E3001B";
+                  el.style.borderColor = "#EC1F27";
                   el.style.transform = "translateY(-2px)";
                 }}
                 onMouseLeave={(e) => {
@@ -158,9 +158,9 @@ export default function LandingPage() {
                     borderRadius: "8px",
                     fontWeight: 700,
                     fontSize: "0.9rem",
-                    background: role.variant === "primary" ? "#E3001B" : "transparent",
-                    color: role.variant === "primary" ? "#ffffff" : "#E3001B",
-                    border: role.variant === "primary" ? "none" : "2px solid #E3001B",
+                    background: role.variant === "primary" ? "#EC1F27" : "transparent",
+                    color: role.variant === "primary" ? "#ffffff" : "#EC1F27",
+                    border: role.variant === "primary" ? "none" : "2px solid #EC1F27",
                     transition: "background 0.15s",
                   }}
                 >
@@ -199,7 +199,7 @@ export default function LandingPage() {
               }}
             >
               Déjà un compte ?{" "}
-              <span style={{ color: "#FFD100", fontWeight: 600 }}>Se connecter →</span>
+              <span style={{ color: "#FCD716", fontWeight: 600 }}>Se connecter →</span>
             </a>
           </div>
         </div>
@@ -218,7 +218,7 @@ export default function LandingPage() {
       {/* Stats strip */}
       <section
         style={{
-          background: "#E3001B",
+          background: "#EC1F27",
           padding: "28px 24px",
           textAlign: "center",
         }}

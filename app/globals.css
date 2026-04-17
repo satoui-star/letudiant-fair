@@ -1,30 +1,60 @@
 @import "tailwindcss";
 
 @theme {
-  /* L'Etudiant brand colors */
-  --color-le-red: #E3001B;
-  --color-le-red-dark: #B0001A;
-  --color-le-red-light: #FDEAEA;
-  --color-le-blue: #003C8F;
-  --color-le-blue-light: #E6ECF8;
-  --color-le-yellow: #FFD100;
-  --color-le-yellow-light: #FFFBE6;
-  --color-le-gray-900: #1A1A1A;
-  --color-le-gray-700: #3D3D3D;
-  --color-le-gray-500: #6B6B6B;
-  --color-le-gray-200: #E8E8E8;
-  --color-le-gray-100: #F4F4F4;
+  /* L'Étudiant Charte Graphique 24/25 - Official Colors */
+  /* Primary Colors */
+  --color-tomate: #EC1F27;
+  --color-blanc: #F8F7F2;
+  --color-noir: #191829;
+
+  /* Secondary Colors */
+  --color-citron: #FCD716;
+  --color-spirit: #FF6B35;
+  --color-framboise: #E91E63;
+  --color-menthe-eau: #4DB8A8;
+  --color-piscine: #0066CC;
+  --color-tropical: #00BFB3;
+  --color-passion: #FFC0D9;
+  --color-cel: #7FD8D9;
+  --color-papyri: #CDDC39;
+  --color-menthe: #00AA66;
+  --color-lagoon: #00AA88;
+  --color-nuit: #2B1B4D;
+  --color-pourpre: #932D99;
+  --color-paen: #004488;
+
+  /* Grays */
+  --color-gray-900: #1A1A1A;
+  --color-gray-700: #3D3D3D;
+  --color-gray-500: #6B6B6B;
+  --color-gray-200: #E8E8E8;
+  --color-gray-100: #F4F4F4;
 }
 
 /* ─── CSS custom properties ─── */
 :root {
-  --le-red: #E3001B;
-  --le-red-dark: #B0001A;
-  --le-red-light: #FDEAEA;
-  --le-blue: #003C8F;
-  --le-blue-light: #E6ECF8;
-  --le-yellow: #FFD100;
-  --le-yellow-light: #FFFBE6;
+  /* Primary */
+  --le-red: #EC1F27;
+  --le-tomate: #EC1F27;
+  --le-blanc: #F8F7F2;
+  --le-noir: #191829;
+
+  /* Secondary */
+  --le-citron: #FCD716;
+  --le-spirit: #FF6B35;
+  --le-framboise: #E91E63;
+  --le-menthe: #4DB8A8;
+  --le-piscine: #0066CC;
+  --le-tropical: #00BFB3;
+  --le-passion: #FFC0D9;
+  --le-cel: #7FD8D9;
+  --le-papyri: #CDDC39;
+  --le-lagoon: #00AA88;
+  --le-nuit: #2B1B4D;
+  --le-pourpre: #932D99;
+  --le-paen: #004488;
+
+  /* Grays */
   --le-gray-900: #1A1A1A;
   --le-gray-700: #3D3D3D;
   --le-gray-500: #6B6B6B;
@@ -46,11 +76,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ─── Stripe rule ─── */
+/* ─── Stripe rule (Charte Graphique accent) ─── */
 .le-stripe {
   width: 100%;
   height: 5px;
-  background: linear-gradient(90deg, #E3001B 60%, #003C8F 60% 80%, #FFD100 80%);
+  background: linear-gradient(90deg, #EC1F27 60%, #0066CC 60% 80%, #FCD716 80%);
   flex-shrink: 0;
 }
 
@@ -240,7 +270,7 @@ body {
 
 .le-input:focus {
   border-color: var(--le-red);
-  box-shadow: 0 0 0 3px rgba(227, 0, 27, 0.12);
+  box-shadow: 0 0 0 3px rgba(236, 31, 39, 0.12);
 }
 
 .le-input:disabled {
@@ -502,7 +532,7 @@ body {
 }
 
 .admin-nav-item.active {
-  background: rgba(227, 0, 27, 0.18);
+  background: rgba(236, 31, 39, 0.18);
   color: #ffffff;
 }
 
@@ -520,7 +550,7 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  box-shadow: 0 8px 32px rgba(227, 0, 27, 0.12);
+  box-shadow: 0 8px 32px rgba(236, 31, 39, 0.12);
 }
 
 /* ─── Heatmap stand ─── */

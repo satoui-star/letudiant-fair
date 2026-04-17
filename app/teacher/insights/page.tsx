@@ -6,13 +6,13 @@ import Button from "@/components/ui/Button";
 import Tag from "@/components/ui/Tag";
 
 const BRANCH_INTERESTS = [
-  { label: "Économie-Gestion", count: 12, pct: 43, color: "#003C8F" },
-  { label: "Ingénierie-Industrie", count: 9, pct: 32, color: "#E3001B" },
-  { label: "Santé-Social", count: 5, pct: 18, color: "#FFD100" },
-  { label: "Droit-Sciences politiques", count: 4, pct: 14, color: "#003C8F" },
+  { label: "Économie-Gestion", count: 12, pct: 43, color: "#0066CC" },
+  { label: "Ingénierie-Industrie", count: 9, pct: 32, color: "#EC1F27" },
+  { label: "Santé-Social", count: 5, pct: 18, color: "#FCD716" },
+  { label: "Droit-Sciences politiques", count: 4, pct: 14, color: "#0066CC" },
   { label: "Communication-Information", count: 3, pct: 11, color: "#6B6B6B" },
-  { label: "Sciences-Nature", count: 3, pct: 11, color: "#003C8F" },
-  { label: "Arts-Culture", count: 1, pct: 4, color: "#FFD100" },
+  { label: "Sciences-Nature", count: 3, pct: 11, color: "#0066CC" },
+  { label: "Arts-Culture", count: 1, pct: 4, color: "#FCD716" },
 ];
 
 const TOP_SCHOOLS = [
@@ -30,7 +30,7 @@ const STUDY_LEVEL_DIST = [
   { level: "Non défini", count: 2, pct: 7 },
 ];
 
-const LEVEL_COLORS = ["#003C8F", "#E3001B", "#FFD100", "#E8E8E8"];
+const LEVEL_COLORS = ["#0066CC", "#EC1F27", "#FCD716", "#E8E8E8"];
 
 function HorizontalBar({
   label,
@@ -54,7 +54,7 @@ function HorizontalBar({
           height: "24px",
           borderRadius: "50%",
           background: rank <= 2 ? color : "#E8E8E8",
-          color: rank <= 2 ? (color === "#FFD100" ? "#1A1A1A" : "#ffffff") : "#6B6B6B",
+          color: rank <= 2 ? (color === "#FCD716" ? "#1A1A1A" : "#ffffff") : "#6B6B6B",
           fontSize: "11px",
           fontWeight: 700,
           display: "flex",
@@ -146,7 +146,7 @@ function SchoolRankRow({
   count: number;
 }) {
   const medalColors: Record<number, string> = {
-    1: "#FFD100",
+    1: "#FCD716",
     2: "#C0C0C0",
     3: "#CD7F32",
   };
@@ -467,7 +467,7 @@ export default function TeacherInsights() {
             label: "Établissement top",
             value: "HEC Paris",
             sub: "8 élèves intéressés",
-            color: "#FFD100",
+            color: "#FCD716",
           },
           {
             label: "Ambition dominante",

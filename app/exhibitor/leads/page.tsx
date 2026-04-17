@@ -176,8 +176,8 @@ export default function ExhibitorLeadsPage() {
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
                 {[
-                  { label: 'Scans de stand',    value: stats?.totalScans ?? 0,  color: '#E3001B',  sub: 'étudiants uniques' },
-                  { label: 'Temps moyen',        value: stats?.avgDwellMin ? `${stats.avgDwellMin} min` : '—', color: '#003C8F', sub: 'par visiteur' },
+                  { label: 'Scans de stand',    value: stats?.totalScans ?? 0,  color: '#EC1F27',  sub: 'étudiants uniques' },
+                  { label: 'Temps moyen',        value: stats?.avgDwellMin ? `${stats.avgDwellMin} min` : '—', color: '#0066CC', sub: 'par visiteur' },
                   { label: 'Dont Décideurs',     value: `${stats?.decidingPct ?? 0}%`,   color: '#16A34A',  sub: 'intention haute' },
                 ].map(k => (
                   <div key={k.label} style={{ background: '#fff', borderRadius: 14, padding: '18px 20px', boxShadow: '0 1px 6px rgba(0,0,0,0.05)' }}>
@@ -237,7 +237,7 @@ export default function ExhibitorLeadsPage() {
                           <span style={{ fontSize: '0.8125rem', color: '#6B6B6B' }}>{l.pct}%</span>
                         </div>
                         <div style={{ height: 6, background: '#F0F0F0', borderRadius: 3, overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${l.pct}%`, background: '#E3001B', borderRadius: 3 }} />
+                          <div style={{ height: '100%', width: `${l.pct}%`, background: '#EC1F27', borderRadius: 3 }} />
                         </div>
                       </div>
                     ))}
@@ -255,7 +255,7 @@ export default function ExhibitorLeadsPage() {
                           <span style={{ fontSize: '0.8125rem', color: '#6B6B6B' }}>{b.pct}%</span>
                         </div>
                         <div style={{ height: 6, background: '#F0F0F0', borderRadius: 3, overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${b.pct}%`, background: '#003C8F', borderRadius: 3 }} />
+                          <div style={{ height: '100%', width: `${b.pct}%`, background: '#0066CC', borderRadius: 3 }} />
                         </div>
                       </div>
                     ))}
@@ -265,10 +265,10 @@ export default function ExhibitorLeadsPage() {
             )}
 
             {/* J+1 data product CTA */}
-            <div style={{ background: '#E6ECF8', borderRadius: 14, padding: '16px 20px', display: 'flex', gap: 14, alignItems: 'center' }}>
+            <div style={{ background: '#E6F0FF', borderRadius: 14, padding: '16px 20px', display: 'flex', gap: 14, alignItems: 'center' }}>
               <span style={{ fontSize: 28, flexShrink: 0 }}>📦</span>
               <div>
-                <p style={{ margin: '0 0 3px', fontWeight: 700, color: '#003C8F', fontSize: '0.9rem' }}>
+                <p style={{ margin: '0 0 3px', fontWeight: 700, color: '#0066CC', fontSize: '0.9rem' }}>
                   Produit Data L'Étudiant — disponible J+1
                 </p>
                 <p style={{ margin: 0, fontSize: '0.8125rem', color: '#1D4ED8', lineHeight: 1.5 }}>
@@ -305,7 +305,7 @@ export default function ExhibitorLeadsPage() {
                   a.href = qrRef.current.toDataURL('image/png')
                   a.click()
                 }}
-                style={{ marginTop: 14, width: '100%', background: '#E3001B', color: '#fff', border: 'none', borderRadius: 10, padding: '10px', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer' }}
+                style={{ marginTop: 14, width: '100%', background: '#EC1F27', color: '#fff', border: 'none', borderRadius: 10, padding: '10px', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer' }}
               >
                 ⬇ Télécharger le QR
               </button>
@@ -313,7 +313,7 @@ export default function ExhibitorLeadsPage() {
 
             {/* Scan count live */}
             <div style={{ background: '#fff', borderRadius: 14, padding: '14px 16px', marginTop: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.05)', textAlign: 'center' }}>
-              <p style={{ margin: '0 0 4px', fontSize: '2rem', fontWeight: 800, color: '#E3001B' }}>
+              <p style={{ margin: '0 0 4px', fontSize: '2rem', fontWeight: 800, color: '#EC1F27' }}>
                 {loading ? '—' : stats?.totalScans ?? 0}
               </p>
               <p style={{ margin: 0, fontSize: '0.8125rem', color: '#6B6B6B' }}>scans aujourd'hui</p>

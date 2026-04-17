@@ -96,10 +96,10 @@ function LoginInner() {
               Pas encore de compte ?
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <a href="/register" style={{ display: 'block', padding: '10px 16px', background: '#E3001B', color: '#fff', borderRadius: 10, fontWeight: 600, fontSize: 14, textDecoration: 'none', textAlign: 'center' }}>
+              <a href="/register" style={{ display: 'block', padding: '10px 16px', background: '#EC1F27', color: '#fff', borderRadius: 10, fontWeight: 600, fontSize: 14, textDecoration: 'none', textAlign: 'center' }}>
                 Créer mon espace étudiant
               </a>
-              <a href="/register?role=teacher" style={{ display: 'block', padding: '10px 16px', background: '#003C8F', color: '#fff', borderRadius: 10, fontWeight: 600, fontSize: 14, textDecoration: 'none', textAlign: 'center' }}>
+              <a href="/register?role=teacher" style={{ display: 'block', padding: '10px 16px', background: '#0066CC', color: '#fff', borderRadius: 10, fontWeight: 600, fontSize: 14, textDecoration: 'none', textAlign: 'center' }}>
                 Espace enseignant →
               </a>
             </div>
@@ -114,7 +114,7 @@ export default function LoginPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div style={{ width: 36, height: 36, border: '3px solid #E3001B', borderTop: '3px solid transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <div style={{ width: 36, height: 36, border: '3px solid #EC1F27', borderTop: '3px solid transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
       </div>
     }>

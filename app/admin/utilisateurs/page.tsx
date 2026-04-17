@@ -3,11 +3,12 @@ import { useEffect, useState } from 'react'
 import type { EventRow } from '@/lib/supabase/types'
 
 const C = {
-  red: '#E3001B', redLight: '#FDEAEA',
-  blue: '#003C8F', blueLight: '#E6ECF8',
-  yellow: '#FFD100', yellowLight: '#FFFBE6',
-  gray900: '#1A1A1A', gray700: '#3D3D3D', gray500: '#6B6B6B',
-  gray200: '#E8E8E8', gray100: '#F4F4F4',
+  tomate: '#EC1F27', tomateLightLight: '#FFF0F1',
+  piscine: '#0066CC', piscineLightLight: '#E6F0FF',
+  citron: '#FCD716', citronLight: '#FFF9E6',
+  spirit: '#FF6B35', spiritLight: '#FFF0E6',
+  gray900: '#191829', gray700: '#3D3D3D', gray500: '#6B6B6B',
+  gray200: '#E8E8E8', gray100: '#F4F4F4', blanc: '#F8F7F2',
 }
 
 interface User {

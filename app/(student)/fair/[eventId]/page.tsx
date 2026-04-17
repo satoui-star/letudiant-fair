@@ -21,12 +21,12 @@ interface Stand {
 }
 
 const STANDS: Stand[] = [
-  { id: 'hec', name: 'HEC Paris', x: 20, y: 30, w: 90, h: 60, color: '#FDEAEA', textColor: '#E3001B', tag: 'red', type: 'Grande École' },
-  { id: 'sciencespo', name: 'Sciences Po', x: 130, y: 30, w: 90, h: 60, color: '#E6ECF8', textColor: '#003C8F', tag: 'blue', type: 'Grande École' },
-  { id: 'insa', name: 'INSA Lyon', x: 240, y: 30, w: 80, h: 60, color: '#FFFBE6', textColor: '#7A6200', tag: 'yellow', type: 'Ingénierie' },
+  { id: 'hec', name: 'HEC Paris', x: 20, y: 30, w: 90, h: 60, color: '#FFF0F1', textColor: '#EC1F27', tag: 'red', type: 'Grande École' },
+  { id: 'sciencespo', name: 'Sciences Po', x: 130, y: 30, w: 90, h: 60, color: '#E6F0FF', textColor: '#0066CC', tag: 'blue', type: 'Grande École' },
+  { id: 'insa', name: 'INSA Lyon', x: 240, y: 30, w: 80, h: 60, color: '#FFF9E6', textColor: '#7A6200', tag: 'yellow', type: 'Ingénierie' },
   { id: 'essec', name: 'ESSEC', x: 20, y: 130, w: 80, h: 55, color: '#F4F4F4', textColor: '#3D3D3D', tag: 'gray', type: 'Grande École' },
-  { id: 'polytechnique', name: 'Polytechnique', x: 120, y: 130, w: 100, h: 55, color: '#E6ECF8', textColor: '#003C8F', tag: 'blue', type: 'Grande École' },
-  { id: 'centrale', name: 'Centrale Paris', x: 240, y: 130, w: 90, h: 55, color: '#FDEAEA', textColor: '#E3001B', tag: 'red', type: 'Ingénierie' },
+  { id: 'polytechnique', name: 'Polytechnique', x: 120, y: 130, w: 100, h: 55, color: '#E6F0FF', textColor: '#0066CC', tag: 'blue', type: 'Grande École' },
+  { id: 'centrale', name: 'Centrale Paris', x: 240, y: 130, w: 90, h: 55, color: '#FFF0F1', textColor: '#EC1F27', tag: 'red', type: 'Ingénierie' },
 ];
 
 const SESSIONS = [
@@ -78,8 +78,8 @@ export default function FairPage({
                 cursor: 'pointer',
                 fontSize: 14,
                 fontWeight: 600,
-                color: activeTab === tab ? '#E3001B' : '#6B6B6B',
-                borderBottom: activeTab === tab ? '2px solid #E3001B' : '2px solid transparent',
+                color: activeTab === tab ? '#EC1F27' : '#6B6B6B',
+                borderBottom: activeTab === tab ? '2px solid #EC1F27' : '2px solid transparent',
                 marginBottom: '-2px',
                 transition: 'color 0.15s ease',
               }}
@@ -121,7 +121,7 @@ export default function FairPage({
                 <text x="190" y="210" textAnchor="middle" fontSize="10" fill="#6B6B6B" fontWeight="600">
                   ENTRÉE
                 </text>
-                <path d="M175 215 L205 215 L205 220 L175 220 Z" fill="#E3001B" opacity="0.5" />
+                <path d="M175 215 L205 215 L205 220 L175 220 Z" fill="#EC1F27" opacity="0.5" />
                 {/* Stands */}
                 {STANDS.map((stand) => (
                   <g
@@ -215,7 +215,7 @@ export default function FairPage({
                       minWidth: 56,
                     }}
                   >
-                    <span style={{ fontSize: 13, fontWeight: 700, color: '#E3001B', display: 'block' }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#EC1F27', display: 'block' }}>
                       {session.time}
                     </span>
                   </div>
@@ -241,7 +241,7 @@ export default function FairPage({
           position: 'fixed',
           bottom: 80,
           right: 20,
-          background: '#E3001B',
+          background: '#EC1F27',
           color: '#fff',
           padding: '14px 20px',
           borderRadius: 30,

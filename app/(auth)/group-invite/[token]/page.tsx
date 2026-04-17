@@ -139,7 +139,7 @@ export default function GroupInvitePage({
       <div style={{ minHeight: '100vh', background: '#F4F4F4', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, textAlign: 'center' }}>
         <div style={{ width: '100%', maxWidth: 420, background: '#fff', borderRadius: 20, overflow: 'hidden', boxShadow: '0 8px 40px rgba(0,0,0,0.10)' }}>
           {/* Header */}
-          <div style={{ background: 'linear-gradient(135deg,#E3001B,#003C8F)', padding: '24px 28px 20px', color: '#fff' }}>
+          <div style={{ background: 'linear-gradient(135deg,#EC1F27,#0066CC)', padding: '24px 28px 20px', color: '#fff' }}>
             <Logo variant="inverted" size="sm" />
             <p style={{ margin: '12px 0 0', fontSize: '0.8125rem', opacity: 0.85 }}>
               {joined.eventName}{joined.eventCity ? ` · ${joined.eventCity}` : ''}
@@ -148,7 +148,7 @@ export default function GroupInvitePage({
           </div>
 
           <div style={{ padding: '28px 28px 32px' }}>
-            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#FDEAEA', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 28 }}>✅</div>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#FFF0F1', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 28 }}>✅</div>
             <h1 style={{ margin: '0 0 6px', fontSize: '1.25rem', fontWeight: 800, color: '#1A1A1A' }}>Bienvenue, {joined.name.split(' ')[0]} !</h1>
             <p style={{ margin: '0 0 24px', fontSize: '0.875rem', color: '#6B6B6B' }}>Groupe : {joined.groupName}</p>
 
@@ -165,7 +165,7 @@ export default function GroupInvitePage({
 
             {/* Guest email warning */}
             {joined.isGuestEmail && (
-              <div style={{ background: '#FFFBE6', border: '1px solid #FFD100', borderRadius: 10, padding: '12px 14px', marginBottom: 20, textAlign: 'left' }}>
+              <div style={{ background: '#FFF9E6', border: '1px solid #FCD716', borderRadius: 10, padding: '12px 14px', marginBottom: 20, textAlign: 'left' }}>
                 <p style={{ margin: 0, fontSize: '0.8125rem', color: '#92400e', lineHeight: 1.5 }}>
                   <strong>💡 Conseil :</strong> Sans email, tu ne pourras pas retrouver ton dossier après le salon.
                   Fais une capture d&apos;écran de ton QR code.
@@ -173,7 +173,7 @@ export default function GroupInvitePage({
               </div>
             )}
 
-            <a href="/home" style={{ display: 'block', background: '#E3001B', color: '#fff', borderRadius: 10, padding: '13px 20px', fontSize: '0.9375rem', fontWeight: 700, textDecoration: 'none', textAlign: 'center' }}>
+            <a href="/home" style={{ display: 'block', background: '#EC1F27', color: '#fff', borderRadius: 10, padding: '13px 20px', fontSize: '0.9375rem', fontWeight: 700, textDecoration: 'none', textAlign: 'center' }}>
               Accéder au salon →
             </a>
           </div>
@@ -220,7 +220,7 @@ export default function GroupInvitePage({
       <div style={{ width: '100%', maxWidth: 460, background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(26,26,26,0.07)' }}>
 
         {/* Header */}
-        <div style={{ background: 'linear-gradient(135deg,#E3001B,#003C8F)', padding: '28px 32px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ background: 'linear-gradient(135deg,#EC1F27,#0066CC)', padding: '28px 32px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           <Logo variant="inverted" size="sm" />
           <Tag variant="yellow" className="self-start">Inscription de groupe</Tag>
         </div>
@@ -238,12 +238,12 @@ export default function GroupInvitePage({
               {group?.school_name}
             </p>
             {(fairName || fairDate) && (
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#E6ECF8', borderRadius: 6, padding: '7px 12px' }}>
-                <svg width={13} height={13} viewBox="0 0 14 14" fill="none" stroke="#003C8F" strokeWidth={1.8} strokeLinecap="round" aria-hidden>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#E6F0FF', borderRadius: 6, padding: '7px 12px' }}>
+                <svg width={13} height={13} viewBox="0 0 14 14" fill="none" stroke="#0066CC" strokeWidth={1.8} strokeLinecap="round" aria-hidden>
                   <rect x="1" y="2" width="12" height="11" rx="2" />
                   <path d="M4 2V1M10 2V1M1 6h12" />
                 </svg>
-                <span style={{ fontSize: '0.8125rem', color: '#003C8F', fontWeight: 600 }}>
+                <span style={{ fontSize: '0.8125rem', color: '#0066CC', fontWeight: 600 }}>
                   {fairName}{fairDate ? ` — ${fairDate}` : ''}
                 </span>
               </div>
@@ -251,7 +251,7 @@ export default function GroupInvitePage({
           </div>
 
           {/* Invitation note */}
-          <div style={{ borderLeft: '3px solid #FFD100', paddingLeft: 12, marginBottom: 24 }}>
+          <div style={{ borderLeft: '3px solid #FCD716', paddingLeft: 12, marginBottom: 24 }}>
             <p style={{ margin: 0, fontSize: '0.875rem', color: '#3D3D3D', lineHeight: 1.6 }}>
               Remplis tes informations pour rejoindre le groupe et obtenir <strong>ton QR code d&apos;entrée</strong>.
             </p>
@@ -287,19 +287,19 @@ export default function GroupInvitePage({
               </div>
 
               {/* GDPR */}
-              <label htmlFor="gdpr" style={{ display: 'flex', gap: 12, alignItems: 'flex-start', cursor: 'pointer', padding: 12, background: '#F4F4F4', borderRadius: 8, border: `1.5px solid ${gdprAccepted ? '#E3001B' : '#E8E8E8'}` }}>
+              <label htmlFor="gdpr" style={{ display: 'flex', gap: 12, alignItems: 'flex-start', cursor: 'pointer', padding: 12, background: '#F4F4F4', borderRadius: 8, border: `1.5px solid ${gdprAccepted ? '#EC1F27' : '#E8E8E8'}` }}>
                 <input id="gdpr" type="checkbox" checked={gdprAccepted} onChange={e => setGdprAccepted(e.target.checked)}
-                  style={{ marginTop: 2, accentColor: '#E3001B', width: 16, height: 16, flexShrink: 0 }} />
+                  style={{ marginTop: 2, accentColor: '#EC1F27', width: 16, height: 16, flexShrink: 0 }} />
                 <span style={{ fontSize: '0.8125rem', color: '#3D3D3D', lineHeight: 1.5 }}>
                   J&apos;accepte que L&apos;Étudiant collecte mes données pour cet événement —{' '}
-                  <a href="#" style={{ color: '#E3001B', textDecoration: 'underline' }}>politique de confidentialité</a>. *
+                  <a href="#" style={{ color: '#EC1F27', textDecoration: 'underline' }}>politique de confidentialité</a>. *
                 </span>
               </label>
 
               {/* Error */}
               {formError && (
-                <div style={{ background: '#FDEAEA', border: '1px solid #E3001B', borderRadius: 8, padding: '10px 14px' }}>
-                  <p style={{ margin: 0, fontSize: '0.875rem', color: '#B0001A' }}>{formError}</p>
+                <div style={{ background: '#FFF0F1', border: '1px solid #EC1F27', borderRadius: 8, padding: '10px 14px' }}>
+                  <p style={{ margin: 0, fontSize: '0.875rem', color: '#C41520' }}>{formError}</p>
                 </div>
               )}
 

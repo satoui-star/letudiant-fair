@@ -45,7 +45,7 @@ function StepDots({ current }: { current: number }) {
             width: n === current ? "24px" : "8px",
             height: "8px",
             borderRadius: "4px",
-            background: n === current ? "#E3001B" : "#E8E8E8",
+            background: n === current ? "#EC1F27" : "#E8E8E8",
             transition: "all 0.2s ease",
           }}
         />
@@ -318,7 +318,7 @@ function RegisterInner() {
               )}
 
               {errors.submit && (
-                <p style={{ color: "#E3001B", fontSize: "13px", background: "#FDEAEA", padding: "10px 14px", borderRadius: "8px", margin: 0 }}>
+                <p style={{ color: "#EC1F27", fontSize: "13px", background: "#FFF0F1", padding: "10px 14px", borderRadius: "8px", margin: 0 }}>
                   {errors.submit}
                 </p>
               )}
@@ -330,7 +330,7 @@ function RegisterInner() {
 
             <p style={{ textAlign: "center", marginTop: "20px", fontSize: "13px", color: "#6B6B6B" }}>
               Déjà un compte ?{" "}
-              <a href="/login" style={{ color: "#E3001B", fontWeight: 600, textDecoration: "none" }}>
+              <a href="/login" style={{ color: "#EC1F27", fontWeight: 600, textDecoration: "none" }}>
                 Se connecter
               </a>
             </p>
@@ -342,8 +342,8 @@ function RegisterInner() {
           <>
             <div
               style={{
-                background: "#FFFBE6",
-                border: "1px solid #FFD100",
+                background: "#FFF9E6",
+                border: "1px solid #FCD716",
                 borderRadius: "8px",
                 padding: "16px",
                 marginBottom: "24px",
@@ -482,10 +482,10 @@ function RegisterInner() {
                         padding: "8px 16px",
                         borderRadius: "20px",
                         border: selected
-                          ? "1.5px solid #E3001B"
+                          ? "1.5px solid #EC1F27"
                           : "1.5px solid #E8E8E8",
-                        background: selected ? "#FDEAEA" : "#ffffff",
-                        color: selected ? "#B0001A" : "#3D3D3D",
+                        background: selected ? "#FFF0F1" : "#ffffff",
+                        color: selected ? "#C41520" : "#3D3D3D",
                         fontSize: "13px",
                         fontWeight: selected ? 700 : 500,
                         cursor: "pointer",
@@ -523,10 +523,10 @@ function RegisterInner() {
                         padding: "10px 12px",
                         borderRadius: "8px",
                         border: selected
-                          ? "1.5px solid #003C8F"
+                          ? "1.5px solid #0066CC"
                           : "1.5px solid #E8E8E8",
-                        background: selected ? "#E6ECF8" : "#ffffff",
-                        color: selected ? "#003C8F" : "#3D3D3D",
+                        background: selected ? "#E6F0FF" : "#ffffff",
+                        color: selected ? "#0066CC" : "#3D3D3D",
                         fontSize: "13px",
                         fontWeight: selected ? 700 : 500,
                         cursor: "pointer",
@@ -543,15 +543,15 @@ function RegisterInner() {
 
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               {errors.submit && (
-                <p style={{ color: "#E3001B", fontSize: "13px", background: "#FDEAEA", padding: "10px 14px", borderRadius: "8px", margin: 0 }}>
+                <p style={{ color: "#EC1F27", fontSize: "13px", background: "#FFF0F1", padding: "10px 14px", borderRadius: "8px", margin: 0 }}>
                   {errors.submit}
                 </p>
               )}
               {errors.level && (
-                <p style={{ color: "#E3001B", fontSize: "13px", margin: 0 }}>{errors.level}</p>
+                <p style={{ color: "#EC1F27", fontSize: "13px", margin: 0 }}>{errors.level}</p>
               )}
               {errors.domains && (
-                <p style={{ color: "#E3001B", fontSize: "13px", margin: 0 }}>{errors.domains}</p>
+                <p style={{ color: "#EC1F27", fontSize: "13px", margin: 0 }}>{errors.domains}</p>
               )}
               <Button
                 type="button"
@@ -604,7 +604,7 @@ export default function RegisterPage() {
   return (
     <Suspense fallback={
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
-        <div style={{ width: 36, height: 36, border: '3px solid #E3001B', borderTop: '3px solid transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <div style={{ width: 36, height: 36, border: '3px solid #EC1F27', borderTop: '3px solid transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
       </div>
     }>

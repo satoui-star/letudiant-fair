@@ -156,7 +156,7 @@ export default function StudentBottomNav() {
             width: 48,
             height: 48,
             borderRadius: "50%",
-            background: "#E3001B",
+            background: "#EC1F27",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -171,7 +171,7 @@ export default function StudentBottomNav() {
           style={{
             fontSize: 10,
             fontWeight: 600,
-            color: qrActive ? "#E3001B" : "#6B6B6B",
+            color: qrActive ? "#EC1F27" : "#6B6B6B",
             letterSpacing: "0.02em",
           }}
         >

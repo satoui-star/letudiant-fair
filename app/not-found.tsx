@@ -79,7 +79,7 @@ export default function NotFound() {
         style={{
           width: "80px",
           height: "4px",
-          background: "linear-gradient(90deg, #E3001B 0%, #003C8F 50%, #FFD100 100%)",
+          background: "linear-gradient(90deg, #EC1F27 0%, #0066CC 50%, #FCD716 100%)",
           borderRadius: "2px",
           marginBottom: "32px",
         }}
@@ -101,7 +101,7 @@ export default function NotFound() {
         Vous êtes perdu(e) ?{" "}
         <a
           href="/login"
-          style={{ color: "#E3001B", fontWeight: 600, textDecoration: "none" }}
+          style={{ color: "#EC1F27", fontWeight: 600, textDecoration: "none" }}
         >
           Connectez-vous
         </a>

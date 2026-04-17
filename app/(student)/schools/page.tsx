@@ -38,7 +38,7 @@ export default function SchoolsPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#F7F7F7', paddingBottom: 100, fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ background: '#E3001B', padding: '52px 20px 20px', color: '#fff' }}>
+      <div style={{ background: '#EC1F27', padding: '52px 20px 20px', color: '#fff' }}>
         <h1 style={{ margin: '0 0 14px', fontSize: '1.375rem', fontWeight: 800 }}>Établissements</h1>
         <input
           value={search}
@@ -51,7 +51,7 @@ export default function SchoolsPage() {
       {/* Type filter */}
       <div style={{ display: 'flex', gap: 8, padding: '14px 20px', overflowX: 'auto', scrollbarWidth: 'none' }}>
         {SCHOOL_TYPES.map(t => (
-          <button key={t} onClick={() => setActiveType(t)} style={{ flexShrink: 0, background: activeType === t ? '#E3001B' : '#fff', color: activeType === t ? '#fff' : '#4B4B4B', border: 'none', borderRadius: 20, padding: '7px 14px', fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+          <button key={t} onClick={() => setActiveType(t)} style={{ flexShrink: 0, background: activeType === t ? '#EC1F27' : '#fff', color: activeType === t ? '#fff' : '#4B4B4B', border: 'none', borderRadius: 20, padding: '7px 14px', fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
             {t}
           </button>
         ))}
@@ -74,7 +74,7 @@ export default function SchoolsPage() {
                   <p style={{ margin: '0 0 3px', fontWeight: 700, fontSize: '0.9375rem', color: '#1A1A1A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{school.name}</p>
                   <p style={{ margin: '0 0 6px', fontSize: '0.8125rem', color: '#6B6B6B' }}>{school.city} · {school.type}</p>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {school.parcoursup && <span style={{ background: '#EEF2FF', color: '#003C8F', borderRadius: 6, padding: '2px 7px', fontSize: '0.6875rem', fontWeight: 600 }}>Parcoursup</span>}
+                    {school.parcoursup && <span style={{ background: '#EEF2FF', color: '#0066CC', borderRadius: 6, padding: '2px 7px', fontSize: '0.6875rem', fontWeight: 600 }}>Parcoursup</span>}
                     {school.apprenticeship && <span style={{ background: '#F0FDF4', color: '#15803d', borderRadius: 6, padding: '2px 7px', fontSize: '0.6875rem', fontWeight: 600 }}>Alternance</span>}
                     {school.scholarship_allowed && <span style={{ background: '#FFFBEB', color: '#92400e', borderRadius: 6, padding: '2px 7px', fontSize: '0.6875rem', fontWeight: 600 }}>Bourse</span>}
                   </div>

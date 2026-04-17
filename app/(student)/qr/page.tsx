@@ -96,7 +96,7 @@ export default function QRPage() {
   const intentScore = (profile as any)?.intent_score ?? 0
   const nudge       = getIntentNudge(intentScore)
 
-  const levelBg:    Record<string, string> = { low: '#EFF6FF', medium: '#FFFBE6', high: '#F0FFF4' }
+  const levelBg:    Record<string, string> = { low: '#EFF6FF', medium: '#FFF9E6', high: '#F0FFF4' }
   const levelColor: Record<string, string> = { low: '#1d4ed8', medium: '#92400e', high: '#15803d' }
   const levelLabel: Record<string, string> = { low: 'Démarrage', medium: 'En exploration', high: 'Très actif(ve)' }
 
@@ -104,7 +104,7 @@ export default function QRPage() {
     <div style={{ minHeight: '100vh', background: '#F7F7F7', paddingBottom: 90, fontFamily: 'system-ui, sans-serif' }}>
 
       {/* Header */}
-      <div style={{ background: '#E3001B', padding: '52px 20px 24px', color: '#fff', textAlign: 'center' }}>
+      <div style={{ background: '#EC1F27', padding: '52px 20px 24px', color: '#fff', textAlign: 'center' }}>
         <h1 style={{ margin: 0, fontSize: '1.375rem', fontWeight: 800 }}>Mon QR Code</h1>
         <p style={{ margin: '6px 0 0', fontSize: '0.8125rem', opacity: 0.8 }}>
           Présente-le à l&apos;entrée et à chaque stand
@@ -174,7 +174,7 @@ export default function QRPage() {
             { step: '4', text: 'Scanne ton QR à la sortie pour valider ton temps passé au salon' },
           ].map(s => (
             <div key={s.step} style={{ display: 'flex', gap: 12, marginBottom: 10, alignItems: 'flex-start' }}>
-              <span style={{ background: '#E3001B', color: '#fff', borderRadius: '50%', width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700, flexShrink: 0 }}>{s.step}</span>
+              <span style={{ background: '#EC1F27', color: '#fff', borderRadius: '50%', width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700, flexShrink: 0 }}>{s.step}</span>
               <p style={{ margin: 0, fontSize: '0.8125rem', color: '#4B4B4B', lineHeight: 1.5 }}>{s.text}</p>
             </div>
           ))}

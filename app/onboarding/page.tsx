@@ -134,7 +134,7 @@ function OnboardingInner() {
 
   const inputStyle = { width: '100%', boxSizing: 'border-box' as const, border: '1px solid #E0E0E0', borderRadius: 12, padding: '13px 16px', fontSize: '0.9375rem', outline: 'none', fontFamily: 'inherit', color: '#1A1A1A', background: '#fff' }
   const labelStyle = { display: 'block' as const, fontSize: '0.8125rem', fontWeight: 600, color: '#4B4B4B', marginBottom: 6 }
-  const btnPrimary = { width: '100%', background: '#E3001B', color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontSize: '1rem', fontWeight: 700, cursor: 'pointer', opacity: loading ? 0.7 : 1 }
+  const btnPrimary = { width: '100%', background: '#EC1F27', color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontSize: '1rem', fontWeight: 700, cursor: 'pointer', opacity: loading ? 0.7 : 1 }
 
   // Steps for student
   const totalSteps = role === 'student' ? 4 : 3
@@ -142,7 +142,7 @@ function OnboardingInner() {
   return (
     <div style={{ minHeight: '100vh', background: '#F7F7F7', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
-      <div style={{ background: '#E3001B', padding: '24px 24px 32px', color: '#fff' }}>
+      <div style={{ background: '#EC1F27', padding: '24px 24px 32px', color: '#fff' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
           <Logo variant="inverted" size="md" />
         </div>
@@ -196,7 +196,7 @@ function OnboardingInner() {
                   <label style={labelStyle}>Niveau actuel</label>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                     {STUDENT_LEVELS.map(l => (
-                      <button key={l} onClick={() => update('level', l)} style={{ padding: '10px 14px', border: `2px solid ${form.level === l ? '#E3001B' : '#E0E0E0'}`, borderRadius: 10, background: form.level === l ? '#FFF0F0' : '#fff', color: form.level === l ? '#E3001B' : '#4B4B4B', fontWeight: form.level === l ? 700 : 400, cursor: 'pointer', fontSize: '0.875rem' }}>{l}</button>
+                      <button key={l} onClick={() => update('level', l)} style={{ padding: '10px 14px', border: `2px solid ${form.level === l ? '#EC1F27' : '#E0E0E0'}`, borderRadius: 10, background: form.level === l ? '#FFF0F0' : '#fff', color: form.level === l ? '#EC1F27' : '#4B4B4B', fontWeight: form.level === l ? 700 : 400, cursor: 'pointer', fontSize: '0.875rem' }}>{l}</button>
                     ))}
                   </div>
                 </div>
@@ -204,7 +204,7 @@ function OnboardingInner() {
                   <label style={labelStyle}>Série (si lycéen)</label>
                   <div style={{ display: 'flex', gap: 8 }}>
                     {STUDENT_SERIES.map(s => (
-                      <button key={s} onClick={() => update('series', s)} style={{ flex: 1, padding: '10px', border: `2px solid ${form.series === s ? '#E3001B' : '#E0E0E0'}`, borderRadius: 10, background: form.series === s ? '#FFF0F0' : '#fff', color: form.series === s ? '#E3001B' : '#4B4B4B', fontWeight: form.series === s ? 700 : 400, cursor: 'pointer', fontSize: '0.8125rem' }}>{s}</button>
+                      <button key={s} onClick={() => update('series', s)} style={{ flex: 1, padding: '10px', border: `2px solid ${form.series === s ? '#EC1F27' : '#E0E0E0'}`, borderRadius: 10, background: form.series === s ? '#FFF0F0' : '#fff', color: form.series === s ? '#EC1F27' : '#4B4B4B', fontWeight: form.series === s ? 700 : 400, cursor: 'pointer', fontSize: '0.8125rem' }}>{s}</button>
                     ))}
                   </div>
                 </div>
@@ -225,7 +225,7 @@ function OnboardingInner() {
                 <p style={{ margin: '0 0 8px', color: '#6B6B6B', fontSize: '0.875rem' }}>Choisissez les filières qui vous intéressent</p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {FILIERES.map(f => (
-                    <button key={f} onClick={() => toggleFiliere(f)} style={{ padding: '8px 14px', border: `2px solid ${form.filieres.includes(f) ? '#E3001B' : '#E0E0E0'}`, borderRadius: 20, background: form.filieres.includes(f) ? '#FFF0F0' : '#fff', color: form.filieres.includes(f) ? '#E3001B' : '#4B4B4B', fontWeight: form.filieres.includes(f) ? 700 : 400, cursor: 'pointer', fontSize: '0.8125rem' }}>{f}</button>
+                    <button key={f} onClick={() => toggleFiliere(f)} style={{ padding: '8px 14px', border: `2px solid ${form.filieres.includes(f) ? '#EC1F27' : '#E0E0E0'}`, borderRadius: 20, background: form.filieres.includes(f) ? '#FFF0F0' : '#fff', color: form.filieres.includes(f) ? '#EC1F27' : '#4B4B4B', fontWeight: form.filieres.includes(f) ? 700 : 400, cursor: 'pointer', fontSize: '0.8125rem' }}>{f}</button>
                   ))}
                 </div>
                 {/* GDPR Consents */}
@@ -237,8 +237,8 @@ function OnboardingInner() {
                     { key: 'optinWax', label: 'J\'accepte le suivi post-salon personnalisé (WAX)', required: false },
                   ].map(c => (
                     <label key={c.key} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer' }}>
-                      <input type="checkbox" checked={form[c.key as keyof typeof form] as boolean} onChange={e => update(c.key, e.target.checked)} style={{ marginTop: 2, accentColor: '#E3001B', width: 16, height: 16 }} />
-                      <span style={{ fontSize: '0.8125rem', color: '#4B4B4B', lineHeight: 1.5 }}>{c.label}{c.required && <span style={{ color: '#E3001B' }}> *</span>}</span>
+                      <input type="checkbox" checked={form[c.key as keyof typeof form] as boolean} onChange={e => update(c.key, e.target.checked)} style={{ marginTop: 2, accentColor: '#EC1F27', width: 16, height: 16 }} />
+                      <span style={{ fontSize: '0.8125rem', color: '#4B4B4B', lineHeight: 1.5 }}>{c.label}{c.required && <span style={{ color: '#EC1F27' }}> *</span>}</span>
                     </label>
                   ))}
                 </div>
@@ -256,8 +256,8 @@ function OnboardingInner() {
                   {fairs.length === 0 ? (
                     <p style={{ color: '#6B6B6B', fontSize: '0.875rem' }}>Chargement des salons…</p>
                   ) : fairs.map(f => (
-                    <button key={f.id} onClick={() => update('selectedFair', f.id)} style={{ padding: '14px 16px', border: `2px solid ${form.selectedFair === f.id ? '#E3001B' : '#E0E0E0'}`, borderRadius: 12, background: form.selectedFair === f.id ? '#FFF0F0' : '#fff', textAlign: 'left', cursor: 'pointer' }}>
-                      <p style={{ margin: '0 0 3px', fontWeight: 700, color: form.selectedFair === f.id ? '#E3001B' : '#1A1A1A', fontSize: '0.9375rem' }}>{f.name}</p>
+                    <button key={f.id} onClick={() => update('selectedFair', f.id)} style={{ padding: '14px 16px', border: `2px solid ${form.selectedFair === f.id ? '#EC1F27' : '#E0E0E0'}`, borderRadius: 12, background: form.selectedFair === f.id ? '#FFF0F0' : '#fff', textAlign: 'left', cursor: 'pointer' }}>
+                      <p style={{ margin: '0 0 3px', fontWeight: 700, color: form.selectedFair === f.id ? '#EC1F27' : '#1A1A1A', fontSize: '0.9375rem' }}>{f.name}</p>
                       <p style={{ margin: 0, fontSize: '0.8125rem', color: '#6B6B6B' }}>{f.city} · {new Date(f.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                     </button>
                   ))}
@@ -291,16 +291,16 @@ function OnboardingInner() {
                 <p style={{ margin: '0 0 8px', color: '#6B6B6B', fontSize: '0.875rem' }}>Créez votre compte pour gérer votre groupe</p>
                 {[['Prénom', 'firstName'], ['Nom', 'lastName'], ['Établissement scolaire', 'schoolName']].map(([label, key]) => (
                   <div key={key}>
-                    <label style={labelStyle}>{label} <span style={{ color: '#E3001B' }}>*</span></label>
+                    <label style={labelStyle}>{label} <span style={{ color: '#EC1F27' }}>*</span></label>
                     <input style={inputStyle} value={form[key as keyof typeof form] as string} onChange={e => update(key, e.target.value)} placeholder={label} />
                   </div>
                 ))}
                 <div>
-                  <label style={labelStyle}>Email professionnel <span style={{ color: '#E3001B' }}>*</span></label>
+                  <label style={labelStyle}>Email professionnel <span style={{ color: '#EC1F27' }}>*</span></label>
                   <input style={inputStyle} type="email" value={form.teacherEmail} onChange={e => update('teacherEmail', e.target.value)} placeholder="prenom.nom@etablissement.fr" />
                 </div>
                 <div>
-                  <label style={labelStyle}>Mot de passe <span style={{ color: '#E3001B' }}>*</span></label>
+                  <label style={labelStyle}>Mot de passe <span style={{ color: '#EC1F27' }}>*</span></label>
                   <input style={inputStyle} type="password" value={form.password} onChange={e => update('password', e.target.value)} placeholder="8 caractères minimum" />
                 </div>
                 <button style={btnPrimary} onClick={() => {
@@ -320,8 +320,8 @@ function OnboardingInner() {
                 {fairs.length === 0 ? (
                   <p style={{ color: '#9B9B9B', fontSize: '0.875rem', padding: '12px 0' }}>Chargement des salons…</p>
                 ) : fairs.map(f => (
-                  <button key={f.id} onClick={() => update('selectedFair', f.id)} style={{ padding: '14px 16px', border: `2px solid ${form.selectedFair === f.id ? '#E3001B' : '#E0E0E0'}`, borderRadius: 12, background: form.selectedFair === f.id ? '#FFF0F0' : '#fff', textAlign: 'left', cursor: 'pointer' }}>
-                    <p style={{ margin: '0 0 3px', fontWeight: 700, color: form.selectedFair === f.id ? '#E3001B' : '#1A1A1A' }}>{f.name}</p>
+                  <button key={f.id} onClick={() => update('selectedFair', f.id)} style={{ padding: '14px 16px', border: `2px solid ${form.selectedFair === f.id ? '#EC1F27' : '#E0E0E0'}`, borderRadius: 12, background: form.selectedFair === f.id ? '#FFF0F0' : '#fff', textAlign: 'left', cursor: 'pointer' }}>
+                    <p style={{ margin: '0 0 3px', fontWeight: 700, color: form.selectedFair === f.id ? '#EC1F27' : '#1A1A1A' }}>{f.name}</p>
                     <p style={{ margin: 0, fontSize: '0.8125rem', color: '#6B6B6B' }}>{f.city} · {new Date(f.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}</p>
                   </button>
                 ))}
@@ -362,16 +362,16 @@ function OnboardingInner() {
                 <h2 style={{ margin: '0 0 8px', fontSize: '1.375rem', fontWeight: 800 }}>Espace parent</h2>
                 {[['Prénom', 'firstName'], ['Nom', 'lastName']].map(([label, key]) => (
                   <div key={key}>
-                    <label style={labelStyle}>{label} <span style={{ color: '#E3001B' }}>*</span></label>
+                    <label style={labelStyle}>{label} <span style={{ color: '#EC1F27' }}>*</span></label>
                     <input style={inputStyle} value={form[key as keyof typeof form] as string} onChange={e => update(key, e.target.value)} placeholder={label} />
                   </div>
                 ))}
                 <div>
-                  <label style={labelStyle}>Email <span style={{ color: '#E3001B' }}>*</span></label>
+                  <label style={labelStyle}>Email <span style={{ color: '#EC1F27' }}>*</span></label>
                   <input style={inputStyle} type="email" value={form.email} onChange={e => update('email', e.target.value)} placeholder="votre@email.com" />
                 </div>
                 <div>
-                  <label style={labelStyle}>Mot de passe <span style={{ color: '#E3001B' }}>*</span></label>
+                  <label style={labelStyle}>Mot de passe <span style={{ color: '#EC1F27' }}>*</span></label>
                   <input style={inputStyle} type="password" value={form.password} onChange={e => update('password', e.target.value)} placeholder="8 caractères minimum" />
                 </div>
                 <button style={btnPrimary} onClick={() => {
@@ -416,7 +416,7 @@ export default function OnboardingPage() {
   return (
     <Suspense fallback={
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 40, height: 40, border: '3px solid #E3001B', borderTop: '3px solid transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <div style={{ width: 40, height: 40, border: '3px solid #EC1F27', borderTop: '3px solid transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
       </div>
     }>

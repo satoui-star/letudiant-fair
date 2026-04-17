@@ -119,7 +119,7 @@ export default function SchoolDetailPage({ params }: { params: Promise<{ schoolI
     <div style={{ padding: 40, textAlign: 'center' }}>
       <p style={{ fontSize: '1.25rem' }}>😕</p>
       <p style={{ color: '#6B6B6B' }}>Établissement introuvable</p>
-      <a href="/schools" style={{ color: '#E3001B', fontWeight: 600 }}>← Retour à la liste</a>
+      <a href="/schools" style={{ color: '#EC1F27', fontWeight: 600 }}>← Retour à la liste</a>
     </div>
   )
 
@@ -134,12 +134,12 @@ export default function SchoolDetailPage({ params }: { params: Promise<{ schoolI
             <h1 style={{ margin: '0 0 6px', fontSize: '1.375rem', fontWeight: 800, lineHeight: 1.2 }}>{school.name}</h1>
             <p style={{ margin: 0, fontSize: '0.875rem', opacity: 0.75 }}>📍 {school.city}</p>
           </div>
-          <button onClick={toggleBookmark} style={{ background: bookmarked ? '#E3001B' : 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 12, padding: '10px 14px', cursor: 'pointer', fontSize: 20 }}>
+          <button onClick={toggleBookmark} style={{ background: bookmarked ? '#EC1F27' : 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 12, padding: '10px 14px', cursor: 'pointer', fontSize: 20 }}>
             {bookmarked ? '❤️' : '🤍'}
           </button>
         </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
-          {school.parcoursup && <span style={{ background: '#003C8F', color: '#fff', borderRadius: 6, padding: '3px 10px', fontSize: '0.75rem', fontWeight: 600 }}>Parcoursup</span>}
+          {school.parcoursup && <span style={{ background: '#0066CC', color: '#fff', borderRadius: 6, padding: '3px 10px', fontSize: '0.75rem', fontWeight: 600 }}>Parcoursup</span>}
           {school.apprenticeship && <span style={{ background: '#15803d', color: '#fff', borderRadius: 6, padding: '3px 10px', fontSize: '0.75rem', fontWeight: 600 }}>Alternance</span>}
           {school.scholarship_allowed && <span style={{ background: '#92400e', color: '#fff', borderRadius: 6, padding: '3px 10px', fontSize: '0.75rem', fontWeight: 600 }}>Bourses</span>}
         </div>
@@ -148,7 +148,7 @@ export default function SchoolDetailPage({ params }: { params: Promise<{ schoolI
       {/* Tabs */}
       <div style={{ display: 'flex', background: '#fff', borderBottom: '1px solid #F0F0F0' }}>
         {([['info', 'Infos'], ['formations', 'Formations'], ['stats', 'Stats'], ['rdv', appointment ? '📅 RDV ✓' : 'Rendez-vous']] as const).map(([tab, label]) => (
-          <button key={tab} onClick={() => setActiveTab(tab)} style={{ flex: 1, padding: '14px 6px', background: 'none', border: 'none', borderBottom: `2px solid ${activeTab === tab ? '#E3001B' : 'transparent'}`, fontWeight: activeTab === tab ? 700 : 400, color: activeTab === tab ? '#E3001B' : tab === 'rdv' && appointment ? '#15803d' : '#6B6B6B', cursor: 'pointer', fontSize: '0.8125rem' }}>
+          <button key={tab} onClick={() => setActiveTab(tab)} style={{ flex: 1, padding: '14px 6px', background: 'none', border: 'none', borderBottom: `2px solid ${activeTab === tab ? '#EC1F27' : 'transparent'}`, fontWeight: activeTab === tab ? 700 : 400, color: activeTab === tab ? '#EC1F27' : tab === 'rdv' && appointment ? '#15803d' : '#6B6B6B', cursor: 'pointer', fontSize: '0.8125rem' }}>
             {label}
           </button>
         ))}
@@ -168,7 +168,7 @@ export default function SchoolDetailPage({ params }: { params: Promise<{ schoolI
                 <span style={{ fontSize: 20 }}>🌐</span>
                 <div>
                   <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: '#1A1A1A' }}>Site officiel</p>
-                  <p style={{ margin: 0, fontSize: '0.8125rem', color: '#003C8F' }}>{school.website}</p>
+                  <p style={{ margin: 0, fontSize: '0.8125rem', color: '#0066CC' }}>{school.website}</p>
                 </div>
               </a>
             )}
@@ -202,7 +202,7 @@ export default function SchoolDetailPage({ params }: { params: Promise<{ schoolI
           !hasEntryScanned ? (
             /* ── Entry scan gate ─────────────────────────────────────────── */
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div style={{ background: '#FFF7E0', border: '1.5px solid #FFD100', borderRadius: 14, padding: 24, textAlign: 'center' }}>
+              <div style={{ background: '#FFF7E0', border: '1.5px solid #FCD716', borderRadius: 14, padding: 24, textAlign: 'center' }}>
                 <p style={{ fontSize: 40, margin: '0 0 12px' }}>🔒</p>
                 <p style={{ margin: '0 0 8px', fontWeight: 800, fontSize: '1rem', color: '#92400e' }}>
                   Rendez-vous réservés aux visiteurs présents
@@ -212,7 +212,7 @@ export default function SchoolDetailPage({ params }: { params: Promise<{ schoolI
                 </p>
                 <a
                   href="/qr"
-                  style={{ display: 'inline-block', background: '#E3001B', color: '#fff', fontWeight: 700, fontSize: '0.9375rem', padding: '12px 24px', borderRadius: 12, textDecoration: 'none' }}
+                  style={{ display: 'inline-block', background: '#EC1F27', color: '#fff', fontWeight: 700, fontSize: '0.9375rem', padding: '12px 24px', borderRadius: 12, textDecoration: 'none' }}
                 >
                   Scanne ton QR à l&apos;entrée →
                 </a>
@@ -250,7 +250,7 @@ export default function SchoolDetailPage({ params }: { params: Promise<{ schoolI
             ].map(stat => (
               <div key={stat.label} style={{ background: '#fff', borderRadius: 14, padding: '14px 16px', textAlign: 'center' }}>
                 <p style={{ margin: '0 0 4px', fontSize: 24 }}>{stat.icon}</p>
-                <p style={{ margin: '0 0 3px', fontSize: '1.0625rem', fontWeight: 800, color: '#E3001B' }}>{stat.value}</p>
+                <p style={{ margin: '0 0 3px', fontSize: '1.0625rem', fontWeight: 800, color: '#EC1F27' }}>{stat.value}</p>
                 <p style={{ margin: 0, fontSize: '0.75rem', color: '#6B6B6B' }}>{stat.label}</p>
               </div>
             ))}
@@ -313,7 +313,7 @@ function RdvTab({
           )}
         </div>
         <div style={{ background: '#F0F4FF', border: '1px solid #C5D3F0', borderRadius: 12, padding: 16 }}>
-          <p style={{ margin: '0 0 6px', fontSize: '0.875rem', fontWeight: 700, color: '#003C8F' }}>💡 Ce RDV booste ton profil</p>
+          <p style={{ margin: '0 0 6px', fontSize: '0.875rem', fontWeight: 700, color: '#0066CC' }}>💡 Ce RDV booste ton profil</p>
           <p style={{ margin: 0, fontSize: '0.8125rem', color: '#4B4B4B', lineHeight: 1.5 }}>
             Prendre un rendez-vous avant le salon est le signal d&apos;intérêt le plus fort dans notre système de scoring.
             Ton profil remonte en priorité dans la liste des leads de {school.name}.
@@ -321,7 +321,7 @@ function RdvTab({
         </div>
         <button
           onClick={onCancel}
-          style={{ background: 'none', border: '1.5px solid #E3001B', color: '#E3001B', borderRadius: 10, padding: '12px 20px', fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer' }}
+          style={{ background: 'none', border: '1.5px solid #EC1F27', color: '#EC1F27', borderRadius: 10, padding: '12px 20px', fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer' }}
         >
           Annuler ce rendez-vous
         </button>
@@ -351,9 +351,9 @@ function RdvTab({
                 key={key}
                 onClick={() => onSelectSlot(`2026-06-07T${key}:00`)}
                 style={{
-                  background: isSelected ? '#E3001B' : '#F5F5F5',
+                  background: isSelected ? '#EC1F27' : '#F5F5F5',
                   color: isSelected ? '#fff' : '#1A1A1A',
-                  border: isSelected ? '2px solid #E3001B' : '2px solid transparent',
+                  border: isSelected ? '2px solid #EC1F27' : '2px solid transparent',
                   borderRadius: 10,
                   padding: '10px 8px',
                   fontSize: '0.8125rem',
@@ -387,7 +387,7 @@ function RdvTab({
         onClick={onBook}
         disabled={!bookingSlot || bookingLoading}
         style={{
-          background: bookingSlot ? '#E3001B' : '#E8E8E8',
+          background: bookingSlot ? '#EC1F27' : '#E8E8E8',
           color: bookingSlot ? '#fff' : '#6B6B6B',
           border: 'none',
           borderRadius: 12,

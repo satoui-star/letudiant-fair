@@ -66,7 +66,7 @@ export default function VirtualFairPage() {
             style={{
               display: "inline-block",
               padding: "4px 12px",
-              background: "#FFD100",
+              background: "#FCD716",
               color: "#1A1A1A",
               borderRadius: 20,
               fontSize: 11,
@@ -96,7 +96,7 @@ export default function VirtualFairPage() {
         {/* Hero card */}
         <div
           style={{
-            background: "linear-gradient(135deg, #1A1A1A 0%, #003C8F 100%)",
+            background: "linear-gradient(135deg, #1A1A1A 0%, #0066CC 100%)",
             borderRadius: 16,
             padding: "32px 24px",
             marginBottom: 24,
@@ -194,7 +194,7 @@ export default function VirtualFairPage() {
                     width: 22,
                     height: 22,
                     borderRadius: "50%",
-                    background: "#FDEAEA",
+                    background: "#FFF0F1",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -211,7 +211,7 @@ export default function VirtualFairPage() {
                   >
                     <path
                       d="M2 6L4.5 8.5L10 3"
-                      stroke="#E3001B"
+                      stroke="#EC1F27"
                       strokeWidth={1.8}
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -291,7 +291,7 @@ export default function VirtualFairPage() {
             background: "#fff",
             borderRadius: 16,
             padding: "24px 20px",
-            border: "2px solid #E3001B",
+            border: "2px solid #EC1F27",
           }}
         >
           {submitted ? (
@@ -337,7 +337,7 @@ export default function VirtualFairPage() {
                   aria-label="Adresse email"
                 />
                 {error && (
-                  <p style={{ fontSize: 12, color: "#E3001B", margin: "0 0 8px" }}>
+                  <p style={{ fontSize: 12, color: "#EC1F27", margin: "0 0 8px" }}>
                     {error}
                   </p>
                 )}
@@ -347,7 +347,7 @@ export default function VirtualFairPage() {
                   style={{
                     width: "100%",
                     padding: "13px",
-                    background: "#E3001B",
+                    background: "#EC1F27",
                     color: "#fff",
                     border: "none",
                     borderRadius: 10,
