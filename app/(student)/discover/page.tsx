@@ -1,26 +1,18 @@
 'use client';
-export const dynamic = 'force-dynamic';
 
 import { useState, useEffect } from 'react';
 import TinderCard from 'react-tinder-card';
 import Tag from '@/components/ui/Tag';
 import Button from '@/components/ui/Button';
-import { getSchools, upsertMatch, refreshIntentScore } from '@/lib/supabase/database';
+import StripeRule from '@/components/ui/StripeRule';
+import { getSchools } from '@/lib/supabase/database';
+import { upsertMatch } from '@/lib/supabase/database';
 import { useAuth } from '@/hooks/useAuth';
 import type { SchoolRow } from '@/lib/supabase/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface SwipeCard {
-  id: string;
-  name: string;
-  type: string;
-  typeVariant: 'red' | 'blue' | 'yellow' | 'gray';
-  city: string;
-  fields: string[];
-  gradient: string;
-  emoji: string;
-}
+// School cards use SchoolRow directly from DB — no more hardcoded mock type
 
 interface Reel {
   id: string;
@@ -41,53 +33,29 @@ interface Article {
   tag: 'red' | 'blue' | 'yellow' | 'gray';
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const SCHOOL_GRADIENTS: Record<string, string> = {
-  'Grande École': 'linear-gradient(160deg, #003C8F 0%, #001A4D 100%)',
-  "École d'Ingénieurs": 'linear-gradient(160deg, #E6A800 0%, #A07000 100%)',
-  "École d'ingénieurs": 'linear-gradient(160deg, #E6A800 0%, #A07000 100%)',
-  "École d'Art": 'linear-gradient(160deg, #E3001B 0%, #8B0012 100%)',
-  "École d'Architecture": 'linear-gradient(160deg, #2d6a4f 0%, #1b4332 100%)',
-  'École Spécialisée': 'linear-gradient(160deg, #1A1A1A 0%, #3D3D3D 100%)',
-  'Université': 'linear-gradient(160deg, #003C8F 0%, #0055cc 100%)',
-  'IUT': 'linear-gradient(160deg, #3D3D3D 0%, #1A1A1A 100%)',
-};
-
-const SCHOOL_EMOJIS: Record<string, string> = {
-  'Grande École': '🏛️',
-  "École d'Ingénieurs": '⚙️',
-  "École d'ingénieurs": '⚙️',
-  "École d'Art": '🎨',
-  "École d'Architecture": '🏗️',
-  'École Spécialisée': '💻',
-  'Université': '🎓',
-  'IUT': '🔬',
-};
-
-const TYPE_VARIANTS: Record<string, 'red' | 'blue' | 'yellow' | 'gray'> = {
-  'Grande École': 'red',
-  "École d'Ingénieurs": 'yellow',
-  "École d'ingénieurs": 'yellow',
-  "École d'Art": 'red',
-  "École d'Architecture": 'blue',
-  'École Spécialisée': 'gray',
-  'Université': 'blue',
-  'IUT': 'gray',
-};
-
-function schoolToCard(s: SchoolRow): SwipeCard {
-  return {
-    id: s.id,
-    name: s.name,
-    type: s.type,
-    typeVariant: TYPE_VARIANTS[s.type] ?? 'gray',
-    city: s.city,
-    fields: s.target_fields.slice(0, 3),
-    gradient: SCHOOL_GRADIENTS[s.type] ?? 'linear-gradient(160deg, #003C8F 0%, #001A4D 100%)',
-    emoji: SCHOOL_EMOJIS[s.type] ?? '🎓',
-  };
+// Map school type to a Tag variant
+function typeVariant(type: string): 'red' | 'blue' | 'yellow' | 'gray' {
+  if (type.toLowerCase().includes('ingénieur')) return 'yellow';
+  if (type.toLowerCase().includes('université')) return 'blue';
+  if (type.toLowerCase().includes('grande')) return 'red';
+  return 'gray';
 }
+
+// Generate a gradient from school type so cards still look nice
+const GRADIENTS = [
+  'linear-gradient(160deg, #E3001B 0%, #8B0012 100%)',
+  'linear-gradient(160deg, #003C8F 0%, #001A4D 100%)',
+  'linear-gradient(160deg, #1a1a2e 0%, #0f3460 100%)',
+  'linear-gradient(160deg, #E6A800 0%, #A07000 100%)',
+  'linear-gradient(160deg, #2d6a4f 0%, #1b4332 100%)',
+  'linear-gradient(160deg, #4a1942 0%, #2d1128 100%)',
+];
+const EMOJIS = ['🏛️', '⚙️', '🌍', '🔬', '📊', '🎓', '🏫', '📐'];
+
+function gradientFor(index: number) { return GRADIENTS[index % GRADIENTS.length]; }
+function emojiFor(index: number) { return EMOJIS[index % EMOJIS.length]; }
 
 const REELS: Reel[] = [
   { id: 'r1', schoolName: 'HEC Paris', title: 'Une journée dans les locaux de Jouy-en-Josas', duration: '0:28', views: '12.4k', thumbnail_color: '#003C8F', tags: ['Grande École', 'Économie'] },
@@ -110,7 +78,7 @@ type TabId = 'swipe' | 'reels' | 'actualites';
 
 // ─── Reel card component ──────────────────────────────────────────────────────
 
-function ReelCard({ reel }: { reel: Reel }) {
+function ReelCard({ reel }: { reel: Reel; key?: string }) {
   const [playing, setPlaying] = useState(false);
 
   const textOnDark = reel.thumbnail_color === '#FFD100' ? '#1A1A1A' : '#fff';
@@ -317,7 +285,7 @@ function ReelCard({ reel }: { reel: Reel }) {
 
 // ─── Article card component ───────────────────────────────────────────────────
 
-function ArticleCard({ article }: { article: Article }) {
+function ArticleCard({ article }: { article: Article; key?: string }) {
   return (
     <div
       className="le-card"
@@ -354,16 +322,18 @@ function ArticleCard({ article }: { article: Article }) {
 export default function DiscoverPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabId>('swipe');
-  const [cards, setCards] = useState<SwipeCard[]>([]);
-  const [loadingCards, setLoadingCards] = useState(true);
+  const [schools, setSchools] = useState<SchoolRow[]>([]);
+  const [loadingSchools, setLoadingSchools] = useState(true);
   const [rightCount, setRightCount] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
   const [gone, setGone] = useState<Set<string>>(new Set());
 
+  // ── Load real schools from Supabase ──────────────────────────────────────
   useEffect(() => {
-    getSchools().then((schools) => {
-      setCards([...schools.map(schoolToCard)].reverse());
-      setLoadingCards(false);
+    getSchools().then((data) => {
+      // Reverse so first school shows on top of TinderCard stack
+      setSchools([...data].reverse());
+      setLoadingSchools(false);
     });
   }, []);
 
@@ -372,24 +342,47 @@ export default function DiscoverPage() {
     setTimeout(() => setToast(null), 2500);
   };
 
-  const handleSwipe = (direction: string, school: SwipeCard) => {
+  const handleSwipe = async (direction: string, school: SchoolRow) => {
     setGone((prev) => new Set(prev).add(school.id));
-    const swipeDir = direction === 'right' ? 'right' : 'left';
-    if (user) {
-      upsertMatch({ student_id: user.id, school_id: school.id, student_swipe: swipeDir, school_interest: false, appointment_booked: false });
-    }
+
     if (direction === 'right') {
-      const next = rightCount + 1;
-      setRightCount(next);
+      setRightCount((n) => n + 1);
       showToast(`Match avec ${school.name} !`);
-      // Fire-and-forget intent score refresh after swipe right
-      if (user) {
-        refreshIntentScore(user.id).catch(() => {})
+
+      // ── Write to Supabase if user is logged in ──────────────────────────
+      if (user?.id) {
+        try {
+          await upsertMatch({
+            student_id: user.id,
+            school_id: school.id,
+            student_swipe: 'right',
+            school_interest: false,
+            appointment_booked: false,
+          });
+        } catch (err) {
+          // Don't block the UI if the write fails
+          console.error('upsertMatch failed:', err);
+        }
+      }
+    } else if (direction === 'left') {
+      // Record left swipe too so the exposant knows who passed
+      if (user?.id) {
+        try {
+          await upsertMatch({
+            student_id: user.id,
+            school_id: school.id,
+            student_swipe: 'left',
+            school_interest: false,
+            appointment_booked: false,
+          });
+        } catch (err) {
+          console.error('upsertMatch failed:', err);
+        }
       }
     }
   };
 
-  const currentCard = cards.find((c) => !gone.has(c.id));
+  const currentCard = schools.find((c) => !gone.has(c.id));
 
   const handleAction = (direction: 'left' | 'right' | 'up') => {
     if (!currentCard) return;
@@ -474,6 +467,8 @@ export default function DiscoverPage() {
         </div>
       </div>
 
+      <StripeRule />
+
       {/* Toast */}
       {toast && (
         <div
@@ -516,22 +511,11 @@ export default function DiscoverPage() {
             className="swipe-container"
             style={{ height: 420, width: '100%', maxWidth: 380, position: 'relative' }}
           >
-            {loadingCards ? (
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  height: '100%',
-                  gap: 16,
-                  color: 'var(--le-gray-500)',
-                }}
-              >
-                <span style={{ fontSize: 40 }}>⏳</span>
-                <p style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Chargement des écoles…</p>
+            {loadingSchools ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                <p style={{ color: 'var(--le-gray-500)', fontSize: 14 }}>Chargement des écoles…</p>
               </div>
-            ) : cards.length === 0 || cards.every((c) => gone.has(c.id)) ? (
+            ) : schools.length === 0 || schools.every((c) => gone.has(c.id)) ? (
               <div
                 style={{
                   display: 'flex',
@@ -554,14 +538,13 @@ export default function DiscoverPage() {
                   size="sm"
                   onClick={() => {
                     setGone(new Set());
-                    getSchools().then((schools) => setCards([...schools.map(schoolToCard)].reverse()));
                   }}
                 >
                   Recommencer
                 </Button>
               </div>
             ) : (
-              cards.map((school) => (
+              schools.map((school, index) => (
                 <TinderCard
                   key={school.id}
                   onSwipe={(dir) => handleSwipe(dir, school)}
@@ -572,7 +555,7 @@ export default function DiscoverPage() {
                     style={{
                       height: 420,
                       borderRadius: 16,
-                      background: school.gradient,
+                      background: gradientFor(index),
                       position: 'relative',
                       overflow: 'hidden',
                       boxShadow: '0 8px 40px rgba(26,26,26,0.15)',
@@ -591,7 +574,7 @@ export default function DiscoverPage() {
                         userSelect: 'none',
                       }}
                     >
-                      {school.emoji}
+                      {emojiFor(index)}
                     </div>
 
                     <div className="school-card-overlay">
@@ -607,13 +590,13 @@ export default function DiscoverPage() {
                         {school.name}
                       </p>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-                        <Tag variant={school.typeVariant}>{school.type}</Tag>
+                        <Tag variant={typeVariant(school.type)}>{school.type}</Tag>
                         <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13 }}>
                           📍 {school.city}
                         </span>
                       </div>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        {school.fields.map((f) => (
+                        {(school.target_fields ?? []).slice(0, 3).map((f) => (
                           <span
                             key={f}
                             style={{
