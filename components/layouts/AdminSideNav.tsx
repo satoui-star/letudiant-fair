@@ -102,12 +102,12 @@ const NAV_ITEMS: NavItem[] = [
     icon: <IconSalons />,
   },
   {
-    href: "/admin/users",
+    href: "/admin/utilisateurs",
     label: "Utilisateurs",
     icon: <IconUsers />,
   },
   {
-    href: "/admin/settings",
+    href: "/admin/parametres",
     label: "Paramètres",
     icon: <IconSettings />,
   },

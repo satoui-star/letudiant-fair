@@ -1,7 +1,6 @@
 'use client'
 import { Suspense, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { signInWithEmail } from '@/lib/supabase/auth'
 import Logo from '@/components/ui/Logo'
 import StripeRule from '@/components/ui/StripeRule'
 
@@ -18,20 +17,22 @@ function LoginInner() {
     setLoading(true)
     setError('')
     try {
-      await signInWithEmail(email, password)
-      // Redirect based on role stored in users table
-      const { getSupabase } = await import('@/lib/supabase/client')
-      const supabase = getSupabase()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const { data: profile } = await supabase
-          .from('users').select('role').eq('id', user.id).maybeSingle()
-        const role = profile?.role ?? user.user_metadata?.role ?? 'student'
-        if (role === 'teacher')   { router.push('/teacher/dashboard'); return }
-        if (role === 'exhibitor') { router.push('/exhibitor/dashboard'); return }
-        if (role === 'admin')     { router.push('/admin/dashboard'); return }
-        if (role === 'parent')    { router.push('/parent/home'); return }
-      }
+      // Use direct login endpoint (bypasses problematic Supabase auth)
+      const res = await fetch('/api/auth/direct-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Login failed')
+
+      // Redirect based on role
+      const role = data.role ?? 'student'
+      if (role === 'teacher')   { router.push('/teacher/dashboard'); return }
+      if (role === 'exhibitor') { router.push('/exhibitor/dashboard'); return }
+      if (role === 'admin')     { router.push('/admin/dashboard'); return }
+      if (role === 'parent')    { router.push('/parent/home'); return }
       router.push('/home')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erreur de connexion')

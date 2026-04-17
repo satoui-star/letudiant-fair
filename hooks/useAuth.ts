@@ -34,10 +34,12 @@ export function useAuth(): AuthState {
   }, [])
 
   async function fetchProfile(id: string) {
-    const { data } = await supabase.from('users').select('*').eq('id', id).maybeSingle()
-    setProfile(data)
+    const { data, error } = await supabase.from('users').select('*').eq('id', id).maybeSingle()
+    if (!error) setProfile(data)
+    // On RLS error (e.g. recursive policy), fall back gracefully — role comes from JWT
     setLoading(false)
   }
 
-  return { user, profile, loading, role: profile?.role ?? null }
+  const jwtRole = (user?.user_metadata?.role ?? null) as UserRow['role'] | null
+  return { user, profile, loading, role: profile?.role ?? jwtRole }
 }

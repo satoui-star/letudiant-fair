@@ -29,11 +29,9 @@ export async function proxy(request: NextRequest) {
             return request.cookies.getAll()
           },
           setAll(cookiesToSet) {
-            // 1. Forward refreshed cookies onto the mutated request object
             cookiesToSet.forEach(({ name, value }) =>
               request.cookies.set(name, value)
             )
-            // 2. Re-build supabaseResponse so the browser receives updated cookies
             supabaseResponse = NextResponse.next({ request })
             cookiesToSet.forEach(({ name, value, options }) =>
               supabaseResponse.cookies.set(name, value, options)
@@ -43,57 +41,31 @@ export async function proxy(request: NextRequest) {
       }
     )
 
-    // ⚠️  DO NOT remove — triggers the internal token refresh
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    // Only refresh session, don't query user (avoids RLS errors)
+    await supabase.auth.getSession()
 
     const { pathname } = request.nextUrl
 
-    // ── Protected routes (require authentication) ──────────────────────
-    // NOTE: route groups like (student) are transparent — the browser URL
-    // is /home, /schools, etc. — NOT /student/home.
+    // ── Redirect unauthenticated users from protected routes to /login ──
     const PROTECTED = [
-      '/home',
-      '/schools',
-      '/discover',
-      '/compare',
-      '/saved',
-      '/qr',
-      '/profile',
-      '/recap',
-      '/fair',
-      '/onboarding',
-      '/admin',
-      '/exhibitor',
-      '/teacher',
-      '/parent',
+      '/home', '/schools', '/discover', '/compare', '/saved', '/qr', '/profile',
+      '/recap', '/fair', '/onboarding', '/admin', '/exhibitor', '/teacher', '/parent',
     ]
 
-    // ── Auth-only routes (redirect away if already logged in) ──────────
-    const AUTH_PAGES = ['/login', '/register']
-
     const isProtected = PROTECTED.some((p) => pathname.startsWith(p))
-    const isAuthPage  = AUTH_PAGES.some((p)  => pathname.startsWith(p))
 
-    if (isProtected && !user) {
-      // Not logged in → send to /login and preserve the intended destination
-      const loginUrl = request.nextUrl.clone()
-      loginUrl.pathname = '/login'
-      loginUrl.searchParams.set('redirectTo', pathname)
-      return NextResponse.redirect(loginUrl)
-    }
-
-    if (isAuthPage && user) {
-      // Already logged in → no reason to be on login/register
-      const homeUrl = request.nextUrl.clone()
-      homeUrl.pathname = '/home'
-      homeUrl.searchParams.delete('redirectTo')
-      return NextResponse.redirect(homeUrl)
+    if (isProtected) {
+      // Check for session cookie
+      const sessionCookie = request.cookies.get('sb-auth-token')
+      if (!sessionCookie) {
+        const loginUrl = request.nextUrl.clone()
+        loginUrl.pathname = '/login'
+        loginUrl.searchParams.set('redirectTo', pathname)
+        return NextResponse.redirect(loginUrl)
+      }
     }
   } catch (e) {
-    // Never block the request — degrade gracefully on unexpected errors
-    console.error('[proxy] Supabase auth check failed:', e)
+    console.error('[proxy] auth check failed:', e)
   }
 
   return supabaseResponse
