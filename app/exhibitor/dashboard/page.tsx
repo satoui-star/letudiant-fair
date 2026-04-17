@@ -26,7 +26,7 @@ interface DashboardStats {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function KpiCard({ label, value, sub, color = '#E3001B' }: {
+function KpiCard({ label, value, sub, color = '#EC1F27' }: {
   label: string; value: string | number; sub?: string; color?: string
 }) {
   return (
@@ -204,7 +204,7 @@ export default function ExhibitorDashboard() {
       </div>
 
       {/* ── GDPR policy notice ─────────────────────────────────────────────── */}
-      <div style={{ background: '#FFFBE6', border: '1px solid #FFD100', borderRadius: 12, padding: '12px 16px', marginBottom: 24, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+      <div style={{ background: '#FFF9E6', border: '1px solid #FCD716', borderRadius: 12, padding: '12px 16px', marginBottom: 24, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
         <span style={{ fontSize: 18, flexShrink: 0 }}>🔒</span>
         <p style={{ margin: 0, fontSize: 13, color: '#92400e', lineHeight: 1.5 }}>
           <strong>Données 100 % agrégées.</strong> Conformément au RGPD, les profils individuels des visiteurs appartiennent à L&apos;Étudiant et ne sont pas accessibles ici. Vous recevez le rapport nominatif complet J+1 après le salon.
@@ -222,8 +222,8 @@ export default function ExhibitorDashboard() {
         <>
           {/* ── KPI row ──────────────────────────────────────────────────── */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 14, marginBottom: 28 }}>
-            <KpiCard label="Scans au stand" value={stats?.totalScans ?? 0} sub="total salon" color="#E3001B" />
-            <KpiCard label="Scans aujourd'hui" value={stats?.todayScans ?? 0} sub="journée en cours" color="#003C8F" />
+            <KpiCard label="Scans au stand" value={stats?.totalScans ?? 0} sub="total salon" color="#EC1F27" />
+            <KpiCard label="Scans aujourd'hui" value={stats?.todayScans ?? 0} sub="journée en cours" color="#0066CC" />
             <KpiCard label="Intérêts confirmés" value={stats?.swipeRights ?? 0} sub="swipes droite dans l'app" color="#15803d" />
             <KpiCard label="Rendez-vous" value={stats?.appointments ?? 0} sub="confirmés" color="#7C3AED" />
           </div>
@@ -238,9 +238,9 @@ export default function ExhibitorDashboard() {
               <div className="le-card le-card-padded" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <SectionLabel>Entonnoir d&apos;engagement</SectionLabel>
                 {[
-                  { label: 'Scan stand',        count: stats?.totalScans   ?? 0, color: '#E3001B' },
-                  { label: 'Swipe app',          count: stats?.swipeRights  ?? 0, color: '#003C8F' },
-                  { label: 'Rendez-vous pris',   count: stats?.appointments ?? 0, color: '#FFD100' },
+                  { label: 'Scan stand',        count: stats?.totalScans   ?? 0, color: '#EC1F27' },
+                  { label: 'Swipe app',          count: stats?.swipeRights  ?? 0, color: '#0066CC' },
+                  { label: 'Rendez-vous pris',   count: stats?.appointments ?? 0, color: '#FCD716' },
                 ].map(f => {
                   const max = stats?.totalScans || 1
                   const pct = Math.round((f.count / max) * 100)
@@ -261,9 +261,9 @@ export default function ExhibitorDashboard() {
               {/* Niveau d'intention (aggregate %) */}
               <div className="le-card le-card-padded" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <SectionLabel>Niveau d&apos;intention des visiteurs</SectionLabel>
-                <BarRow label="🔴 Décideur"    pct={stats?.decidingPct  ?? 0} color="#E3001B" />
-                <BarRow label="🟡 Comparateur" pct={stats?.comparingPct ?? 0} color="#FFD100" />
-                <BarRow label="🔵 Explorateur" pct={stats?.exploringPct ?? 0} color="#003C8F" />
+                <BarRow label="🔴 Décideur"    pct={stats?.decidingPct  ?? 0} color="#EC1F27" />
+                <BarRow label="🟡 Comparateur" pct={stats?.comparingPct ?? 0} color="#FCD716" />
+                <BarRow label="🔵 Explorateur" pct={stats?.exploringPct ?? 0} color="#0066CC" />
                 <p style={{ margin: 0, fontSize: 12, color: '#9B9B9B', lineHeight: 1.4 }}>
                   Calculé sur les signaux comportementaux agrégés — aucune donnée individuelle.
                 </p>
@@ -274,7 +274,7 @@ export default function ExhibitorDashboard() {
                 <div className="le-card le-card-padded" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <SectionLabel>Domaines d&apos;intérêt des visiteurs</SectionLabel>
                   {stats.topBranches.map(b => (
-                    <BarRow key={b.label} label={b.label} pct={b.pct} color="#003C8F" />
+                    <BarRow key={b.label} label={b.label} pct={b.pct} color="#0066CC" />
                   ))}
                 </div>
               )}
@@ -304,7 +304,7 @@ export default function ExhibitorDashboard() {
                   <Button variant="primary" size="sm" onClick={downloadQR} style={{ width: '100%' }}>
                     ⬇ Télécharger pour impression
                   </Button>
-                  <Link href="/exhibitor/leads" style={{ display: 'block', textAlign: 'center', fontSize: '0.8125rem', color: '#E3001B', fontWeight: 600, textDecoration: 'none', padding: '8px 0' }}>
+                  <Link href="/exhibitor/leads" style={{ display: 'block', textAlign: 'center', fontSize: '0.8125rem', color: '#EC1F27', fontWeight: 600, textDecoration: 'none', padding: '8px 0' }}>
                     Voir les statistiques détaillées →
                   </Link>
                 </div>
@@ -318,7 +318,7 @@ export default function ExhibitorDashboard() {
               </div>
 
               {/* J+1 data product teaser */}
-              <div style={{ background: 'linear-gradient(135deg,#003C8F,#0056CC)', borderRadius: 14, padding: '20px 18px', color: '#fff' }}>
+              <div style={{ background: 'linear-gradient(135deg,#0066CC,#0056CC)', borderRadius: 14, padding: '20px 18px', color: '#fff' }}>
                 <p style={{ margin: '0 0 6px', fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', opacity: 0.8 }}>Rapport post-salon</p>
                 <p style={{ margin: '0 0 10px', fontSize: '1rem', fontWeight: 800, lineHeight: 1.3 }}>
                   Recevez le rapport nominatif J+1
@@ -328,7 +328,7 @@ export default function ExhibitorDashboard() {
                 </p>
                 <a
                   href="mailto:data@letudiant.fr?subject=Rapport%20post-salon"
-                  style={{ display: 'inline-block', background: '#fff', color: '#003C8F', fontWeight: 700, fontSize: '0.8125rem', padding: '8px 14px', borderRadius: 8, textDecoration: 'none' }}
+                  style={{ display: 'inline-block', background: '#fff', color: '#0066CC', fontWeight: 700, fontSize: '0.8125rem', padding: '8px 14px', borderRadius: 8, textDecoration: 'none' }}
                 >
                   Demander mon rapport →
                 </a>

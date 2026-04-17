@@ -1,30 +1,60 @@
 @import "tailwindcss";
 
 @theme {
-  /* L'Etudiant brand colors */
-  --color-le-red: #E3001B;
-  --color-le-red-dark: #B0001A;
-  --color-le-red-light: #FDEAEA;
-  --color-le-blue: #003C8F;
-  --color-le-blue-light: #E6ECF8;
-  --color-le-yellow: #FFD100;
-  --color-le-yellow-light: #FFFBE6;
-  --color-le-gray-900: #1A1A1A;
-  --color-le-gray-700: #3D3D3D;
-  --color-le-gray-500: #6B6B6B;
-  --color-le-gray-200: #E8E8E8;
-  --color-le-gray-100: #F4F4F4;
+  /* L'Étudiant Charte Graphique 24/25 - Official Colors */
+  /* Primary Colors */
+  --color-tomate: #EC1F27;
+  --color-blanc: #F8F7F2;
+  --color-noir: #191829;
+
+  /* Secondary Colors */
+  --color-citron: #FCD716;
+  --color-spirit: #FF6B35;
+  --color-framboise: #E91E63;
+  --color-menthe-eau: #4DB8A8;
+  --color-piscine: #0066CC;
+  --color-tropical: #00BFB3;
+  --color-passion: #FFC0D9;
+  --color-cel: #7FD8D9;
+  --color-papyri: #CDDC39;
+  --color-menthe: #00AA66;
+  --color-lagoon: #00AA88;
+  --color-nuit: #2B1B4D;
+  --color-pourpre: #932D99;
+  --color-paen: #004488;
+
+  /* Grays */
+  --color-gray-900: #1A1A1A;
+  --color-gray-700: #3D3D3D;
+  --color-gray-500: #6B6B6B;
+  --color-gray-200: #E8E8E8;
+  --color-gray-100: #F4F4F4;
 }
 
 /* ─── CSS custom properties ─── */
 :root {
-  --le-red: #E3001B;
-  --le-red-dark: #B0001A;
-  --le-red-light: #FDEAEA;
-  --le-blue: #003C8F;
-  --le-blue-light: #E6ECF8;
-  --le-yellow: #FFD100;
-  --le-yellow-light: #FFFBE6;
+  /* Primary */
+  --le-red: #EC1F27;
+  --le-tomate: #EC1F27;
+  --le-blanc: #F8F7F2;
+  --le-noir: #191829;
+
+  /* Secondary */
+  --le-citron: #FCD716;
+  --le-spirit: #FF6B35;
+  --le-framboise: #E91E63;
+  --le-menthe: #4DB8A8;
+  --le-piscine: #0066CC;
+  --le-tropical: #00BFB3;
+  --le-passion: #FFC0D9;
+  --le-cel: #7FD8D9;
+  --le-papyri: #CDDC39;
+  --le-lagoon: #00AA88;
+  --le-nuit: #2B1B4D;
+  --le-pourpre: #932D99;
+  --le-paen: #004488;
+
+  /* Grays */
   --le-gray-900: #1A1A1A;
   --le-gray-700: #3D3D3D;
   --le-gray-500: #6B6B6B;
@@ -46,36 +76,96 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ─── Stripe rule ─── */
+/* ─── Stripe rule (Charte Graphique accent) ─── */
 .le-stripe {
   width: 100%;
-  height: 5px;
-  background: linear-gradient(90deg, #E3001B 60%, #003C8F 60% 80%, #FFD100 80%);
+  height: 6px;
+  background: linear-gradient(90deg,
+    #EC1F27 0% 33.33%,
+    #0066CC 33.33% 66.66%,
+    #FCD716 66.66% 100%
+  );
   flex-shrink: 0;
 }
 
-/* ─── Typography ─── */
+/* Multicolor stripe (full charte palette) */
+.le-stripe-multi {
+  width: 100%;
+  height: 6px;
+  background: linear-gradient(90deg,
+    #E91E63 0% 12.5%,
+    #FF6B35 12.5% 25%,
+    #FCD716 25% 37.5%,
+    #CDDC39 37.5% 50%,
+    #00AA66 50% 62.5%,
+    #00BFB3 62.5% 75%,
+    #0066CC 75% 87.5%,
+    #2B1B4D 87.5% 100%
+  );
+  flex-shrink: 0;
+}
+
+/* Vertical colored accent bar */
+.le-accent-bar {
+  width: 4px;
+  height: 100%;
+  background: var(--le-tomate);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* Multicolor dots (like the charte identity pattern) */
+.le-dots {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.le-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+.le-dots span:nth-child(1) { background: #EC1F27; }
+.le-dots span:nth-child(2) { background: #0066CC; }
+.le-dots span:nth-child(3) { background: #FCD716; }
+.le-dots span:nth-child(4) { background: #00AA66; }
+.le-dots span:nth-child(5) { background: #E91E63; }
+
+/* ─── Typography (Charte 24/25 - Editorial, Bold, Impactful) ─── */
+.le-display {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 900;
+  line-height: 0.95;
+  color: var(--le-noir);
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  font-stretch: condensed;
+}
+
 .le-h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  line-height: 1.2;
-  color: var(--le-gray-900);
-  letter-spacing: -0.02em;
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--le-noir);
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
 }
 
 .le-h2 {
   font-size: 1.5rem;
-  font-weight: 700;
-  line-height: 1.25;
-  color: var(--le-gray-900);
-  letter-spacing: -0.01em;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--le-noir);
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
 }
 
 .le-h3 {
   font-size: 1.125rem;
-  font-weight: 600;
-  line-height: 1.35;
-  color: var(--le-gray-900);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--le-noir);
+  letter-spacing: -0.005em;
 }
 
 .le-body {
@@ -87,21 +177,42 @@ body {
 
 .le-caption {
   font-size: 0.75rem;
-  font-weight: 400;
+  font-weight: 500;
   line-height: 1.5;
   color: var(--le-gray-500);
+  letter-spacing: 0.02em;
 }
 
-/* Section label */
+/* Eyebrow / section label (Charte 24/25) */
 .le-section-label {
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 800;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: var(--le-gray-500);
-  border-bottom: 2px solid var(--le-red);
-  padding-bottom: 4px;
+  color: var(--le-gray-900);
+  padding-bottom: 6px;
   display: inline-block;
+  position: relative;
+}
+
+.le-section-label::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 28px;
+  height: 3px;
+  background: var(--le-tomate);
+}
+
+/* Quote style (editorial) */
+.le-quote {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--le-noir);
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
 }
 
 /* ─── Buttons ─── */
@@ -240,7 +351,7 @@ body {
 
 .le-input:focus {
   border-color: var(--le-red);
-  box-shadow: 0 0 0 3px rgba(227, 0, 27, 0.12);
+  box-shadow: 0 0 0 3px rgba(236, 31, 39, 0.12);
 }
 
 .le-input:disabled {
@@ -502,7 +613,7 @@ body {
 }
 
 .admin-nav-item.active {
-  background: rgba(227, 0, 27, 0.18);
+  background: rgba(236, 31, 39, 0.18);
   color: #ffffff;
 }
 
@@ -520,7 +631,7 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  box-shadow: 0 8px 32px rgba(227, 0, 27, 0.12);
+  box-shadow: 0 8px 32px rgba(236, 31, 39, 0.12);
 }
 
 /* ─── Heatmap stand ─── */

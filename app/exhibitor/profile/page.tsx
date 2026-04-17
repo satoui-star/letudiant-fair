@@ -180,7 +180,7 @@ export default function ExhibitorProfilePage() {
             </p>
             <p style={{ fontSize: "13px", color: "#6B6B6B" }}>
               ou{" "}
-              <span style={{ color: "#E3001B", cursor: "pointer", fontWeight: 600 }}>
+              <span style={{ color: "#EC1F27", cursor: "pointer", fontWeight: 600 }}>
                 parcourez vos fichiers
               </span>
             </p>
@@ -332,9 +332,9 @@ export default function ExhibitorProfilePage() {
                     cursor: "pointer",
                     padding: "8px 12px",
                     borderRadius: "6px",
-                    background: checked ? "#FDEAEA" : "transparent",
+                    background: checked ? "#FFF0F1" : "transparent",
                     border: checked
-                      ? "1px solid #E3001B"
+                      ? "1px solid #EC1F27"
                       : "1px solid transparent",
                     transition: "all 0.15s ease",
                   }}
@@ -344,12 +344,12 @@ export default function ExhibitorProfilePage() {
                     type="checkbox"
                     checked={checked}
                     onChange={() => toggleLevel(l)}
-                    style={{ accentColor: "#E3001B", width: "16px", height: "16px" }}
+                    style={{ accentColor: "#EC1F27", width: "16px", height: "16px" }}
                   />
                   <span
                     style={{
                       fontSize: "14px",
-                      color: checked ? "#B0001A" : "#3D3D3D",
+                      color: checked ? "#C41520" : "#3D3D3D",
                       fontWeight: checked ? 600 : 400,
                     }}
                   >
@@ -385,10 +385,10 @@ export default function ExhibitorProfilePage() {
                     padding: "8px 16px",
                     borderRadius: "20px",
                     border: selected
-                      ? "1.5px solid #003C8F"
+                      ? "1.5px solid #0066CC"
                       : "1.5px solid #E8E8E8",
-                    background: selected ? "#E6ECF8" : "#ffffff",
-                    color: selected ? "#003C8F" : "#3D3D3D",
+                    background: selected ? "#E6F0FF" : "#ffffff",
+                    color: selected ? "#0066CC" : "#3D3D3D",
                     fontWeight: selected ? 700 : 500,
                     fontSize: "13px",
                     cursor: "pointer",
@@ -491,7 +491,7 @@ export default function ExhibitorProfilePage() {
                     height: "100%",
                     width: `${uploadProgress}%`,
                     background:
-                      uploadProgress === 100 ? "#10B981" : "#E3001B",
+                      uploadProgress === 100 ? "#10B981" : "#EC1F27",
                     borderRadius: "4px",
                     transition: "width 0.2s ease",
                   }}

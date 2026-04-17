@@ -64,11 +64,11 @@ const NEXT_STEPS_INITIAL: NextStep[] = [
 ]
 
 const SCHOOL_COLORS: Record<string, string> = {
-  'Grande École': '#003C8F',
+  'Grande École': '#0066CC',
   "École d'Ingénieurs": '#E6A800',
   "École d'ingénieurs": '#E6A800',
-  "École d'Art": '#E3001B',
-  'Université': '#003C8F',
+  "École d'Art": '#EC1F27',
+  'Université': '#0066CC',
   'IUT': '#3D3D3D',
   'École Spécialisée': '#1A1A1A',
 }
@@ -209,7 +209,7 @@ export default function RecapPage({ params }: { params: Promise<{ eventId: strin
           id,
           name: schoolMap[id].name,
           type: schoolMap[id].type,
-          color: SCHOOL_COLORS[schoolMap[id].type] ?? '#003C8F',
+          color: SCHOOL_COLORS[schoolMap[id].type] ?? '#0066CC',
         }))
       setVisitedSchools(visited)
       setSelectedSchools(new Set(visited.map(s => s.id)))
@@ -275,7 +275,7 @@ export default function RecapPage({ params }: { params: Promise<{ eventId: strin
       {/* Header */}
       <div
         style={{
-          background: 'linear-gradient(135deg, #E3001B 0%, #B0001A 60%, #003C8F 100%)',
+          background: 'linear-gradient(135deg, #EC1F27 0%, #C41520 60%, #0066CC 100%)',
           padding: '24px 20px 0',
           position: 'relative',
           overflow: 'hidden',
@@ -425,7 +425,7 @@ export default function RecapPage({ params }: { params: Promise<{ eventId: strin
                     <div
                       style={{
                         width: 48, height: 48, borderRadius: 10,
-                        background: SCHOOL_COLORS[school.type] ?? '#003C8F',
+                        background: SCHOOL_COLORS[school.type] ?? '#0066CC',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         color: SCHOOL_COLORS[school.type] === '#E6A800' ? '#1A1A1A' : '#fff',
                         fontWeight: 700, fontSize: 16, flexShrink: 0,

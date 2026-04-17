@@ -24,8 +24,8 @@ const INTENT_LABEL: Record<string, string> = {
 }
 const INTENT_COLOR: Record<string, string> = {
   low: '#6B6B6B',
-  medium: '#003C8F',
-  high: '#E3001B',
+  medium: '#0066CC',
+  high: '#EC1F27',
 }
 
 export default function ParentHomePage() {
@@ -175,7 +175,7 @@ export default function ParentHomePage() {
             <a
               href="/parent/orientation"
               className="block w-full text-center py-3 rounded-xl font-semibold text-sm"
-              style={{ background: '#003C8F', color: '#fff' }}
+              style={{ background: '#0066CC', color: '#fff' }}
             >
               Conseils orientation
             </a>

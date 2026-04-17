@@ -12,11 +12,11 @@ import type { AppointmentRow } from '@/lib/supabase/types';
 // ─── Mock data ───────────────────────────────────────────────────────────────
 
 const SAVED_DOCS = [
-  { id: 'd1', schoolName: 'HEC Paris', type: 'Brochure', fileName: 'HEC_Brochure_2026.pdf', size: '4.2 MB', savedAt: '15 avril 2026 · 10h23', unlockedByScan: true, schoolColor: '#003C8F' },
-  { id: 'd2', schoolName: 'Sciences Po', type: 'Plaquette des programmes', fileName: 'SciencesPo_Programmes_2026.pdf', size: '2.8 MB', savedAt: '15 avril 2026 · 11h05', unlockedByScan: true, schoolColor: '#E3001B' },
-  { id: 'd3', schoolName: 'INSA Lyon', type: 'Guide des admissions', fileName: 'INSA_Admissions_2026.pdf', size: '1.9 MB', savedAt: '15 avril 2026 · 11h45', unlockedByScan: true, schoolColor: '#FFD100' },
+  { id: 'd1', schoolName: 'HEC Paris', type: 'Brochure', fileName: 'HEC_Brochure_2026.pdf', size: '4.2 MB', savedAt: '15 avril 2026 · 10h23', unlockedByScan: true, schoolColor: '#0066CC' },
+  { id: 'd2', schoolName: 'Sciences Po', type: 'Plaquette des programmes', fileName: 'SciencesPo_Programmes_2026.pdf', size: '2.8 MB', savedAt: '15 avril 2026 · 11h05', unlockedByScan: true, schoolColor: '#EC1F27' },
+  { id: 'd3', schoolName: 'INSA Lyon', type: 'Guide des admissions', fileName: 'INSA_Admissions_2026.pdf', size: '1.9 MB', savedAt: '15 avril 2026 · 11h45', unlockedByScan: true, schoolColor: '#FCD716' },
   { id: 'd4', schoolName: 'emlyon', type: 'Présentation PGE', fileName: 'emlyon_PGE_2026.pdf', size: '3.1 MB', savedAt: '15 avril 2026 · 12h10', unlockedByScan: false, schoolColor: '#1A1A1A' },
-  { id: 'd5', schoolName: 'CentraleSupélec', type: 'Livret accueil', fileName: 'CS_Livret_2026.pdf', size: '5.4 MB', savedAt: '15 avril 2026 · 12h30', unlockedByScan: true, schoolColor: '#003C8F' },
+  { id: 'd5', schoolName: 'CentraleSupélec', type: 'Livret accueil', fileName: 'CS_Livret_2026.pdf', size: '5.4 MB', savedAt: '15 avril 2026 · 12h30', unlockedByScan: true, schoolColor: '#0066CC' },
 ];
 
 const SAVED_LINKS = [
@@ -40,11 +40,11 @@ const APPOINTMENTS = [
 ];
 
 const DOWNLOADS = [
-  { id: 'dl1', schoolName: 'HEC Paris', type: 'Brochure', fileName: 'HEC_Brochure_2026.pdf', size: '4.2 MB', downloadedAt: '15 avril 2026 · 10h25', schoolColor: '#003C8F' },
-  { id: 'dl2', schoolName: 'Sciences Po', type: 'Plaquette des programmes', fileName: 'SciencesPo_Programmes_2026.pdf', size: '2.8 MB', downloadedAt: '15 avril 2026 · 11h08', schoolColor: '#E3001B' },
-  { id: 'dl3', schoolName: 'INSA Lyon', type: 'Guide des admissions', fileName: 'INSA_Admissions_2026.pdf', size: '1.9 MB', downloadedAt: '15 avril 2026 · 11h47', schoolColor: '#FFD100' },
+  { id: 'dl1', schoolName: 'HEC Paris', type: 'Brochure', fileName: 'HEC_Brochure_2026.pdf', size: '4.2 MB', downloadedAt: '15 avril 2026 · 10h25', schoolColor: '#0066CC' },
+  { id: 'dl2', schoolName: 'Sciences Po', type: 'Plaquette des programmes', fileName: 'SciencesPo_Programmes_2026.pdf', size: '2.8 MB', downloadedAt: '15 avril 2026 · 11h08', schoolColor: '#EC1F27' },
+  { id: 'dl3', schoolName: 'INSA Lyon', type: 'Guide des admissions', fileName: 'INSA_Admissions_2026.pdf', size: '1.9 MB', downloadedAt: '15 avril 2026 · 11h47', schoolColor: '#FCD716' },
   { id: 'dl4', schoolName: 'emlyon', type: 'Présentation PGE', fileName: 'emlyon_PGE_2026.pdf', size: '3.1 MB', downloadedAt: '15 avril 2026 · 12h12', schoolColor: '#1A1A1A' },
-  { id: 'dl5', schoolName: 'CentraleSupélec', type: 'Livret accueil', fileName: 'CS_Livret_2026.pdf', size: '5.4 MB', downloadedAt: '15 avril 2026 · 12h33', schoolColor: '#003C8F' },
+  { id: 'dl5', schoolName: 'CentraleSupélec', type: 'Livret accueil', fileName: 'CS_Livret_2026.pdf', size: '5.4 MB', downloadedAt: '15 avril 2026 · 12h33', schoolColor: '#0066CC' },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

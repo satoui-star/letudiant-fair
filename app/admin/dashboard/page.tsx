@@ -13,16 +13,17 @@ import {
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════════════════
 const C = {
-  red: '#E3001B', redDark: '#B0001A', redLight: '#FDEAEA',
-  blue: '#003C8F', blueLight: '#E6ECF8',
-  yellow: '#FFD100', yellowLight: '#FFFBE6',
-  gray900: '#1A1A1A', gray700: '#3D3D3D', gray500: '#6B6B6B',
-  gray200: '#E8E8E8', gray100: '#F4F4F4',
+  tomate: '#EC1F27', tomateDark: '#C41520', tomateLightLight: '#FFF0F1',
+  piscine: '#0066CC', piscineLightLight: '#E6F0FF',
+  citron: '#FCD716', citronLight: '#FFF9E6',
+  spirit: '#FF6B35', spiritLight: '#FFF0E6',
+  gray900: '#191829', gray700: '#3D3D3D', gray500: '#6B6B6B',
+  gray200: '#E8E8E8', gray100: '#F4F4F4', blanc: '#F8F7F2',
   success: '#22c55e', warning: '#f59e0b',
 } as const
 
-const TIER = { deciding: C.red, comparing: C.blue, exploring: C.yellow } as const
-const TIER_LIGHT = { deciding: C.redLight, comparing: C.blueLight, exploring: C.yellowLight } as const
+const TIER = { deciding: C.tomate, comparing: C.piscine, exploring: C.citron } as const
+const TIER_LIGHT = { deciding: C.tomateLightLight, comparing: C.piscineLightLight, exploring: C.citronLight } as const
 const TIER_LABEL = { deciding: 'Décideurs', comparing: 'Comparateurs', exploring: 'Explorateurs' } as const
 
 const fmt = (n: number) => new Intl.NumberFormat('fr-FR').format(n)

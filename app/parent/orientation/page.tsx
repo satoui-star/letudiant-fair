@@ -8,7 +8,7 @@ import Logo from '@/components/ui/Logo'
 const TIPS = [
   {
     phase: 'Avant le salon',
-    color: '#003C8F',
+    color: '#0066CC',
     items: [
       'Encouragez votre enfant a creer son profil sur l app avant le salon',
       'Discutez ensemble des domaines qui l interessent sans imposer vos preferences',
@@ -18,7 +18,7 @@ const TIPS = [
   },
   {
     phase: 'Pendant le salon',
-    color: '#E3001B',
+    color: '#EC1F27',
     items: [
       'Laissez votre enfant scanner lui meme son QR a l entree',
       'Privilegiez les stands qui correspondent aux interets declares',

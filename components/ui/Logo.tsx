@@ -26,28 +26,28 @@ export default function Logo({
       ? "#ffffff"
       : variant === "mono"
       ? "#1A1A1A"
-      : "#E3001B";
+      : "#EC1F27";
 
   // Left dashes colors: [blue, yellow, red]
   let leftDashColors: [string, string, string];
   if (variant === "inverted") {
-    leftDashColors = ["#ffffff", "#FFD100", "#ffffff"];
+    leftDashColors = ["#ffffff", "#FCD716", "#ffffff"];
   } else if (variant === "mono") {
     leftDashColors = ["#6B6B6B", "#6B6B6B", "#6B6B6B"];
   } else {
     // default and dark both use the brand colors
-    leftDashColors = ["#003C8F", "#FFD100", "#E3001B"];
+    leftDashColors = ["#0066CC", "#FCD716", "#EC1F27"];
   }
 
   // Underline dashes colors: 5 dashes alternating brand colors
   let underlineDashColors: string[];
   if (variant === "inverted") {
     underlineDashColors = [
-      "#FFD100",
+      "#FCD716",
       "#ffffff",
-      "#FFD100",
+      "#FCD716",
       "#ffffff",
-      "#FFD100",
+      "#FCD716",
     ];
   } else if (variant === "mono") {
     underlineDashColors = [
@@ -59,11 +59,11 @@ export default function Logo({
     ];
   } else {
     underlineDashColors = [
-      "#E3001B",
-      "#003C8F",
-      "#FFD100",
-      "#E3001B",
-      "#003C8F",
+      "#EC1F27",
+      "#0066CC",
+      "#FCD716",
+      "#EC1F27",
+      "#0066CC",
     ];
   }
 

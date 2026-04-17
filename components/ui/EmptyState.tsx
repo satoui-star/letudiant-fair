@@ -13,8 +13,8 @@ export function EmptyState({ icon = '📭', title, description, action }: EmptyS
       {description && <p style={{ fontSize: '0.875rem', color: '#6B6B6B', margin: 0, maxWidth: 280, lineHeight: 1.5 }}>{description}</p>}
       {action && (
         action.href
-          ? <a href={action.href} style={{ marginTop: 8, display: 'inline-block', background: '#E3001B', color: '#fff', borderRadius: 10, padding: '10px 20px', fontSize: '0.875rem', fontWeight: 600, textDecoration: 'none' }}>{action.label}</a>
-          : <button onClick={action.onClick} style={{ marginTop: 8, background: '#E3001B', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 20px', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer' }}>{action.label}</button>
+          ? <a href={action.href} style={{ marginTop: 8, display: 'inline-block', background: '#EC1F27', color: '#fff', borderRadius: 10, padding: '10px 20px', fontSize: '0.875rem', fontWeight: 600, textDecoration: 'none' }}>{action.label}</a>
+          : <button onClick={action.onClick} style={{ marginTop: 8, background: '#EC1F27', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 20px', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer' }}>{action.label}</button>
       )}
     </div>
   )

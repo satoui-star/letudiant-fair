@@ -52,7 +52,7 @@ export default function ComparePage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#F7F7F7', paddingBottom: 100, fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ background: '#E3001B', padding: '52px 20px 20px', color: '#fff' }}>
+      <div style={{ background: '#EC1F27', padding: '52px 20px 20px', color: '#fff' }}>
         <h1 style={{ margin: '0 0 6px', fontSize: '1.375rem', fontWeight: 800 }}>Comparateur</h1>
         <p style={{ margin: 0, fontSize: '0.8125rem', opacity: 0.8 }}>Comparez jusqu&apos;à 3 établissements côte à côte</p>
       </div>
@@ -63,11 +63,11 @@ export default function ComparePage() {
           {selected.map(s => (
             <div key={s.id} style={{ background: '#fff', borderRadius: 12, padding: '8px 12px', display: 'flex', gap: 8, alignItems: 'center', boxShadow: '0 1px 6px rgba(0,0,0,0.06)' }}>
               <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#1A1A1A' }}>{s.name}</span>
-              <button onClick={() => removeSchool(s.id)} style={{ background: 'none', border: 'none', color: '#E3001B', cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: 0 }}>×</button>
+              <button onClick={() => removeSchool(s.id)} style={{ background: 'none', border: 'none', color: '#EC1F27', cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: 0 }}>×</button>
             </div>
           ))}
           {selected.length < MAX_COMPARE && (
-            <button onClick={() => setShowPicker(true)} style={{ background: '#fff', border: '2px dashed #E3001B', borderRadius: 12, padding: '8px 16px', color: '#E3001B', fontWeight: 600, fontSize: '0.8125rem', cursor: 'pointer' }}>
+            <button onClick={() => setShowPicker(true)} style={{ background: '#fff', border: '2px dashed #EC1F27', borderRadius: 12, padding: '8px 16px', color: '#EC1F27', fontWeight: 600, fontSize: '0.8125rem', cursor: 'pointer' }}>
               + Ajouter
             </button>
           )}
@@ -85,7 +85,7 @@ export default function ComparePage() {
                       <p style={{ margin: '0 0 2px', fontWeight: 600, fontSize: '0.875rem', color: '#1A1A1A' }}>{s.name}</p>
                       <p style={{ margin: 0, fontSize: '0.75rem', color: '#6B6B6B' }}>{s.city} · {s.type}</p>
                     </div>
-                    <span style={{ color: '#E3001B' }}>+</span>
+                    <span style={{ color: '#EC1F27' }}>+</span>
                   </button>
                 ))}
               </div>

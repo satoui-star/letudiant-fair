@@ -3,12 +3,31 @@ import { useEffect, useState } from 'react'
 import type { EventRow } from '@/lib/supabase/types'
 
 const C = {
-  red: '#E3001B', redLight: '#FDEAEA',
-  blue: '#003C8F', blueLight: '#E6ECF8',
-  yellow: '#FFD100', yellowLight: '#FFFBE6',
-  gray900: '#1A1A1A', gray700: '#3D3D3D', gray500: '#6B6B6B',
-  gray200: '#E8E8E8', gray100: '#F4F4F4',
+  tomate: '#EC1F27', tomateLight: '#FFF0F1',
+  piscine: '#0066CC', piscineLight: '#E6F0FF',
+  citron: '#FCD716', citronLight: '#FFF9E6',
+  spirit: '#FF6B35', spiritLight: '#FFF0E6',
+  framboise: '#E91E63', framboiseLight: '#FCE4EC',
+  menthe: '#00AA66', mentheLight: '#E0F5EC',
+  tropical: '#00BFB3', tropicalLight: '#E0F7F5',
+  papyri: '#CDDC39', papyriLight: '#F7F9E1',
+  nuit: '#2B1B4D',
+  noir: '#191829',
+  gray700: '#3D3D3D', gray500: '#6B6B6B',
+  gray200: '#E8E8E8', gray100: '#F4F4F4', blanc: '#F8F7F2',
 }
+
+// Palette pour les différentes villes/salons (charte graphique)
+const SALON_COLORS = [
+  { color: C.tomate, light: C.tomateLight, name: 'Tomate' },
+  { color: C.piscine, light: C.piscineLight, name: 'Piscine' },
+  { color: C.framboise, light: C.framboiseLight, name: 'Framboise' },
+  { color: C.spirit, light: C.spiritLight, name: 'Spirit' },
+  { color: C.menthe, light: C.mentheLight, name: 'Menthe' },
+  { color: C.tropical, light: C.tropicalLight, name: 'Tropical' },
+  { color: C.citron, light: C.citronLight, name: 'Citron' },
+  { color: C.papyri, light: C.papyriLight, name: 'Papyri' },
+]
 
 export default function SalonsPage() {
   const [events, setEvents] = useState<EventRow[]>([])
@@ -37,163 +56,427 @@ export default function SalonsPage() {
   const getStatusBadge = (event: EventRow) => {
     const now = new Date()
     const eventDate = new Date(event.event_date)
-    if (eventDate > now) return { label: 'À venir', color: C.red }
-    if (event.is_active) return { label: 'En direct', color: C.blue }
+    if (eventDate > now) return { label: 'À venir', color: C.tomate }
+    if (event.is_active) return { label: 'En direct', color: C.menthe, pulse: true }
     return { label: 'Archivé', color: C.gray500 }
   }
 
+  const getSalonColor = (index: number) => SALON_COLORS[index % SALON_COLORS.length]
+
   return (
-    <div style={{ padding: '32px' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
-        <div>
-          <h1 style={{ margin: '0 0 8px', fontSize: 28, fontWeight: 700, color: C.gray900 }}>Salons</h1>
-          <p style={{ margin: 0, fontSize: 14, color: C.gray500 }}>Gérez tous les salons de l'orientation</p>
-        </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          style={{
-            padding: '10px 20px',
-            background: C.red,
-            color: '#fff',
-            border: 'none',
-            borderRadius: 8,
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
-        >
-          + Créer un salon
-        </button>
-      </div>
+    <div style={{ padding: '0', background: C.blanc, minHeight: '100vh' }}>
+      {/* Signature stripe (Charte 24/25) */}
+      <div
+        style={{
+          width: '100%',
+          height: 6,
+          background: `linear-gradient(90deg, ${C.tomate} 0% 33.33%, ${C.piscine} 33.33% 66.66%, ${C.citron} 66.66% 100%)`,
+        }}
+      />
 
-      {/* Filters */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 32 }}>
-        {(['all', 'upcoming', 'live', 'archived'] as const).map(status => (
-          <button
-            key={status}
-            onClick={() => setStatusFilter(status)}
-            style={{
-              padding: '8px 16px',
-              background: statusFilter === status ? C.red : C.gray100,
-              color: statusFilter === status ? '#fff' : C.gray700,
-              border: 'none',
-              borderRadius: 6,
-              cursor: 'pointer',
-              fontWeight: 500,
-              fontSize: 13,
-            }}
-          >
-            {status === 'all' ? 'Tous' : status === 'upcoming' ? 'À venir' : status === 'live' ? 'En direct' : 'Archivés'}
-          </button>
-        ))}
-      </div>
-
-      {/* Grid */}
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', color: C.gray500 }}>Chargement...</div>
-      ) : events.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', color: C.gray500 }}>
-          Aucun salon trouvé
-        </div>
-      ) : (
+      <div style={{ padding: '32px 40px' }}>
+        {/* Header */}
         <div
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-            gap: 20,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-end',
+            marginBottom: 40,
+            paddingBottom: 24,
+            borderBottom: `1px solid ${C.gray200}`,
           }}
         >
-          {events.map(event => {
-            const badge = getStatusBadge(event)
-            const eventDate = new Date(event.event_date)
-            return (
-              <div
-                key={event.id}
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 800,
+                letterSpacing: 3,
+                textTransform: 'uppercase',
+                color: C.noir,
+                paddingBottom: 6,
+                display: 'inline-block',
+                position: 'relative',
+                marginBottom: 16,
+              }}
+            >
+              Administration
+              <span
                 style={{
-                  background: '#fff',
-                  borderRadius: 12,
-                  padding: 20,
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-                  border: `1px solid ${C.gray200}`,
+                  position: 'absolute',
+                  left: 0,
+                  bottom: 0,
+                  width: 28,
+                  height: 3,
+                  background: C.tomate,
+                }}
+              />
+            </div>
+            <h1
+              style={{
+                margin: 0,
+                fontSize: 42,
+                fontWeight: 900,
+                color: C.noir,
+                letterSpacing: '-0.03em',
+                textTransform: 'uppercase',
+                lineHeight: 1,
+              }}
+            >
+              Salons
+            </h1>
+            <p style={{ margin: '12px 0 0', fontSize: 15, color: C.gray500 }}>
+              Gérez tous les salons de l'orientation L'Étudiant
+            </p>
+          </div>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            style={{
+              padding: '14px 28px',
+              background: C.tomate,
+              color: '#fff',
+              border: 'none',
+              borderRadius: 4,
+              fontWeight: 700,
+              fontSize: 14,
+              letterSpacing: '0.02em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(236,31,39,0.25)',
+              transition: 'transform 0.15s, box-shadow 0.15s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)'
+              e.currentTarget.style.boxShadow = '0 6px 16px rgba(236,31,39,0.35)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(236,31,39,0.25)'
+            }}
+          >
+            + Créer un salon
+          </button>
+        </div>
+
+        {/* Filters */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 32 }}>
+          {(['all', 'upcoming', 'live', 'archived'] as const).map(status => {
+            const isActive = statusFilter === status
+            const label = status === 'all' ? 'Tous' : status === 'upcoming' ? 'À venir' : status === 'live' ? 'En direct' : 'Archivés'
+            return (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                style={{
+                  padding: '10px 20px',
+                  background: isActive ? C.noir : 'transparent',
+                  color: isActive ? '#fff' : C.gray700,
+                  border: `1.5px solid ${isActive ? C.noir : C.gray200}`,
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: 13,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  transition: 'all 0.15s',
                 }}
               >
-                {/* Status Badge */}
-                <div
-                  style={{
-                    display: 'inline-block',
-                    padding: '4px 12px',
-                    background: badge.color,
-                    color: '#fff',
-                    borderRadius: 4,
-                    fontSize: 11,
-                    fontWeight: 600,
-                    marginBottom: 12,
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  {badge.label}
-                </div>
-
-                {/* Name & Date */}
-                <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700, color: C.gray900 }}>
-                  {event.name}
-                </h3>
-                <p style={{ margin: '0 0 16px', fontSize: 13, color: C.gray500 }}>
-                  {eventDate.toLocaleDateString('fr-FR')} • {event.city}
-                </p>
-
-                {/* Quick Stats */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
-                  <div style={{ padding: '8px', background: C.gray100, borderRadius: 6 }}>
-                    <p style={{ margin: '0 0 4px', fontSize: 11, color: C.gray500, textTransform: 'uppercase', fontWeight: 600 }}>
-                      Pré-inscrits
-                    </p>
-                    <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.gray900 }}>—</p>
-                  </div>
-                  <div style={{ padding: '8px', background: C.gray100, borderRadius: 6 }}>
-                    <p style={{ margin: '0 0 4px', fontSize: 11, color: C.gray500, textTransform: 'uppercase', fontWeight: 600 }}>
-                      Stands
-                    </p>
-                    <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.gray900 }}>—</p>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                  <button
-                    style={{
-                      padding: '8px 12px',
-                      background: C.blueLight,
-                      color: C.blue,
-                      border: 'none',
-                      borderRadius: 6,
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Détails
-                  </button>
-                  <button
-                    style={{
-                      padding: '8px 12px',
-                      background: C.gray200,
-                      color: C.gray700,
-                      border: 'none',
-                      borderRadius: 6,
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Éditer
-                  </button>
-                </div>
-              </div>
+                {label}
+              </button>
             )
           })}
         </div>
-      )}
+
+        {/* Grid */}
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '80px 20px', color: C.gray500 }}>
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                border: `3px solid ${C.gray200}`,
+                borderTop: `3px solid ${C.tomate}`,
+                borderRadius: '50%',
+                margin: '0 auto 16px',
+                animation: 'spin 0.8s linear infinite',
+              }}
+            />
+            Chargement des salons...
+          </div>
+        ) : events.length === 0 ? (
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '80px 20px',
+              background: '#fff',
+              borderRadius: 8,
+              border: `1px dashed ${C.gray200}`,
+            }}
+          >
+            <div
+              style={{
+                display: 'inline-flex',
+                gap: 4,
+                marginBottom: 16,
+              }}
+            >
+              {[C.tomate, C.piscine, C.citron, C.menthe, C.framboise].map((c, i) => (
+                <span
+                  key={i}
+                  style={{ width: 12, height: 12, background: c, borderRadius: 2 }}
+                />
+              ))}
+            </div>
+            <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: C.noir, textTransform: 'uppercase' }}>
+              Aucun salon trouvé
+            </p>
+            <p style={{ margin: '8px 0 0', fontSize: 14, color: C.gray500 }}>
+              Créez votre premier salon pour commencer
+            </p>
+          </div>
+        ) : (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
+              gap: 24,
+            }}
+          >
+            {events.map((event, idx) => {
+              const badge = getStatusBadge(event)
+              const eventDate = new Date(event.event_date)
+              const salonColor = getSalonColor(idx)
+              return (
+                <div
+                  key={event.id}
+                  style={{
+                    background: '#fff',
+                    borderRadius: 8,
+                    overflow: 'hidden',
+                    border: `1px solid ${C.gray200}`,
+                    transition: 'transform 0.2s, box-shadow 0.2s',
+                    cursor: 'pointer',
+                    position: 'relative',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-4px)'
+                    e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.08)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.boxShadow = 'none'
+                  }}
+                >
+                  {/* Colored accent header */}
+                  <div
+                    style={{
+                      height: 80,
+                      background: salonColor.color,
+                      position: 'relative',
+                      padding: '20px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    {/* Multicolor stripe */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: 4,
+                        background: `linear-gradient(90deg,
+                          ${C.tomate} 0% 12.5%,
+                          ${C.spirit} 12.5% 25%,
+                          ${C.citron} 25% 37.5%,
+                          ${C.papyri} 37.5% 50%,
+                          ${C.menthe} 50% 62.5%,
+                          ${C.tropical} 62.5% 75%,
+                          ${C.piscine} 75% 87.5%,
+                          ${C.framboise} 87.5% 100%
+                        )`,
+                      }}
+                    />
+
+                    {/* Status Badge */}
+                    <div
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        alignSelf: 'flex-start',
+                        padding: '4px 10px',
+                        background: 'rgba(255,255,255,0.95)',
+                        borderRadius: 3,
+                        fontSize: 10,
+                        fontWeight: 800,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.06em',
+                        color: badge.color,
+                      }}
+                    >
+                      {badge.pulse && (
+                        <span
+                          style={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: '50%',
+                            background: badge.color,
+                            animation: 'pulse 1.5s infinite',
+                          }}
+                        />
+                      )}
+                      {badge.label}
+                    </div>
+                    {/* Italic logo-style city name */}
+                    <div
+                      style={{
+                        fontSize: 28,
+                        fontWeight: 900,
+                        color: '#fff',
+                        fontStyle: 'italic',
+                        letterSpacing: '-0.02em',
+                        lineHeight: 1,
+                      }}
+                    >
+                      {event.city}
+                    </div>
+                  </div>
+
+                  <div style={{ padding: 20 }}>
+                    {/* Name & Date */}
+                    <h3
+                      style={{
+                        margin: '0 0 4px',
+                        fontSize: 18,
+                        fontWeight: 800,
+                        color: C.noir,
+                        textTransform: 'uppercase',
+                        letterSpacing: '-0.01em',
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {event.name}
+                    </h3>
+                    <p
+                      style={{
+                        margin: '0 0 20px',
+                        fontSize: 13,
+                        color: C.gray500,
+                        fontWeight: 500,
+                      }}
+                    >
+                      {eventDate.toLocaleDateString('fr-FR', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      })}
+                    </p>
+
+                    {/* Quick Stats */}
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: 12,
+                        marginBottom: 20,
+                        paddingBottom: 20,
+                        borderBottom: `1px solid ${C.gray200}`,
+                      }}
+                    >
+                      <div>
+                        <p
+                          style={{
+                            margin: '0 0 4px',
+                            fontSize: 10,
+                            color: C.gray500,
+                            textTransform: 'uppercase',
+                            fontWeight: 700,
+                            letterSpacing: '0.1em',
+                          }}
+                        >
+                          Pré-inscrits
+                        </p>
+                        <p style={{ margin: 0, fontSize: 22, fontWeight: 900, color: C.noir, letterSpacing: '-0.02em' }}>
+                          —
+                        </p>
+                      </div>
+                      <div>
+                        <p
+                          style={{
+                            margin: '0 0 4px',
+                            fontSize: 10,
+                            color: C.gray500,
+                            textTransform: 'uppercase',
+                            fontWeight: 700,
+                            letterSpacing: '0.1em',
+                          }}
+                        >
+                          Stands
+                        </p>
+                        <p style={{ margin: 0, fontSize: 22, fontWeight: 900, color: C.noir, letterSpacing: '-0.02em' }}>
+                          —
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      <button
+                        style={{
+                          padding: '10px 12px',
+                          background: C.noir,
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: 4,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.06em',
+                          cursor: 'pointer',
+                          transition: 'background 0.15s',
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = salonColor.color)}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = C.noir)}
+                      >
+                        Détails
+                      </button>
+                      <button
+                        style={{
+                          padding: '10px 12px',
+                          background: 'transparent',
+                          color: C.noir,
+                          border: `1.5px solid ${C.gray200}`,
+                          borderRadius: 4,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.06em',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = C.noir
+                          e.currentTarget.style.background = C.gray100
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = C.gray200
+                          e.currentTarget.style.background = 'transparent'
+                        }}
+                      >
+                        Éditer
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
 
       {/* Create Modal */}
       {showCreateModal && (
@@ -204,88 +487,195 @@ export default function SalonsPage() {
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'rgba(0,0,0,0.5)',
+            background: 'rgba(25,24,41,0.7)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 1000,
+            padding: 24,
           }}
           onClick={() => setShowCreateModal(false)}
         >
           <div
             style={{
               background: '#fff',
-              borderRadius: 12,
-              padding: 32,
-              maxWidth: 400,
-              width: '90%',
+              borderRadius: 8,
+              maxWidth: 480,
+              width: '100%',
+              overflow: 'hidden',
             }}
             onClick={e => e.stopPropagation()}
           >
-            <h2 style={{ margin: '0 0 20px', fontSize: 20, fontWeight: 700 }}>Créer un salon</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 20 }}>
-              <input
-                type="text"
-                placeholder="Nom du salon"
+            {/* Multicolor stripe at top of modal */}
+            <div
+              style={{
+                height: 6,
+                background: `linear-gradient(90deg, ${C.tomate} 0% 33.33%, ${C.piscine} 33.33% 66.66%, ${C.citron} 66.66% 100%)`,
+              }}
+            />
+            <div style={{ padding: 32 }}>
+              <div
                 style={{
-                  padding: '10px 12px',
-                  border: `1px solid ${C.gray200}`,
-                  borderRadius: 6,
-                  fontSize: 14,
-                }}
-              />
-              <input
-                type="date"
-                style={{
-                  padding: '10px 12px',
-                  border: `1px solid ${C.gray200}`,
-                  borderRadius: 6,
-                  fontSize: 14,
-                }}
-              />
-              <input
-                type="text"
-                placeholder="Ville"
-                style={{
-                  padding: '10px 12px',
-                  border: `1px solid ${C.gray200}`,
-                  borderRadius: 6,
-                  fontSize: 14,
-                }}
-              />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                style={{
-                  padding: '10px 16px',
-                  background: C.gray100,
-                  color: C.gray700,
-                  border: 'none',
-                  borderRadius: 6,
-                  fontWeight: 600,
-                  cursor: 'pointer',
+                  fontSize: 11,
+                  fontWeight: 800,
+                  letterSpacing: 3,
+                  textTransform: 'uppercase',
+                  color: C.tomate,
+                  marginBottom: 8,
                 }}
               >
-                Annuler
-              </button>
-              <button
+                Nouveau salon
+              </div>
+              <h2
                 style={{
-                  padding: '10px 16px',
-                  background: C.red,
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 6,
-                  fontWeight: 600,
-                  cursor: 'pointer',
+                  margin: '0 0 24px',
+                  fontSize: 28,
+                  fontWeight: 900,
+                  color: C.noir,
+                  letterSpacing: '-0.02em',
+                  textTransform: 'uppercase',
+                  lineHeight: 1.1,
                 }}
               >
-                Créer
-              </button>
+                Créer un salon
+              </h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24 }}>
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: C.noir,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.06em',
+                      marginBottom: 6,
+                    }}
+                  >
+                    Nom du salon
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Salon de l'Étudiant Paris"
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      border: `1.5px solid ${C.gray200}`,
+                      borderRadius: 4,
+                      fontSize: 14,
+                      boxSizing: 'border-box',
+                      outline: 'none',
+                      transition: 'border-color 0.15s',
+                    }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = C.tomate)}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = C.gray200)}
+                  />
+                </div>
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: C.noir,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.06em',
+                      marginBottom: 6,
+                    }}
+                  >
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      border: `1.5px solid ${C.gray200}`,
+                      borderRadius: 4,
+                      fontSize: 14,
+                      boxSizing: 'border-box',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: C.noir,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.06em',
+                      marginBottom: 6,
+                    }}
+                  >
+                    Ville
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Paris"
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      border: `1.5px solid ${C.gray200}`,
+                      borderRadius: 4,
+                      fontSize: 14,
+                      boxSizing: 'border-box',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  style={{
+                    padding: '12px 20px',
+                    background: 'transparent',
+                    color: C.noir,
+                    border: `1.5px solid ${C.gray200}`,
+                    borderRadius: 4,
+                    fontWeight: 700,
+                    fontSize: 13,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Annuler
+                </button>
+                <button
+                  style={{
+                    padding: '12px 20px',
+                    background: C.tomate,
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 4,
+                    fontWeight: 700,
+                    fontSize: 13,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Créer
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }

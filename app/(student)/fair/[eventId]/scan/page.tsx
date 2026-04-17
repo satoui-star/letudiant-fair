@@ -189,7 +189,7 @@ export default function ScanPage({
           <a
             href="/login"
             style={{
-              background: '#E3001B',
+              background: '#EC1F27',
               color: '#fff',
               borderRadius: 12,
               padding: '12px 24px',
@@ -310,10 +310,10 @@ export default function ScanPage({
           >
             {/* Corner decorations */}
             {[
-              { top: -4, left: -4, borderTop: '3px solid #E3001B', borderLeft: '3px solid #E3001B', borderRadius: '4px 0 0 0' },
-              { top: -4, right: -4, borderTop: '3px solid #E3001B', borderRight: '3px solid #E3001B', borderRadius: '0 4px 0 0' },
-              { bottom: -4, left: -4, borderBottom: '3px solid #E3001B', borderLeft: '3px solid #E3001B', borderRadius: '0 0 0 4px' },
-              { bottom: -4, right: -4, borderBottom: '3px solid #E3001B', borderRight: '3px solid #E3001B', borderRadius: '0 0 4px 0' },
+              { top: -4, left: -4, borderTop: '3px solid #EC1F27', borderLeft: '3px solid #EC1F27', borderRadius: '4px 0 0 0' },
+              { top: -4, right: -4, borderTop: '3px solid #EC1F27', borderRight: '3px solid #EC1F27', borderRadius: '0 4px 0 0' },
+              { bottom: -4, left: -4, borderBottom: '3px solid #EC1F27', borderLeft: '3px solid #EC1F27', borderRadius: '0 0 0 4px' },
+              { bottom: -4, right: -4, borderBottom: '3px solid #EC1F27', borderRight: '3px solid #EC1F27', borderRadius: '0 0 4px 0' },
             ].map((s, i) => (
               <div
                 key={i}

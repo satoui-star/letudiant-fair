@@ -20,7 +20,7 @@ interface Member {
 type FilterKey = 'all' | 'profile_complete' | 'profile_incomplete'
 
 const AVATAR_COLORS = [
-  '#003C8F', '#E3001B', '#FFD100', '#16A34A', '#7C3AED',
+  '#0066CC', '#EC1F27', '#FCD716', '#16A34A', '#7C3AED',
   '#0891B2', '#EA580C', '#BE185D',
 ]
 
@@ -30,7 +30,7 @@ function getInitials(name: string) {
 
 function AvatarCircle({ name, index }: { name: string; index: number }) {
   const bg = AVATAR_COLORS[index % AVATAR_COLORS.length]
-  const textColor = bg === '#FFD100' ? '#1A1A1A' : '#fff'
+  const textColor = bg === '#FCD716' ? '#1A1A1A' : '#fff'
   return (
     <div style={{ width: 36, height: 36, borderRadius: '50%', background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
       <span style={{ fontSize: 12, fontWeight: 700, color: textColor }}>{getInitials(name)}</span>
@@ -134,9 +134,9 @@ export default function TeacherGroup() {
       </div>
 
       {/* GDPR notice */}
-      <div style={{ background: '#E6ECF8', borderRadius: 12, padding: '12px 16px', marginBottom: 24, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+      <div style={{ background: '#E6F0FF', borderRadius: 12, padding: '12px 16px', marginBottom: 24, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
         <span style={{ fontSize: 18, flexShrink: 0 }}>🔒</span>
-        <p style={{ margin: 0, fontSize: 13, color: '#003C8F', lineHeight: 1.5 }}>
+        <p style={{ margin: 0, fontSize: 13, color: '#0066CC', lineHeight: 1.5 }}>
           <strong>Données affichées : nom + date d&apos;inscription uniquement.</strong><br />
           Les données comportementales (stands visités, swipes, scores) sont confidentielles et réservées à L&apos;Étudiant.
         </p>
@@ -235,7 +235,7 @@ export default function TeacherGroup() {
             {[
               { label: 'Inscrits', count: members.length, color: 'var(--le-blue)' },
               { label: 'Profil renseigné', count: profileComplete.length, color: '#16A34A' },
-              { label: 'Profil incomplet', count: profileIncomplete.length, color: '#E3001B' },
+              { label: 'Profil incomplet', count: profileIncomplete.length, color: '#EC1F27' },
             ].map(item => (
               <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ width: 10, height: 10, borderRadius: '50%', background: item.color, flexShrink: 0 }} />

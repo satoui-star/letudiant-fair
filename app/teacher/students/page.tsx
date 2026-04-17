@@ -101,7 +101,7 @@ export default function TeacherStudentsPage() {
         {/* KPIs */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 24 }}>
           {[
-            { label: 'Inscrits via le groupe', value: totalRegistered, color: '#003C8F' },
+            { label: 'Inscrits via le groupe', value: totalRegistered, color: '#0066CC' },
             { label: 'Présents au salon',       value: totalCheckedIn,  color: '#22c55e' },
             { label: 'Non encore présents',     value: totalRegistered - totalCheckedIn, color: '#f59e0b' },
           ].map(k => (
@@ -113,9 +113,9 @@ export default function TeacherStudentsPage() {
         </div>
 
         {/* Notice */}
-        <div style={{ background: '#E6ECF8', borderRadius: 12, padding: '12px 16px', marginBottom: 24, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+        <div style={{ background: '#E6F0FF', borderRadius: 12, padding: '12px 16px', marginBottom: 24, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
           <span style={{ fontSize: 18 }}>ℹ️</span>
-          <p style={{ margin: 0, fontSize: '0.8125rem', color: '#003C8F', lineHeight: 1.6 }}>
+          <p style={{ margin: 0, fontSize: '0.8125rem', color: '#0066CC', lineHeight: 1.6 }}>
             <strong>Données visibles ici :</strong> inscriptions et présence physique au salon.<br />
             Les parcours de visite, intérêts et données de navigation de vos élèves sont confidentiels et réservés à L&apos;Étudiant.
           </p>
@@ -146,7 +146,7 @@ export default function TeacherStudentsPage() {
                 style={{ display: 'grid', gridTemplateColumns: '40px 1fr auto auto', gap: 12, padding: '13px 20px', borderBottom: i < students.length - 1 ? '1px solid #F0F0F0' : 'none', alignItems: 'center' }}
               >
                 {/* Avatar */}
-                <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#E6ECF8', color: '#003C8F', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8125rem', fontWeight: 700 }}>
+                <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#E6F0FF', color: '#0066CC', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8125rem', fontWeight: 700 }}>
                   {s.name.charAt(0).toUpperCase()}
                 </div>
 

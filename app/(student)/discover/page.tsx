@@ -45,8 +45,8 @@ function typeVariant(type: string): 'red' | 'blue' | 'yellow' | 'gray' {
 
 // Generate a gradient from school type so cards still look nice
 const GRADIENTS = [
-  'linear-gradient(160deg, #E3001B 0%, #8B0012 100%)',
-  'linear-gradient(160deg, #003C8F 0%, #001A4D 100%)',
+  'linear-gradient(160deg, #EC1F27 0%, #8B0012 100%)',
+  'linear-gradient(160deg, #0066CC 0%, #001A4D 100%)',
   'linear-gradient(160deg, #1a1a2e 0%, #0f3460 100%)',
   'linear-gradient(160deg, #E6A800 0%, #A07000 100%)',
   'linear-gradient(160deg, #2d6a4f 0%, #1b4332 100%)',
@@ -58,11 +58,11 @@ function gradientFor(index: number) { return GRADIENTS[index % GRADIENTS.length]
 function emojiFor(index: number) { return EMOJIS[index % EMOJIS.length]; }
 
 const REELS: Reel[] = [
-  { id: 'r1', schoolName: 'HEC Paris', title: 'Une journée dans les locaux de Jouy-en-Josas', duration: '0:28', views: '12.4k', thumbnail_color: '#003C8F', tags: ['Grande École', 'Économie'] },
-  { id: 'r2', schoolName: 'Sciences Po', title: "Le témoignage d'un étudiant en 1ère année", duration: '0:45', views: '8.2k', thumbnail_color: '#E3001B', tags: ['IEP', 'Sciences Po'] },
-  { id: 'r3', schoolName: 'INSA Lyon', title: "Les labos d'ingénierie — visite exclusive", duration: '0:32', views: '6.7k', thumbnail_color: '#FFD100', tags: ['Ingénierie'] },
+  { id: 'r1', schoolName: 'HEC Paris', title: 'Une journée dans les locaux de Jouy-en-Josas', duration: '0:28', views: '12.4k', thumbnail_color: '#0066CC', tags: ['Grande École', 'Économie'] },
+  { id: 'r2', schoolName: 'Sciences Po', title: "Le témoignage d'un étudiant en 1ère année", duration: '0:45', views: '8.2k', thumbnail_color: '#EC1F27', tags: ['IEP', 'Sciences Po'] },
+  { id: 'r3', schoolName: 'INSA Lyon', title: "Les labos d'ingénierie — visite exclusive", duration: '0:32', views: '6.7k', thumbnail_color: '#FCD716', tags: ['Ingénierie'] },
   { id: 'r4', schoolName: 'emlyon', title: "L'alternance chez emlyon : retour d'expérience", duration: '0:38', views: '5.1k', thumbnail_color: '#1A1A1A', tags: ['Alternance', 'Commerce'] },
-  { id: 'r5', schoolName: 'Université Paris-Saclay', title: 'Les bourses et aides financières en 2026', duration: '1:02', views: '18.9k', thumbnail_color: '#003C8F', tags: ['Financement'] },
+  { id: 'r5', schoolName: 'Université Paris-Saclay', title: 'Les bourses et aides financières en 2026', duration: '1:02', views: '18.9k', thumbnail_color: '#0066CC', tags: ['Financement'] },
 ];
 
 const ARTICLES: Article[] = [
@@ -81,7 +81,7 @@ type TabId = 'swipe' | 'reels' | 'actualites';
 function ReelCard({ reel }: { reel: Reel; key?: string }) {
   const [playing, setPlaying] = useState(false);
 
-  const textOnDark = reel.thumbnail_color === '#FFD100' ? '#1A1A1A' : '#fff';
+  const textOnDark = reel.thumbnail_color === '#FCD716' ? '#1A1A1A' : '#fff';
 
   return (
     <div

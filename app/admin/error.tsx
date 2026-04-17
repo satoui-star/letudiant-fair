@@ -4,9 +4,9 @@ export default function AdminError({ error, reset }: { error: Error; reset: () =
   useEffect(() => { console.error('[Admin Error]', error) }, [error])
   return (
     <div style={{ padding: 32, textAlign: 'center' }}>
-      <p style={{ fontWeight: 700, color: '#E3001B' }}>Erreur tableau de bord admin</p>
+      <p style={{ fontWeight: 700, color: '#EC1F27' }}>Erreur tableau de bord admin</p>
       <p style={{ color: '#6B6B6B', fontSize: '0.875rem', marginBottom: 16 }}>{error.message}</p>
-      <button onClick={reset} style={{ background: '#E3001B', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 20px', cursor: 'pointer' }}>Réessayer</button>
+      <button onClick={reset} style={{ background: '#EC1F27', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 20px', cursor: 'pointer' }}>Réessayer</button>
     </div>
   )
 }

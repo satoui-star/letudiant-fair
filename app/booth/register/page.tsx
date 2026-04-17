@@ -112,15 +112,15 @@ export default function BoothRegisterPage() {
       <div style={{ minHeight: '100vh', background: '#1A1A1A', display: 'flex', flexDirection: 'column', fontFamily: 'system-ui, sans-serif' }}>
 
         {/* Header stripe */}
-        <div style={{ background: '#E3001B', padding: '0 40px', height: 8, background: 'linear-gradient(90deg, #E3001B 60%, #003C8F 60% 80%, #FFD100 80%)' }} />
+        <div style={{ background: '#EC1F27', padding: '0 40px', height: 8, background: 'linear-gradient(90deg, #EC1F27 60%, #0066CC 60% 80%, #FCD716 80%)' }} />
 
         {/* Logo + Title */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 40px 32px', textAlign: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
             <div style={{ display: 'flex', gap: 4 }}>
-              <span style={{ width: 6, height: 36, background: '#003C8F', borderRadius: 3 }} />
-              <span style={{ width: 6, height: 36, background: '#FFD100', borderRadius: 3 }} />
-              <span style={{ width: 6, height: 36, background: '#E3001B', borderRadius: 3 }} />
+              <span style={{ width: 6, height: 36, background: '#0066CC', borderRadius: 3 }} />
+              <span style={{ width: 6, height: 36, background: '#FCD716', borderRadius: 3 }} />
+              <span style={{ width: 6, height: 36, background: '#EC1F27', borderRadius: 3 }} />
             </div>
             <span style={{ fontSize: '2rem', fontWeight: 900, color: '#fff', fontStyle: 'italic', letterSpacing: '-0.02em' }}>
               l&apos;étudiant
@@ -171,9 +171,9 @@ export default function BoothRegisterPage() {
                     onClick={() => setEducationLevel(l.value)}
                     style={{
                       padding: '14px 16px', borderRadius: 12, border: '2px solid',
-                      borderColor: educationLevel === l.value ? '#E3001B' : '#E8E8E8',
-                      background: educationLevel === l.value ? '#FDEAEA' : '#FAFAFA',
-                      color: educationLevel === l.value ? '#E3001B' : '#3D3D3D',
+                      borderColor: educationLevel === l.value ? '#EC1F27' : '#E8E8E8',
+                      background: educationLevel === l.value ? '#FFF0F1' : '#FAFAFA',
+                      color: educationLevel === l.value ? '#EC1F27' : '#3D3D3D',
                       fontWeight: educationLevel === l.value ? 700 : 400,
                       fontSize: '0.9375rem', cursor: 'pointer', textAlign: 'left',
                       transition: 'all 0.15s',
@@ -201,7 +201,7 @@ export default function BoothRegisterPage() {
               disabled={!firstName.trim() || !lastName.trim() || !educationLevel || step === 'submitting'}
               style={{
                 width: '100%', padding: '20px', borderRadius: 14, border: 'none',
-                background: (!firstName.trim() || !lastName.trim() || !educationLevel) ? '#E8E8E8' : '#E3001B',
+                background: (!firstName.trim() || !lastName.trim() || !educationLevel) ? '#E8E8E8' : '#EC1F27',
                 color: (!firstName.trim() || !lastName.trim() || !educationLevel) ? '#9B9B9B' : '#fff',
                 fontWeight: 800, fontSize: '1.25rem', cursor: (!firstName.trim() || !lastName.trim() || !educationLevel) ? 'not-allowed' : 'pointer',
                 transition: 'background 0.2s',
@@ -231,7 +231,7 @@ export default function BoothRegisterPage() {
           <p style={{ margin: '0 0 24px', color: '#6B6B6B', fontSize: '0.9375rem' }}>{errorMsg}</p>
           <button
             onClick={resetForm}
-            style={{ background: '#E3001B', color: '#fff', border: 'none', borderRadius: 12, padding: '14px 32px', fontWeight: 700, fontSize: '1rem', cursor: 'pointer' }}
+            style={{ background: '#EC1F27', color: '#fff', border: 'none', borderRadius: 12, padding: '14px 32px', fontWeight: 700, fontSize: '1rem', cursor: 'pointer' }}
           >
             Réessayer →
           </button>
@@ -247,7 +247,7 @@ export default function BoothRegisterPage() {
     <div style={{ minHeight: '100vh', background: '#1A1A1A', display: 'flex', flexDirection: 'column', fontFamily: 'system-ui, sans-serif' }}>
 
       {/* Header stripe */}
-      <div style={{ height: 8, background: 'linear-gradient(90deg, #E3001B 60%, #003C8F 60% 80%, #FFD100 80%)' }} />
+      <div style={{ height: 8, background: 'linear-gradient(90deg, #EC1F27 60%, #0066CC 60% 80%, #FCD716 80%)' }} />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 40px', textAlign: 'center' }}>
 
@@ -267,7 +267,7 @@ export default function BoothRegisterPage() {
         <div style={{ background: '#fff', borderRadius: 24, padding: '32px 40px', boxShadow: '0 8px 48px rgba(0,0,0,0.5)', marginBottom: 32 }}>
           <canvas ref={qrCanvasRef} style={{ display: 'block', borderRadius: 12 }} />
           <p style={{ margin: '16px 0 4px', fontWeight: 800, fontSize: '1.25rem', color: '#1A1A1A' }}>{createdName}</p>
-          <p style={{ margin: 0, fontSize: '0.9375rem', color: '#E3001B', fontWeight: 600 }}>✓ Profil créé avec succès</p>
+          <p style={{ margin: 0, fontSize: '0.9375rem', color: '#EC1F27', fontWeight: 600 }}>✓ Profil créé avec succès</p>
         </div>
 
         {/* Instructions */}
@@ -278,7 +278,7 @@ export default function BoothRegisterPage() {
             { n: '3', text: 'Rescannez ce QR à la sortie pour valider votre parcours' },
           ].map(s => (
             <div key={s.n} style={{ display: 'flex', gap: 14, alignItems: 'center', background: 'rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 18px', textAlign: 'left' }}>
-              <span style={{ width: 28, height: 28, borderRadius: '50%', background: '#E3001B', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.875rem', flexShrink: 0 }}>{s.n}</span>
+              <span style={{ width: 28, height: 28, borderRadius: '50%', background: '#EC1F27', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.875rem', flexShrink: 0 }}>{s.n}</span>
               <p style={{ margin: 0, color: '#fff', fontSize: '0.9375rem', lineHeight: 1.4 }}>{s.text}</p>
             </div>
           ))}
@@ -287,7 +287,7 @@ export default function BoothRegisterPage() {
         {/* Auto-reset countdown */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
           <p style={{ margin: 0, color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem' }}>
-            Retour automatique dans <strong style={{ color: '#FFD100' }}>{countdown}s</strong>
+            Retour automatique dans <strong style={{ color: '#FCD716' }}>{countdown}s</strong>
           </p>
           <button
             onClick={resetForm}
@@ -331,7 +331,7 @@ function Field({
           outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
           transition: 'border-color 0.15s',
         }}
-        onFocus={e => { e.currentTarget.style.borderColor = '#E3001B' }}
+        onFocus={e => { e.currentTarget.style.borderColor = '#EC1F27' }}
         onBlur={e => { e.currentTarget.style.borderColor = '#E8E8E8' }}
       />
     </div>

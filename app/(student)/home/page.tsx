@@ -35,7 +35,7 @@ export default function StudentHomePage() {
   const firstName = profile?.name?.split(' ')[0] ?? 'Étudiant(e)'
   const stage = profile?.orientation_stage ?? 'exploring'
   const stageLabel: Record<string, string> = { exploring: 'Exploration', comparing: 'Comparaison', deciding: 'Décision' }
-  const stageColor: Record<string, string> = { exploring: '#003C8F', comparing: '#f59e0b', deciding: '#22c55e' }
+  const stageColor: Record<string, string> = { exploring: '#0066CC', comparing: '#f59e0b', deciding: '#22c55e' }
 
   const nextEvent    = events[0]
   const daysUntil    = nextEvent
@@ -45,13 +45,13 @@ export default function StudentHomePage() {
   const intentScore  = (profile as any)?.intent_score ?? 0
   const nudge        = getIntentNudge(intentScore, nextEvent?.id)
 
-  const nudgeBg:    Record<string, string> = { low: '#EFF6FF', medium: '#FFFBE6', high: '#F0FFF4' }
+  const nudgeBg:    Record<string, string> = { low: '#EFF6FF', medium: '#FFF9E6', high: '#F0FFF4' }
   const nudgeColor: Record<string, string> = { low: '#1d4ed8', medium: '#92400e', high: '#15803d' }
 
   return (
     <div style={{ minHeight: '100vh', background: '#F7F7F7', paddingBottom: 100, fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
-      <div style={{ background: 'linear-gradient(135deg,#E3001B,#C5001A)', padding: '52px 20px 28px', color: '#fff' }}>
+      <div style={{ background: 'linear-gradient(135deg,#EC1F27,#C5001A)', padding: '52px 20px 28px', color: '#fff' }}>
         {authLoading ? (
           <div style={{ height: 60, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <Skeleton className="h-5 w-40" style={{ background: 'rgba(255,255,255,0.2)' }} />
@@ -82,8 +82,8 @@ export default function StudentHomePage() {
             </div>
             {daysUntil !== null && (
               <div style={{ textAlign: 'center', background: '#FFF0F0', borderRadius: 12, padding: '10px 16px' }}>
-                <p style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color: '#E3001B', lineHeight: 1 }}>{daysUntil}</p>
-                <p style={{ margin: 0, fontSize: '0.6875rem', color: '#E3001B', fontWeight: 600 }}>jours</p>
+                <p style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color: '#EC1F27', lineHeight: 1 }}>{daysUntil}</p>
+                <p style={{ margin: 0, fontSize: '0.6875rem', color: '#EC1F27', fontWeight: 600 }}>jours</p>
               </div>
             )}
           </div>
@@ -142,7 +142,7 @@ export default function StudentHomePage() {
                   <p style={{ margin: '0 0 3px', fontWeight: 700, fontSize: '0.9375rem', color: '#1A1A1A' }}>{ev.name}</p>
                   <p style={{ margin: 0, fontSize: '0.8125rem', color: '#6B6B6B' }}>{ev.city} · {new Date(ev.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                 </div>
-                <span style={{ color: '#E3001B', fontSize: 18 }}>›</span>
+                <span style={{ color: '#EC1F27', fontSize: 18 }}>›</span>
               </a>
             ))}
           </div>
@@ -163,7 +163,7 @@ export default function StudentHomePage() {
                 <div style={{ width: '100%', height: 70, background: 'linear-gradient(135deg,#F0F0F0,#E8E8E8)', borderRadius: 10, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>🏫</div>
                 <p style={{ margin: '0 0 3px', fontWeight: 700, fontSize: '0.8125rem', color: '#1A1A1A', lineHeight: 1.3 }}>{school.name}</p>
                 <p style={{ margin: 0, fontSize: '0.75rem', color: '#6B6B6B' }}>{school.city} · {school.type}</p>
-                {school.parcoursup && <span style={{ display: 'inline-block', marginTop: 6, background: '#EEF2FF', color: '#003C8F', borderRadius: 6, padding: '2px 7px', fontSize: '0.6875rem', fontWeight: 600 }}>Parcoursup</span>}
+                {school.parcoursup && <span style={{ display: 'inline-block', marginTop: 6, background: '#EEF2FF', color: '#0066CC', borderRadius: 6, padding: '2px 7px', fontSize: '0.6875rem', fontWeight: 600 }}>Parcoursup</span>}
               </a>
             ))}
           </div>

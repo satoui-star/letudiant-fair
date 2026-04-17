@@ -10,7 +10,7 @@ export default function StudentError({ error, reset }: { error: Error; reset: ()
       <p style={{ color: '#6B6B6B', fontSize: '0.875rem', textAlign: 'center', maxWidth: 280, marginBottom: 20 }}>
         Impossible de charger cette page. Vérifiez votre connexion.
       </p>
-      <button onClick={reset} style={{ background: '#E3001B', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 24px', fontWeight: 600, cursor: 'pointer' }}>Réessayer</button>
+      <button onClick={reset} style={{ background: '#EC1F27', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 24px', fontWeight: 600, cursor: 'pointer' }}>Réessayer</button>
     </div>
   )
 }

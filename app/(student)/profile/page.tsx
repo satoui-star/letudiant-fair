@@ -197,7 +197,7 @@ export default function ProfilePage() {
           <div
             style={{
               width: 64, height: 64, borderRadius: '50%',
-              background: 'linear-gradient(135deg, #E3001B, #B0001A)',
+              background: 'linear-gradient(135deg, #EC1F27, #C41520)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: '#fff', fontWeight: 700, fontSize: 24, flexShrink: 0,
               boxShadow: '0 4px 16px rgba(227,0,27,0.3)',
@@ -251,13 +251,13 @@ export default function ProfilePage() {
         <div style={{ marginTop: 14 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
             <span style={{ fontSize: 12, color: '#6B6B6B', fontWeight: 600 }}>Profil complété</span>
-            <span style={{ fontSize: 12, color: '#E3001B', fontWeight: 700 }}>{completionPct}%</span>
+            <span style={{ fontSize: 12, color: '#EC1F27', fontWeight: 700 }}>{completionPct}%</span>
           </div>
           <div style={{ height: 6, background: '#E8E8E8', borderRadius: 3, overflow: 'hidden' }}>
             <div
               style={{
                 height: '100%', width: `${completionPct}%`,
-                background: 'linear-gradient(90deg, #E3001B, #FF4D4D)',
+                background: 'linear-gradient(90deg, #EC1F27, #FF4D4D)',
                 borderRadius: 3, transition: 'width 0.4s ease',
               }}
             />
@@ -281,9 +281,9 @@ export default function ProfilePage() {
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                   padding: '8px 14px', borderRadius: 24,
-                  border: `1.5px solid ${active ? '#E3001B' : '#E8E8E8'}`,
-                  background: active ? '#FDEAEA' : '#fff',
-                  color: active ? '#E3001B' : '#3D3D3D',
+                  border: `1.5px solid ${active ? '#EC1F27' : '#E8E8E8'}`,
+                  background: active ? '#FFF0F1' : '#fff',
+                  color: active ? '#EC1F27' : '#3D3D3D',
                   fontWeight: active ? 700 : 500, fontSize: 13,
                   cursor: 'pointer', transition: 'all 0.15s ease',
                 }}
@@ -323,7 +323,7 @@ export default function ProfilePage() {
                   <div
                     style={{
                       width: 40, height: 40, borderRadius: 8,
-                      background: '#FDEAEA',
+                      background: '#FFF0F1',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 20, flexShrink: 0,
                     }}
@@ -384,7 +384,7 @@ export default function ProfilePage() {
                 disabled={savingConsent === key}
                 style={{
                   width: 44, height: 24, borderRadius: 12,
-                  background: consents[key] ? '#E3001B' : '#E8E8E8',
+                  background: consents[key] ? '#EC1F27' : '#E8E8E8',
                   border: 'none', cursor: 'pointer', padding: 2,
                   display: 'flex', alignItems: 'center',
                   justifyContent: consents[key] ? 'flex-end' : 'flex-start',
@@ -409,7 +409,7 @@ export default function ProfilePage() {
             variant="ghost"
             size="sm"
             onClick={handleDeleteAccount}
-            style={{ color: '#E3001B', borderColor: '#FDEAEA' }}
+            style={{ color: '#EC1F27', borderColor: '#FFF0F1' }}
           >
             Supprimer mon compte
           </Button>

@@ -21,8 +21,8 @@ const TIERS = [
     id: "pro",
     name: "Pro",
     badge: "Populaire",
-    badgeColor: "#003C8F",
-    badgeBg: "#E6ECF8",
+    badgeColor: "#0066CC",
+    badgeBg: "#E6F0FF",
     features: [
       "Tout Starter inclus",
       "Slots rendez-vous visio (jusqu'à 20/jour)",
@@ -38,7 +38,7 @@ const TIERS = [
     name: "Elite",
     badge: "Premium",
     badgeColor: "#7A6200",
-    badgeBg: "#FFFBE6",
+    badgeBg: "#FFF9E6",
     features: [
       "Tout Pro inclus",
       "Visibilité maximale — mise en avant",
@@ -68,7 +68,7 @@ export default function ExhibitorVirtualPage() {
             style={{
               display: "inline-block",
               padding: "5px 14px",
-              background: "#FFD100",
+              background: "#FCD716",
               color: "#1A1A1A",
               borderRadius: 20,
               fontSize: 11,
@@ -93,7 +93,7 @@ export default function ExhibitorVirtualPage() {
       {/* Why virtual section */}
       <div
         style={{
-          background: "linear-gradient(135deg, #003C8F 0%, #001F5C 100%)",
+          background: "linear-gradient(135deg, #0066CC 0%, #001F5C 100%)",
           borderRadius: 16,
           padding: "28px 28px",
           marginBottom: 32,
@@ -127,7 +127,7 @@ export default function ExhibitorVirtualPage() {
         <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
           {STAT_ITEMS.map((s) => (
             <div key={s.label} style={{ textAlign: "center", minWidth: 90 }}>
-              <p style={{ fontSize: 28, fontWeight: 700, color: "#FFD100", margin: 0 }}>{s.value}</p>
+              <p style={{ fontSize: 28, fontWeight: 700, color: "#FCD716", margin: 0 }}>{s.value}</p>
               <p style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", margin: "4px 0 0" }}>{s.label}</p>
             </div>
           ))}
@@ -156,7 +156,7 @@ export default function ExhibitorVirtualPage() {
                 background: "#fff",
                 borderRadius: 14,
                 padding: "24px",
-                border: tier.highlight ? "2px solid #003C8F" : "1px solid #E8E8E8",
+                border: tier.highlight ? "2px solid #0066CC" : "1px solid #E8E8E8",
                 display: "flex",
                 flexDirection: "column",
                 position: "relative",
@@ -170,7 +170,7 @@ export default function ExhibitorVirtualPage() {
                     left: 24,
                     right: 24,
                     height: 3,
-                    background: "#003C8F",
+                    background: "#0066CC",
                     borderRadius: "0 0 3px 3px",
                   }}
                 />
@@ -249,9 +249,9 @@ export default function ExhibitorVirtualPage() {
                 style={{
                   width: "100%",
                   padding: "12px",
-                  background: tier.highlight ? "#003C8F" : "#fff",
-                  color: tier.highlight ? "#fff" : "#003C8F",
-                  border: `2px solid #003C8F`,
+                  background: tier.highlight ? "#0066CC" : "#fff",
+                  color: tier.highlight ? "#fff" : "#0066CC",
+                  border: `2px solid #0066CC`,
                   borderRadius: 10,
                   fontSize: 14,
                   fontWeight: 700,
@@ -269,7 +269,7 @@ export default function ExhibitorVirtualPage() {
       {/* Primary CTA */}
       <div
         style={{
-          background: "#FDEAEA",
+          background: "#FFF0F1",
           borderRadius: 16,
           padding: "28px 24px",
           display: "flex",
@@ -291,7 +291,7 @@ export default function ExhibitorVirtualPage() {
           onClick={() => {}}
           style={{
             padding: "14px 28px",
-            background: "#E3001B",
+            background: "#EC1F27",
             color: "#fff",
             border: "none",
             borderRadius: 10,
