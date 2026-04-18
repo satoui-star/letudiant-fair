@@ -7,12 +7,6 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Tag from "@/components/ui/Tag";
 
-const INITIAL_PROGRAMMES = [
-  "Grande École — Programme Grande École (PGE)",
-  "Bachelor en Management",
-  "Mastère Spécialisé Finance",
-];
-
 const ALL_LEVELS = [
   "Terminale",
   "Post-bac BTS",
@@ -36,26 +30,18 @@ const ALL_FIELDS = [
 ];
 
 export default function ExhibitorProfilePage() {
-  const [schoolName, setSchoolName] = useState("HEC Paris");
-  const [city, setCity] = useState("Jouy-en-Josas");
-  const [schoolType, setSchoolType] = useState("Grande École de Commerce");
+  // Empty defaults — the exhibitor fills in their own establishment details.
+  // TODO: hydrate from Supabase `schools` row linked to the authenticated exhibitor.
+  const [schoolName, setSchoolName] = useState("");
+  const [city, setCity] = useState("");
+  const [schoolType, setSchoolType] = useState("");
 
-  const [programmes, setProgrammes] = useState<string[]>(INITIAL_PROGRAMMES);
+  const [programmes, setProgrammes] = useState<string[]>([]);
   const [newProgramme, setNewProgramme] = useState("");
 
-  const [selectedLevels, setSelectedLevels] = useState<string[]>([
-    "Terminale",
-    "Post-bac Licence",
-    "Bac+3/4",
-    "Bac+5",
-  ]);
+  const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
 
-  const [selectedFields, setSelectedFields] = useState<string[]>([
-    "Business",
-    "Finance",
-    "Management",
-    "Marketing",
-  ]);
+  const [selectedFields, setSelectedFields] = useState<string[]>([]);
 
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [saved, setSaved] = useState(false);

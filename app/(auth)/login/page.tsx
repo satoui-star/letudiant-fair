@@ -31,15 +31,26 @@ function LoginInner() {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch('/api/auth/direct-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Login failed')
+      const { getSupabase } = await import('@/lib/supabase/client')
+      const supabase = getSupabase()
 
-      const role = data.role ?? 'student'
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      if (signInError) throw new Error(signInError.message || 'Identifiants invalides')
+
+      const uid = signInData.user?.id
+      let role: string = 'student'
+      if (uid) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', uid)
+          .maybeSingle()
+        if (profile?.role) role = profile.role as string
+      }
+
       if (role === 'teacher')   { router.push('/teacher/dashboard'); return }
       if (role === 'exhibitor') { router.push('/exhibitor/dashboard'); return }
       if (role === 'admin')     { router.push('/admin/dashboard'); return }

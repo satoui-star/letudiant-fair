@@ -5,30 +5,16 @@ import SectionLabel from "@/components/ui/SectionLabel";
 import Button from "@/components/ui/Button";
 import Tag from "@/components/ui/Tag";
 
-const BRANCH_INTERESTS = [
-  { label: "Économie-Gestion", count: 12, pct: 43, color: "#0066CC" },
-  { label: "Ingénierie-Industrie", count: 9, pct: 32, color: "#EC1F27" },
-  { label: "Santé-Social", count: 5, pct: 18, color: "#FCD716" },
-  { label: "Droit-Sciences politiques", count: 4, pct: 14, color: "#0066CC" },
-  { label: "Communication-Information", count: 3, pct: 11, color: "#6B6B6B" },
-  { label: "Sciences-Nature", count: 3, pct: 11, color: "#0066CC" },
-  { label: "Arts-Culture", count: 1, pct: 4, color: "#FCD716" },
-];
+// Aggregated class insights — will be computed from the teacher's group.
+// Empty by default; once a group is created and students fill their profiles,
+// these arrays will be hydrated from Supabase.
+type BranchInterest = { label: string; count: number; pct: number; color: string };
+type TopSchool = { name: string; count: number; type: string };
+type StudyLevel = { level: string; count: number; pct: number };
 
-const TOP_SCHOOLS = [
-  { name: "HEC Paris", count: 8, type: "Grande École" },
-  { name: "Sciences Po", count: 7, type: "IEP" },
-  { name: "INSA Lyon", count: 6, type: "École d'ingénieurs" },
-  { name: "Université Paris-Saclay", count: 5, type: "Université" },
-  { name: "CentraleSupélec", count: 4, type: "Grande École d'ingénieurs" },
-];
-
-const STUDY_LEVEL_DIST = [
-  { level: "Bac+5 (Master/Grande École)", count: 15, pct: 54 },
-  { level: "Bac+3 (Licence)", count: 7, pct: 25 },
-  { level: "Bac+2 (BTS/BUT)", count: 4, pct: 14 },
-  { level: "Non défini", count: 2, pct: 7 },
-];
+const BRANCH_INTERESTS: BranchInterest[] = [];
+const TOP_SCHOOLS: TopSchool[] = [];
+const STUDY_LEVEL_DIST: StudyLevel[] = [];
 
 const LEVEL_COLORS = ["#0066CC", "#EC1F27", "#FCD716", "#E8E8E8"];
 
@@ -281,7 +267,7 @@ export default function TeacherInsights() {
             Intérêts de la Classe
           </h1>
           <p className="le-body" style={{ marginTop: "4px" }}>
-            14 profils complétés sur 28 · Terminale S — Groupe 2
+            Aucun profil complété pour l&apos;instant — invitez vos élèves à rejoindre votre groupe.
           </p>
         </div>
         <Button variant="ghost" onClick={handleExport}>
@@ -289,40 +275,42 @@ export default function TeacherInsights() {
         </Button>
       </div>
 
-      {/* Advisory insight card */}
-      <div
-        style={{
-          marginBottom: "28px",
-          padding: "16px 20px",
-          background: "var(--le-red-light)",
-          borderLeft: "4px solid var(--le-red)",
-          borderRadius: "0 8px 8px 0",
-          display: "flex",
-          alignItems: "flex-start",
-          gap: "12px",
-        }}
-        role="note"
-        aria-label="Conseil pédagogique"
-      >
-        <svg
-          width={20}
-          height={20}
-          viewBox="0 0 20 20"
-          fill="none"
-          stroke="var(--le-red)"
-          strokeWidth={1.8}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{ flexShrink: 0, marginTop: "2px" }}
+      {/* Advisory insight card — shows when there is data to advise on. */}
+      {BRANCH_INTERESTS.length > 0 && (
+        <div
+          style={{
+            marginBottom: "28px",
+            padding: "16px 20px",
+            background: "var(--le-red-light)",
+            borderLeft: "4px solid var(--le-red)",
+            borderRadius: "0 8px 8px 0",
+            display: "flex",
+            alignItems: "flex-start",
+            gap: "12px",
+          }}
+          role="note"
+          aria-label="Conseil pédagogique"
         >
-          <circle cx="10" cy="10" r="9" />
-          <path d="M10 6v4M10 14h.01" />
-        </svg>
-        <p style={{ fontSize: "14px", color: "var(--le-red-dark)", fontWeight: 500, lineHeight: 1.6 }}>
-          <strong>43% de la classe s&apos;intéresse à l&apos;Économie-Gestion</strong> — pensez à
-          prioriser les stands Commerce et Finance lors de votre visite au salon.
-        </p>
-      </div>
+          <svg
+            width={20}
+            height={20}
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="var(--le-red)"
+            strokeWidth={1.8}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ flexShrink: 0, marginTop: "2px" }}
+          >
+            <circle cx="10" cy="10" r="9" />
+            <path d="M10 6v4M10 14h.01" />
+          </svg>
+          <p style={{ fontSize: "14px", color: "var(--le-red-dark)", fontWeight: 500, lineHeight: 1.6 }}>
+            <strong>{BRANCH_INTERESTS[0].pct}% de la classe s&apos;intéresse à {BRANCH_INTERESTS[0].label}</strong> —
+            pensez à prioriser les stands correspondants lors de votre visite au salon.
+          </p>
+        </div>
+      )}
 
       {/* Two-column layout */}
       <div
@@ -338,22 +326,28 @@ export default function TeacherInsights() {
           <div style={{ marginBottom: "20px" }}>
             <SectionLabel>Filières populaires</SectionLabel>
             <p style={{ fontSize: "12px", color: "#6B6B6B", marginTop: "6px" }}>
-              Basé sur les 14 profils complétés — plusieurs filières par élève possible
+              Basé sur les profils d&apos;élèves complétés — plusieurs filières par élève possible
             </p>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            {BRANCH_INTERESTS.map((branch, i) => (
-              <HorizontalBar
-                key={branch.label}
-                rank={i + 1}
-                label={branch.label}
-                count={branch.count}
-                pct={branch.pct}
-                color={branch.color}
-              />
-            ))}
-          </div>
+          {BRANCH_INTERESTS.length === 0 ? (
+            <p style={{ fontSize: 13, color: "#6B6B6B", textAlign: "center", padding: "24px 0" }}>
+              Les filières préférées de votre classe apparaîtront ici dès que les élèves auront rempli leur profil.
+            </p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              {BRANCH_INTERESTS.map((branch, i) => (
+                <HorizontalBar
+                  key={branch.label}
+                  rank={i + 1}
+                  label={branch.label}
+                  count={branch.count}
+                  pct={branch.pct}
+                  color={branch.color}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Right column: top schools + level dist */}
@@ -363,15 +357,21 @@ export default function TeacherInsights() {
             <div style={{ marginBottom: "12px" }}>
               <SectionLabel>Top 5 établissements sauvegardés</SectionLabel>
             </div>
-            {TOP_SCHOOLS.map((school, i) => (
-              <SchoolRankRow
-                key={school.name}
-                rank={i + 1}
-                name={school.name}
-                type={school.type}
-                count={school.count}
-              />
-            ))}
+            {TOP_SCHOOLS.length === 0 ? (
+              <p style={{ fontSize: 13, color: "#6B6B6B", textAlign: "center", padding: "16px 0" }}>
+                Les écoles sauvegardées par vos élèves apparaîtront ici.
+              </p>
+            ) : (
+              TOP_SCHOOLS.map((school, i) => (
+                <SchoolRankRow
+                  key={school.name}
+                  rank={i + 1}
+                  name={school.name}
+                  type={school.type}
+                  count={school.count}
+                />
+              ))
+            )}
           </div>
 
           {/* Niveau d'études visé */}
@@ -379,6 +379,11 @@ export default function TeacherInsights() {
             <div style={{ marginBottom: "16px" }}>
               <SectionLabel>Niveau d&apos;études visé</SectionLabel>
             </div>
+            {STUDY_LEVEL_DIST.length === 0 && (
+              <p style={{ fontSize: 13, color: "#6B6B6B", textAlign: "center", padding: "16px 0" }}>
+                La répartition des niveaux visés par vos élèves apparaîtra ici.
+              </p>
+            )}
             {STUDY_LEVEL_DIST.map((item, i) => (
               <StudyLevelBar
                 key={item.level}
@@ -460,25 +465,25 @@ export default function TeacherInsights() {
           {
             label: "Filières explorées",
             value: BRANCH_INTERESTS.length,
-            sub: "au total",
+            sub: BRANCH_INTERESTS.length ? "au total" : "aucune donnée",
             color: "var(--le-blue)",
           },
           {
             label: "Établissement top",
-            value: "HEC Paris",
-            sub: "8 élèves intéressés",
+            value: TOP_SCHOOLS[0]?.name ?? "—",
+            sub: TOP_SCHOOLS[0] ? `${TOP_SCHOOLS[0].count} élèves intéressés` : "aucune donnée",
             color: "#FCD716",
           },
           {
             label: "Ambition dominante",
-            value: "Bac+5",
-            sub: "54% de la classe",
+            value: STUDY_LEVEL_DIST[0]?.level.split(" ")[0] ?? "—",
+            sub: STUDY_LEVEL_DIST[0] ? `${STUDY_LEVEL_DIST[0].pct}% de la classe` : "aucune donnée",
             color: "var(--le-red)",
           },
           {
             label: "Profils complétés",
-            value: "14/28",
-            sub: "50% du groupe",
+            value: "0",
+            sub: "aucun profil",
             color: "#16A34A",
           },
         ].map((item) => (

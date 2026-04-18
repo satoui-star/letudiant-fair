@@ -2,25 +2,34 @@ import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
 /**
- * Fix admin@demo.fr metadata by directly updating auth.users
- * GET /api/admin/fix-metadata
+ * Set role: admin in auth.users.raw_user_meta_data for a given user.
+ *   GET /api/admin/fix-metadata?email=<user-email>
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const email = searchParams.get('email')?.trim().toLowerCase()
+
+    if (!email) {
+      return NextResponse.json(
+        { error: 'Missing required query param: email' },
+        { status: 400 },
+      )
+    }
+
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
       {
         auth: { persistSession: false },
-        db: { schema: 'auth' }
-      }
+        db: { schema: 'auth' },
+      },
     )
 
-    // Query auth.users directly (service role bypasses RLS)
     const { data: users, error: listError } = await supabase
       .from('users')
       .select('id, email, raw_user_meta_data')
-      .eq('email', 'admin@demo.fr')
+      .eq('email', email)
 
     if (listError) {
       console.error('Query error:', listError)
@@ -28,22 +37,23 @@ export async function GET() {
     }
 
     if (!users || users.length === 0) {
-      return NextResponse.json({ error: 'admin@demo.fr not found in auth.users' }, { status: 404 })
+      return NextResponse.json(
+        { error: `${email} not found in auth.users` },
+        { status: 404 },
+      )
     }
 
-    const adminUser = users[0]
-    console.log('Found admin user:', adminUser)
+    const target = users[0]
 
-    // Update raw_user_meta_data
     const { data: updated, error: updateError } = await supabase
       .from('users')
       .update({
         raw_user_meta_data: {
-          ...(adminUser.raw_user_meta_data || {}),
+          ...(target.raw_user_meta_data || {}),
           role: 'admin',
         },
       })
-      .eq('id', adminUser.id)
+      .eq('id', target.id)
       .select()
 
     if (updateError) {
@@ -53,14 +63,14 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      message: 'Metadata updated for admin@demo.fr',
+      message: `Metadata updated for ${email}`,
       user: updated?.[0],
     })
   } catch (err: unknown) {
     console.error('[GET /api/admin/fix-metadata]', err)
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Server error' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

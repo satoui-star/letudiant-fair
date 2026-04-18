@@ -57,20 +57,9 @@ const EMOJIS = ['🏛️', '⚙️', '🌍', '🔬', '📊', '🎓', '🏫', '�
 function gradientFor(index: number) { return GRADIENTS[index % GRADIENTS.length]; }
 function emojiFor(index: number) { return EMOJIS[index % EMOJIS.length]; }
 
-const REELS: Reel[] = [
-  { id: 'r1', schoolName: 'HEC Paris', title: 'Une journée dans les locaux de Jouy-en-Josas', duration: '0:28', views: '12.4k', thumbnail_color: '#0066CC', tags: ['Grande École', 'Économie'] },
-  { id: 'r2', schoolName: 'Sciences Po', title: "Le témoignage d'un étudiant en 1ère année", duration: '0:45', views: '8.2k', thumbnail_color: '#EC1F27', tags: ['IEP', 'Sciences Po'] },
-  { id: 'r3', schoolName: 'INSA Lyon', title: "Les labos d'ingénierie — visite exclusive", duration: '0:32', views: '6.7k', thumbnail_color: '#FCD716', tags: ['Ingénierie'] },
-  { id: 'r4', schoolName: 'emlyon', title: "L'alternance chez emlyon : retour d'expérience", duration: '0:38', views: '5.1k', thumbnail_color: '#1A1A1A', tags: ['Alternance', 'Commerce'] },
-  { id: 'r5', schoolName: 'Université Paris-Saclay', title: 'Les bourses et aides financières en 2026', duration: '1:02', views: '18.9k', thumbnail_color: '#0066CC', tags: ['Financement'] },
-];
-
-const ARTICLES: Article[] = [
-  { id: 'a1', title: 'Parcoursup 2026 : les dates clés à ne pas manquer', rubrique: 'Parcoursup', readingTime: '3 min', published_at: '4 avril 2026', tag: 'red' },
-  { id: 'a2', title: 'Comment choisir entre BTS et BUT ?', rubrique: 'Études', readingTime: '5 min', published_at: '2 avril 2026', tag: 'blue' },
-  { id: 'a3', title: 'Les grandes écoles de commerce en 2026', rubrique: 'Classements', readingTime: '8 min', published_at: '28 mars 2026', tag: 'yellow' },
-  { id: 'a4', title: 'Alternance : secteurs qui recrutent le plus', rubrique: 'Emploi', readingTime: '4 min', published_at: '25 mars 2026', tag: 'gray' },
-];
+// Reels and articles are editorial content published by exhibitors / l'Étudiant
+// editorial team. Until the content tables are wired up (school_reels, articles),
+// we show empty states rather than shipping hardcoded demo rows.
 
 // ─── Tab type ─────────────────────────────────────────────────────────────────
 
@@ -327,6 +316,9 @@ export default function DiscoverPage() {
   const [rightCount, setRightCount] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
   const [gone, setGone] = useState<Set<string>>(new Set());
+  // Empty arrays until reel/article tables are wired in Supabase
+  const reels: Reel[] = [];
+  const articles: Article[] = [];
 
   // ── Load real schools from Supabase ──────────────────────────────────────
   useEffect(() => {
@@ -665,56 +657,84 @@ export default function DiscoverPage() {
       {/* ── Reels tab ── */}
       {activeTab === 'reels' && (
         <div style={{ padding: '16px 16px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <p style={{ fontSize: 12, color: 'var(--le-gray-500)', margin: 0 }}>
-              {REELS.length} vidéos disponibles
-            </p>
-            <span
-              style={{
-                background: 'var(--le-red-light)',
-                color: 'var(--le-red-dark)',
-                fontSize: 10,
-                fontWeight: 700,
-                padding: '3px 8px',
-                borderRadius: 20,
-                letterSpacing: '0.06em',
-                textTransform: 'uppercase',
-              }}
-            >
-              Direct du salon
-            </span>
-          </div>
-          {REELS.map((reel) => (
-            <ReelCard key={reel.id} reel={reel} />
-          ))}
-          <p className="le-caption" style={{ textAlign: 'center', paddingBottom: 16 }}>
-            Nouvelles vidéos ajoutées chaque semaine
-          </p>
+          {reels.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--le-gray-500)' }}>
+              <span style={{ fontSize: 44, display: 'block', marginBottom: 12 }}>🎬</span>
+              <p style={{ fontSize: 15, fontWeight: 600, margin: '0 0 6px', color: 'var(--le-gray-700)' }}>
+                Aucune vidéo pour l&apos;instant
+              </p>
+              <p className="le-caption" style={{ margin: 0 }}>
+                Les reels publiés par les écoles apparaîtront ici.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <p style={{ fontSize: 12, color: 'var(--le-gray-500)', margin: 0 }}>
+                  {reels.length} vidéos disponibles
+                </p>
+                <span
+                  style={{
+                    background: 'var(--le-red-light)',
+                    color: 'var(--le-red-dark)',
+                    fontSize: 10,
+                    fontWeight: 700,
+                    padding: '3px 8px',
+                    borderRadius: 20,
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Direct du salon
+                </span>
+              </div>
+              {reels.map((reel) => (
+                <ReelCard key={reel.id} reel={reel} />
+              ))}
+              <p className="le-caption" style={{ textAlign: 'center', paddingBottom: 16 }}>
+                Nouvelles vidéos ajoutées chaque semaine
+              </p>
+            </>
+          )}
         </div>
       )}
 
       {/* ── Actualités tab ── */}
       {activeTab === 'actualites' && (
         <div style={{ padding: '16px 16px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-            <p style={{ fontSize: 12, color: 'var(--le-gray-500)', margin: 0 }}>
-              {ARTICLES.length} articles récents
-            </p>
-            <a
-              href="#"
-              style={{ fontSize: 12, fontWeight: 700, color: 'var(--le-red)', textDecoration: 'none' }}
-            >
-              Voir tout →
-            </a>
-          </div>
-          {ARTICLES.map((article) => (
-            <ArticleCard key={article.id} article={article} />
-          ))}
-          <div style={{ paddingBottom: 16 }}>
-            <Button variant="secondary" style={{ width: '100%', justifyContent: 'center' }}>
-              Charger plus d&apos;articles
-            </Button>
-          </div>
+          {articles.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--le-gray-500)' }}>
+              <span style={{ fontSize: 44, display: 'block', marginBottom: 12 }}>📰</span>
+              <p style={{ fontSize: 15, fontWeight: 600, margin: '0 0 6px', color: 'var(--le-gray-700)' }}>
+                Aucune actualité pour l&apos;instant
+              </p>
+              <p className="le-caption" style={{ margin: 0 }}>
+                Les articles publiés par la rédaction de L&apos;Étudiant apparaîtront ici.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                <p style={{ fontSize: 12, color: 'var(--le-gray-500)', margin: 0 }}>
+                  {articles.length} articles récents
+                </p>
+                <a
+                  href="#"
+                  style={{ fontSize: 12, fontWeight: 700, color: 'var(--le-red)', textDecoration: 'none' }}
+                >
+                  Voir tout →
+                </a>
+              </div>
+              {articles.map((article) => (
+                <ArticleCard key={article.id} article={article} />
+              ))}
+              <div style={{ paddingBottom: 16 }}>
+                <Button variant="secondary" style={{ width: '100%', justifyContent: 'center' }}>
+                  Charger plus d&apos;articles
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

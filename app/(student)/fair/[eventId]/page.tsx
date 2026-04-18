@@ -20,21 +20,11 @@ interface Stand {
   type: string;
 }
 
-const STANDS: Stand[] = [
-  { id: 'hec', name: 'HEC Paris', x: 20, y: 30, w: 90, h: 60, color: '#FFF0F1', textColor: '#EC1F27', tag: 'red', type: 'Grande École' },
-  { id: 'sciencespo', name: 'Sciences Po', x: 130, y: 30, w: 90, h: 60, color: '#E6F0FF', textColor: '#0066CC', tag: 'blue', type: 'Grande École' },
-  { id: 'insa', name: 'INSA Lyon', x: 240, y: 30, w: 80, h: 60, color: '#FFF9E6', textColor: '#7A6200', tag: 'yellow', type: 'Ingénierie' },
-  { id: 'essec', name: 'ESSEC', x: 20, y: 130, w: 80, h: 55, color: '#F4F4F4', textColor: '#3D3D3D', tag: 'gray', type: 'Grande École' },
-  { id: 'polytechnique', name: 'Polytechnique', x: 120, y: 130, w: 100, h: 55, color: '#E6F0FF', textColor: '#0066CC', tag: 'blue', type: 'Grande École' },
-  { id: 'centrale', name: 'Centrale Paris', x: 240, y: 130, w: 90, h: 55, color: '#FFF0F1', textColor: '#EC1F27', tag: 'red', type: 'Ingénierie' },
-];
-
-const SESSIONS = [
-  { time: '09h30', title: 'Ouverture officielle du salon', room: 'Salle principale', tag: 'red' as const },
-  { time: '10h00', title: 'Business ou Ingénierie ? Comment choisir', room: 'Amphithéâtre A', tag: 'blue' as const },
-  { time: '11h30', title: 'Financer ses études : bourses, prêts, alternance', room: 'Salle B', tag: 'yellow' as const },
-  { time: '14h00', title: 'Table ronde : parcours d\'alumni', room: 'Amphithéâtre A', tag: 'gray' as const },
-];
+// Stands and sessions are configured per event by the organiser. Until the
+// event_stands / event_sessions tables are wired, we render empty states
+// rather than shipping fictitious schools.
+const STANDS: Stand[] = [];
+const SESSIONS: { time: string; title: string; room: string; tag: 'red' | 'blue' | 'yellow' | 'gray' }[] = [];
 
 export default function FairPage({
   params,
@@ -192,13 +182,20 @@ export default function FairPage({
             </div>
 
             <p className="le-caption" style={{ textAlign: 'center', marginTop: 12 }}>
-              Appuyez sur un stand pour voir ses informations
+              {STANDS.length === 0
+                ? 'Le plan du salon sera disponible dès que les stands seront configurés.'
+                : 'Appuyez sur un stand pour voir ses informations'}
             </p>
           </div>
         ) : (
           <div>
             <SectionLabel>Programme du jour</SectionLabel>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
+              {SESSIONS.length === 0 && (
+                <p style={{ color: '#6B6B6B', fontSize: 13, textAlign: 'center', padding: '24px 0' }}>
+                  Le programme sera publié prochainement par l&apos;organisateur du salon.
+                </p>
+              )}
               {SESSIONS.map((session, i) => (
                 <div
                   key={i}

@@ -9,43 +9,14 @@ import { getAppointmentsForStudent } from '@/lib/supabase/database';
 import { useAuth } from '@/hooks/useAuth';
 import type { AppointmentRow } from '@/lib/supabase/types';
 
-// ─── Mock data ───────────────────────────────────────────────────────────────
+// ─── User-specific data types ────────────────────────────────────────────────
+// Saved docs/links/downloads persist per authenticated user via Supabase.
+// Empty state on a fresh account — items are added by user actions (scan stand,
+// save link, download doc).
 
-const SAVED_DOCS = [
-  { id: 'd1', schoolName: 'HEC Paris', type: 'Brochure', fileName: 'HEC_Brochure_2026.pdf', size: '4.2 MB', savedAt: '15 avril 2026 · 10h23', unlockedByScan: true, schoolColor: '#0066CC' },
-  { id: 'd2', schoolName: 'Sciences Po', type: 'Plaquette des programmes', fileName: 'SciencesPo_Programmes_2026.pdf', size: '2.8 MB', savedAt: '15 avril 2026 · 11h05', unlockedByScan: true, schoolColor: '#EC1F27' },
-  { id: 'd3', schoolName: 'INSA Lyon', type: 'Guide des admissions', fileName: 'INSA_Admissions_2026.pdf', size: '1.9 MB', savedAt: '15 avril 2026 · 11h45', unlockedByScan: true, schoolColor: '#FCD716' },
-  { id: 'd4', schoolName: 'emlyon', type: 'Présentation PGE', fileName: 'emlyon_PGE_2026.pdf', size: '3.1 MB', savedAt: '15 avril 2026 · 12h10', unlockedByScan: false, schoolColor: '#1A1A1A' },
-  { id: 'd5', schoolName: 'CentraleSupélec', type: 'Livret accueil', fileName: 'CS_Livret_2026.pdf', size: '5.4 MB', savedAt: '15 avril 2026 · 12h30', unlockedByScan: true, schoolColor: '#0066CC' },
-];
-
-const SAVED_LINKS = [
-  { id: 'l1', schoolName: 'HEC Paris', label: 'Page inscription Parcoursup', url: 'https://parcoursup.fr/...', savedAt: '15 avril 10h23' },
-  { id: 'l2', schoolName: 'Sciences Po', label: 'Calendrier JPO 2026', url: 'https://sciencespo.fr/...', savedAt: '15 avril 11h05' },
-  { id: 'l3', schoolName: 'INSA Lyon', label: 'Portail candidature INSA', url: 'https://insa-lyon.fr/...', savedAt: '15 avril 11h45' },
-  { id: 'l4', schoolName: 'Université Paris-Saclay', label: 'Offre de formation complète', url: 'https://universite-paris-saclay.fr/...', savedAt: '15 avril 12h00' },
-  { id: 'l5', schoolName: 'emlyon', label: 'Dossier de candidature 2026', url: 'https://emlyon.com/...', savedAt: '15 avril 12h15' },
-  { id: 'l6', schoolName: 'CentraleSupélec', label: 'Résultats concours 2025', url: 'https://centralesupelec.fr/...', savedAt: '15 avril 12h32' },
-  { id: 'l7', schoolName: 'HEC Paris', label: 'Témoignages anciens élèves', url: 'https://hec.edu/...', savedAt: '15 avril 13h10' },
-  { id: 'l8', schoolName: 'Sciences Po', label: 'Bourse et aides financières', url: 'https://sciencespo.fr/...', savedAt: '15 avril 13h25' },
-  { id: 'l9', schoolName: 'INSA Lyon', label: 'Départements et spécialités', url: 'https://insa-lyon.fr/...', savedAt: '15 avril 13h40' },
-  { id: 'l10', schoolName: 'Université Paris-Saclay', label: 'Masters et Licences 2026', url: 'https://universite-paris-saclay.fr/...', savedAt: '15 avril 14h05' },
-  { id: 'l11', schoolName: 'CentraleSupélec', label: 'Vie étudiante & associations', url: 'https://centralesupelec.fr/...', savedAt: '15 avril 14h20' },
-  { id: 'l12', schoolName: 'emlyon', label: 'Programme Alternance 2026', url: 'https://emlyon.com/...', savedAt: '15 avril 14h45' },
-];
-
-const APPOINTMENTS = [
-  { id: 'a1', schoolName: 'HEC Paris', contact: 'Mme Leroy, Responsable admissions', date: '15 avril 2026', time: '14h00', location: 'Stand B12', status: 'confirmed', notes: 'Apporter dossier scolaire' },
-  { id: 'a2', schoolName: 'Sciences Po', contact: 'M. Girard, Conseiller orientation', date: '15 avril 2026', time: '15h30', location: 'Stand A7', status: 'pending', notes: '' },
-];
-
-const DOWNLOADS = [
-  { id: 'dl1', schoolName: 'HEC Paris', type: 'Brochure', fileName: 'HEC_Brochure_2026.pdf', size: '4.2 MB', downloadedAt: '15 avril 2026 · 10h25', schoolColor: '#0066CC' },
-  { id: 'dl2', schoolName: 'Sciences Po', type: 'Plaquette des programmes', fileName: 'SciencesPo_Programmes_2026.pdf', size: '2.8 MB', downloadedAt: '15 avril 2026 · 11h08', schoolColor: '#EC1F27' },
-  { id: 'dl3', schoolName: 'INSA Lyon', type: 'Guide des admissions', fileName: 'INSA_Admissions_2026.pdf', size: '1.9 MB', downloadedAt: '15 avril 2026 · 11h47', schoolColor: '#FCD716' },
-  { id: 'dl4', schoolName: 'emlyon', type: 'Présentation PGE', fileName: 'emlyon_PGE_2026.pdf', size: '3.1 MB', downloadedAt: '15 avril 2026 · 12h12', schoolColor: '#1A1A1A' },
-  { id: 'dl5', schoolName: 'CentraleSupélec', type: 'Livret accueil', fileName: 'CS_Livret_2026.pdf', size: '5.4 MB', downloadedAt: '15 avril 2026 · 12h33', schoolColor: '#0066CC' },
-];
+type SavedDoc = { id: string; schoolName: string; type: string; fileName: string; size: string; savedAt: string; unlockedByScan: boolean; schoolColor: string };
+type SavedLink = { id: string; schoolName: string; label: string; url: string; savedAt: string };
+type Download = { id: string; schoolName: string; type: string; fileName: string; size: string; downloadedAt: string; schoolColor: string };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -68,7 +39,7 @@ function getTypeVariant(type: string): 'blue' | 'red' | 'yellow' | 'gray' {
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
-function DocCard({ doc }: { doc: typeof SAVED_DOCS[0] }) {
+function DocCard({ doc }: { doc: SavedDoc }) {
   const [shared, setShared] = useState(false);
   const initials = getInitials(doc.schoolName);
   const typeVariant = getTypeVariant(doc.type);
@@ -170,7 +141,7 @@ function DocCard({ doc }: { doc: typeof SAVED_DOCS[0] }) {
   );
 }
 
-function LinkRow({ link }: { link: typeof SAVED_LINKS[0] }) {
+function LinkRow({ link }: { link: SavedLink }) {
   return (
     <div
       style={{
@@ -226,7 +197,7 @@ function LinkRow({ link }: { link: typeof SAVED_LINKS[0] }) {
   );
 }
 
-function AppointmentCard({ appt }: { appt: typeof APPOINTMENTS[0] }) {
+function AppointmentCard({ appt }: { appt: { id: string; schoolName: string; contact: string; date: string; time: string; location: string; status: string; notes: string } }) {
   const isConfirmed = appt.status === 'confirmed';
   return (
     <div className="le-card" style={{ padding: '16px' }}>
@@ -321,7 +292,7 @@ function AppointmentCard({ appt }: { appt: typeof APPOINTMENTS[0] }) {
   );
 }
 
-function DownloadCard({ dl }: { dl: typeof DOWNLOADS[0] }) {
+function DownloadCard({ dl }: { dl: Download }) {
   const initials = getInitials(dl.schoolName);
   const typeVariant = getTypeVariant(dl.type);
 
@@ -404,27 +375,47 @@ function DownloadCard({ dl }: { dl: typeof DOWNLOADS[0] }) {
 
 type TabId = 'documents' | 'liens' | 'rendez-vous' | 'telechargements';
 
-const TABS: { id: TabId; label: string; count: number }[] = [
-  { id: 'documents', label: 'Documents', count: 8 },
-  { id: 'liens', label: 'Liens sauvegardés', count: 12 },
-  { id: 'rendez-vous', label: 'Rendez-vous', count: 2 },
-  { id: 'telechargements', label: 'Téléchargements', count: 5 },
-];
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SavedPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabId>('documents');
   const [appointments, setAppointments] = useState<(AppointmentRow & { schools?: { name: string; city: string; type: string } })[]>([]);
+  const [activeEventId, setActiveEventId] = useState<string | null>(null);
 
-  // Paris event ID — in production this would come from context/URL
-  const PARIS_EVENT_ID = 'a1b2c3d4-0000-0000-0000-000000000001';
+  // Saved docs/links/downloads start empty for a fresh user — filled via stand
+  // scans and user save actions. Persistence tables TBD; kept as local state
+  // shape for now so UI components work unchanged.
+  const savedDocs: SavedDoc[] = [];
+  const savedLinks: SavedLink[] = [];
+  const downloads: Download[] = [];
 
   useEffect(() => {
     if (!user) return;
-    getAppointmentsForStudent(user.id, PARIS_EVENT_ID).then(setAppointments);
+    // Resolve the currently active event dynamically instead of hardcoding one.
+    (async () => {
+      const { getSupabase } = await import('@/lib/supabase/client');
+      const { data } = await getSupabase()
+        .from('events')
+        .select('id')
+        .eq('is_active', true)
+        .order('event_date', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      const eventId = data?.id ?? null;
+      setActiveEventId(eventId);
+      if (eventId) {
+        getAppointmentsForStudent(user.id, eventId).then(setAppointments);
+      }
+    })();
   }, [user]);
+
+  const tabs: { id: TabId; label: string; count: number }[] = [
+    { id: 'documents', label: 'Documents', count: savedDocs.length },
+    { id: 'liens', label: 'Liens sauvegardés', count: savedLinks.length },
+    { id: 'rendez-vous', label: 'Rendez-vous', count: appointments.length },
+    { id: 'telechargements', label: 'Téléchargements', count: downloads.length },
+  ];
 
   return (
     <div className="page-with-nav" style={{ background: 'var(--le-gray-100)', minHeight: '100vh' }}>
@@ -442,8 +433,8 @@ export default function SavedPage() {
 
         {/* Summary bar */}
         <p className="le-caption" style={{ margin: '0 0 16px' }}>
-          8 documents · 12 liens · 2 RDV · Depuis le{' '}
-          <span style={{ fontWeight: 700, color: 'var(--le-gray-700)' }}>Salon de Paris 2026</span>
+          {savedDocs.length} documents · {savedLinks.length} liens · {appointments.length} RDV
+          {activeEventId ? '' : ' · Aucun salon actif'}
         </p>
 
         {/* Tabs */}
@@ -455,7 +446,7 @@ export default function SavedPage() {
             overflowX: 'auto',
           }}
         >
-          {TABS.map((tab) => (
+          {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -500,17 +491,17 @@ export default function SavedPage() {
         {activeTab === 'documents' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <SectionLabel>Documents collectés au salon</SectionLabel>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10, marginTop: 10 }}>
-              {SAVED_DOCS.map((doc) => (
-                <DocCard key={doc.id} doc={doc} />
-              ))}
-            </div>
-            <p
-              className="le-caption"
-              style={{ textAlign: 'center', marginTop: 8, marginBottom: 16 }}
-            >
-              3 documents supplémentaires disponibles via scan de stand
-            </p>
+            {savedDocs.length === 0 ? (
+              <p style={{ color: 'var(--le-gray-500)', fontSize: 14, textAlign: 'center', padding: '32px 16px' }}>
+                Aucun document enregistré pour l&apos;instant. Scannez un stand au salon pour récupérer les brochures des établissements.
+              </p>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10, marginTop: 10 }}>
+                {savedDocs.map((doc) => (
+                  <DocCard key={doc.id} doc={doc} />
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -518,19 +509,25 @@ export default function SavedPage() {
         {activeTab === 'liens' && (
           <div>
             <SectionLabel>Liens sauvegardés</SectionLabel>
-            <div
-              style={{
-                background: '#fff',
-                borderRadius: 8,
-                border: '1px solid var(--le-gray-200)',
-                overflow: 'hidden',
-                marginTop: 12,
-              }}
-            >
-              {SAVED_LINKS.map((link) => (
-                <LinkRow key={link.id} link={link} />
-              ))}
-            </div>
+            {savedLinks.length === 0 ? (
+              <p style={{ color: 'var(--le-gray-500)', fontSize: 14, textAlign: 'center', padding: '32px 16px' }}>
+                Aucun lien sauvegardé. Enregistrez des pages d&apos;écoles depuis leur fiche pour les retrouver ici.
+              </p>
+            ) : (
+              <div
+                style={{
+                  background: '#fff',
+                  borderRadius: 8,
+                  border: '1px solid var(--le-gray-200)',
+                  overflow: 'hidden',
+                  marginTop: 12,
+                }}
+              >
+                {savedLinks.map((link) => (
+                  <LinkRow key={link.id} link={link} />
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -592,16 +589,24 @@ export default function SavedPage() {
         {activeTab === 'telechargements' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <SectionLabel>Fichiers téléchargés</SectionLabel>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
-              {DOWNLOADS.map((dl) => (
-                <DownloadCard key={dl.id} dl={dl} />
-              ))}
-            </div>
-            <div style={{ paddingBottom: 16 }}>
-              <Button variant="secondary" style={{ width: '100%', justifyContent: 'center' }}>
-                Télécharger tout (.zip)
-              </Button>
-            </div>
+            {downloads.length === 0 ? (
+              <p style={{ color: 'var(--le-gray-500)', fontSize: 14, textAlign: 'center', padding: '32px 16px' }}>
+                Aucun téléchargement pour l&apos;instant. Les brochures et documents téléchargés depuis les fiches écoles apparaîtront ici.
+              </p>
+            ) : (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+                  {downloads.map((dl) => (
+                    <DownloadCard key={dl.id} dl={dl} />
+                  ))}
+                </div>
+                <div style={{ paddingBottom: 16 }}>
+                  <Button variant="secondary" style={{ width: '100%', justifyContent: 'center' }}>
+                    Télécharger tout (.zip)
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

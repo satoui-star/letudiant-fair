@@ -341,17 +341,16 @@ export default function LandingPage() {
             }}
           >
             {roles.map((role) => (
-              <a
+              <div
                 key={role.href}
-                href={role.href}
                 style={{
                   position: "relative",
-                  display: "block",
+                  display: "flex",
+                  flexDirection: "column",
                   padding: 32,
                   background: "#fff",
                   border: `1px solid ${C.gray200}`,
                   borderTop: `6px solid ${role.accent}`,
-                  textDecoration: "none",
                   color: C.nuit,
                   transition: "transform 0.2s, box-shadow 0.2s",
                 }}
@@ -403,34 +402,62 @@ export default function LandingPage() {
                 </h3>
                 <p
                   style={{
-                    margin: "0 0 32px",
+                    margin: "0 0 28px",
                     fontSize: 14,
                     color: C.gray500,
                     lineHeight: 1.55,
+                    flex: 1,
                   }}
                 >
                   {role.description}
                 </p>
 
-                <div
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "10px 18px",
-                    background: role.accent,
-                    color: "#fff",
-                    fontSize: 11,
-                    fontWeight: 800,
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    borderRadius: 2,
-                  }}
-                >
-                  Commencer
-                  <span>→</span>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <a
+                    href={role.href}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 8,
+                      padding: "12px 18px",
+                      background: role.accent,
+                      color: "#fff",
+                      fontSize: 11,
+                      fontWeight: 800,
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                      borderRadius: 2,
+                      textDecoration: "none",
+                    }}
+                  >
+                    Créer un compte
+                    <span>→</span>
+                  </a>
+                  <a
+                    href="/login"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 8,
+                      padding: "12px 18px",
+                      background: "transparent",
+                      color: role.accent,
+                      border: `1.5px solid ${role.accent}`,
+                      fontSize: 11,
+                      fontWeight: 800,
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                      borderRadius: 2,
+                      textDecoration: "none",
+                    }}
+                  >
+                    Se connecter
+                    <span>→</span>
+                  </a>
                 </div>
-              </a>
+              </div>
             ))}
           </div>
         </div>
