@@ -1,7 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/supabase/require-admin'
 
 export async function GET() {
+  const guard = await requireAdmin()
+  if (guard.error) return guard.error
+
   try {
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,6 +37,9 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
+  const guard = await requireAdmin()
+  if (guard.error) return guard.error
+
   try {
     const body = await request.json()
 

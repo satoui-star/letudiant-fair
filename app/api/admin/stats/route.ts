@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { requireAdmin } from '@/lib/supabase/require-admin'
 
 /**
  * GET /api/admin/stats?eventId=xxx
  *
- * Returns aggregated admin statistics that require service-role access:
- *  - Pre-registration resolution rate (Eventmaker sync)
- *  - Intent level distribution across all students
- *
- * Used by the admin dashboard. Protected by service role on the server —
- * no client-side auth check needed here since this is a server-only route.
+ * Returns aggregated admin statistics that require service-role access.
+ * Protected by requireAdmin() — caller must be an authenticated admin.
  */
 export async function GET(req: Request) {
+  const guard = await requireAdmin()
+  if (guard.error) return guard.error
+
   try {
     const { searchParams } = new URL(req.url)
     const eventId = searchParams.get('eventId')

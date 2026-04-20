@@ -33,7 +33,7 @@ interface AggregateStats {
 }
 
 export default function ExhibitorLeadsPage() {
-  const { profile } = useAuth()
+  const { user, profile } = useAuth()
   const qrRef = useRef<HTMLCanvasElement>(null)
   const [stats, setStats] = useState<AggregateStats | null>(null)
   const [schoolId, setSchoolId] = useState<string | null>(null)
@@ -41,15 +41,16 @@ export default function ExhibitorLeadsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!user?.id) return
     async function load() {
       const supabase = getSupabase()
-      // Resolve the school linked to this exhibitor account
-      // Convention: exhibitor's profile.name matches a school name, or we pick first school for demo
+      // Resolve the school linked to THIS exhibitor account — never pick the
+      // first row globally, that would leak competitors' aggregates.
       const { data: schoolData } = await supabase
         .from('schools')
         .select('id, name')
-        .limit(1)
-        .single()
+        .eq('user_id', user!.id)
+        .maybeSingle()
 
       const sid  = schoolData?.id ?? null
       const name = schoolData?.name ?? 'Votre établissement'
@@ -121,7 +122,7 @@ export default function ExhibitorLeadsPage() {
       setLoading(false)
     }
     load()
-  }, [profile])
+  }, [user?.id, profile])
 
   // Generate QR code for THIS school's stand — students scan it to learn more in their app
   useEffect(() => {

@@ -7,16 +7,40 @@ import Button from '@/components/ui/Button';
 import SectionLabel from '@/components/ui/SectionLabel';
 import { getAppointmentsForStudent } from '@/lib/supabase/database';
 import { useAuth } from '@/hooks/useAuth';
+import { getSupabase } from '@/lib/supabase/client';
 import type { AppointmentRow } from '@/lib/supabase/types';
 
 // ─── User-specific data types ────────────────────────────────────────────────
-// Saved docs/links/downloads persist per authenticated user via Supabase.
-// Empty state on a fresh account — items are added by user actions (scan stand,
-// save link, download doc).
+// Saved docs/links/downloads persist per authenticated user via the
+// public.saved_items table (migration 010). Items are added by user actions
+// (scan stand, save link, download doc).
 
 type SavedDoc = { id: string; schoolName: string; type: string; fileName: string; size: string; savedAt: string; unlockedByScan: boolean; schoolColor: string };
 type SavedLink = { id: string; schoolName: string; label: string; url: string; savedAt: string };
 type Download = { id: string; schoolName: string; type: string; fileName: string; size: string; downloadedAt: string; schoolColor: string };
+
+type SavedItemRow = {
+  id: string;
+  school_id: string | null;
+  kind: 'document' | 'link' | 'download';
+  label: string;
+  url: string | null;
+  file_name: string | null;
+  file_size: string | null;
+  meta: Record<string, unknown> | null;
+  created_at: string;
+  schools?: { name: string; color?: string | null } | null;
+};
+
+function formatRelative(iso: string): string {
+  const date = new Date(iso);
+  const diffMs = Date.now() - date.getTime();
+  const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+  if (diffDays <= 0) return "Aujourd'hui";
+  if (diffDays === 1) return 'Hier';
+  if (diffDays < 7) return `Il y a ${diffDays} j`;
+  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -383,30 +407,73 @@ export default function SavedPage() {
   const [appointments, setAppointments] = useState<(AppointmentRow & { schools?: { name: string; city: string; type: string } })[]>([]);
   const [activeEventId, setActiveEventId] = useState<string | null>(null);
 
-  // Saved docs/links/downloads start empty for a fresh user — filled via stand
-  // scans and user save actions. Persistence tables TBD; kept as local state
-  // shape for now so UI components work unchanged.
-  const savedDocs: SavedDoc[] = [];
-  const savedLinks: SavedLink[] = [];
-  const downloads: Download[] = [];
+  const [savedDocs, setSavedDocs] = useState<SavedDoc[]>([]);
+  const [savedLinks, setSavedLinks] = useState<SavedLink[]>([]);
+  const [downloads, setDownloads] = useState<Download[]>([]);
 
   useEffect(() => {
     if (!user) return;
-    // Resolve the currently active event dynamically instead of hardcoding one.
     (async () => {
-      const { getSupabase } = await import('@/lib/supabase/client');
-      const { data } = await getSupabase()
+      const supabase = getSupabase();
+
+      // Resolve the currently active event dynamically instead of hardcoding one.
+      const { data: evt } = await supabase
         .from('events')
         .select('id')
         .eq('is_active', true)
         .order('event_date', { ascending: true })
         .limit(1)
         .maybeSingle();
-      const eventId = data?.id ?? null;
+      const eventId = evt?.id ?? null;
       setActiveEventId(eventId);
       if (eventId) {
         getAppointmentsForStudent(user.id, eventId).then(setAppointments);
       }
+
+      // Load saved items for the current user, joined with school name.
+      const { data: items } = await supabase
+        .from('saved_items')
+        .select('id, school_id, kind, label, url, file_name, file_size, meta, created_at, schools ( name )')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      const rows: SavedItemRow[] = (items as unknown as SavedItemRow[]) ?? [];
+      const defaultColor = '#003C8F';
+
+      setSavedDocs(
+        rows.filter((r) => r.kind === 'document').map((r) => ({
+          id: r.id,
+          schoolName: r.schools?.name ?? 'École',
+          type: (r.meta?.type as string) ?? 'Document',
+          fileName: r.file_name ?? r.label,
+          size: r.file_size ?? '',
+          savedAt: formatRelative(r.created_at),
+          unlockedByScan: Boolean(r.meta?.unlockedByScan),
+          schoolColor: (r.schools?.color as string) ?? defaultColor,
+        })),
+      );
+
+      setSavedLinks(
+        rows.filter((r) => r.kind === 'link').map((r) => ({
+          id: r.id,
+          schoolName: r.schools?.name ?? 'École',
+          label: r.label,
+          url: r.url ?? '#',
+          savedAt: formatRelative(r.created_at),
+        })),
+      );
+
+      setDownloads(
+        rows.filter((r) => r.kind === 'download').map((r) => ({
+          id: r.id,
+          schoolName: r.schools?.name ?? 'École',
+          type: (r.meta?.type as string) ?? 'Document',
+          fileName: r.file_name ?? r.label,
+          size: r.file_size ?? '',
+          downloadedAt: formatRelative(r.created_at),
+          schoolColor: (r.schools?.color as string) ?? defaultColor,
+        })),
+      );
     })();
   }, [user]);
 

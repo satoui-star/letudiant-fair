@@ -1,11 +1,13 @@
 "use client";
 export const dynamic = 'force-dynamic'
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SectionLabel from "@/components/ui/SectionLabel";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Tag from "@/components/ui/Tag";
+import { useAuth } from "@/hooks/useAuth";
+import { getSupabase } from "@/lib/supabase/client";
 
 const ALL_LEVELS = [
   "Terminale",
@@ -30,11 +32,15 @@ const ALL_FIELDS = [
 ];
 
 export default function ExhibitorProfilePage() {
-  // Empty defaults — the exhibitor fills in their own establishment details.
-  // TODO: hydrate from Supabase `schools` row linked to the authenticated exhibitor.
+  const { user } = useAuth();
+  const [schoolId, setSchoolId] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
   const [schoolName, setSchoolName] = useState("");
   const [city, setCity] = useState("");
   const [schoolType, setSchoolType] = useState("");
+  const [description, setDescription] = useState("");
 
   const [programmes, setProgrammes] = useState<string[]>([]);
   const [newProgramme, setNewProgramme] = useState("");
@@ -44,7 +50,55 @@ export default function ExhibitorProfilePage() {
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
 
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [reelUrl, setReelUrl] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // ── Hydrate from the school row owned by the current exhibitor ─────────────
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    (async () => {
+      const supabase = getSupabase();
+      const { data, error } = await supabase
+        .from("schools")
+        .select("id, name, city, type, description, target_levels, target_fields, cover_image_url")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      if (error) {
+        setLoadError(error.message);
+        setLoading(false);
+        return;
+      }
+      if (data) {
+        setSchoolId(data.id);
+        setSchoolName(data.name ?? "");
+        setCity(data.city ?? "");
+        setSchoolType(data.type ?? "");
+        setDescription(data.description ?? "");
+        setSelectedLevels(data.target_levels ?? []);
+        setSelectedFields(data.target_fields ?? []);
+        setCoverUrl(data.cover_image_url ?? null);
+      }
+
+      // Load the formations (programmes) list
+      if (data?.id) {
+        const { data: formRows } = await supabase
+          .from("formations")
+          .select("name")
+          .eq("school_id", data.id);
+        setProgrammes((formRows ?? []).map((f) => f.name).filter(Boolean));
+      }
+
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   function toggleLevel(l: string) {
     setSelectedLevels((prev) =>
@@ -70,22 +124,117 @@ export default function ExhibitorProfilePage() {
     setProgrammes((prev) => prev.filter((_, i) => i !== idx));
   }
 
-  function simulateVideoUpload() {
+  async function handleCoverFile(file: File) {
+    if (!user?.id) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setSaveError("Fichier trop volumineux (max 5 Mo).");
+      return;
+    }
+    const supabase = getSupabase();
     setUploadProgress(0);
-    const interval = setInterval(() => {
-      setUploadProgress((p) => {
-        if (p === null || p >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return p + 10;
-      });
-    }, 200);
+    const ext  = file.name.split('.').pop()?.toLowerCase() ?? 'jpg';
+    const path = `${user.id}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage
+      .from("school-covers")
+      .upload(path, file, { cacheControl: "3600", upsert: true });
+    if (error) {
+      setSaveError(`Upload échoué: ${error.message}`);
+      setUploadProgress(null);
+      return;
+    }
+    setUploadProgress(100);
+    const { data: pub } = supabase.storage.from("school-covers").getPublicUrl(path);
+    setCoverUrl(pub.publicUrl);
+    setTimeout(() => setUploadProgress(null), 1500);
+  }
+
+  async function handleReelFile(file: File) {
+    if (!user?.id) return;
+    if (file.size > 100 * 1024 * 1024) {
+      setSaveError("Vidéo trop volumineuse (max 100 Mo).");
+      return;
+    }
+    const supabase = getSupabase();
+    setUploadProgress(0);
+    const ext  = file.name.split('.').pop()?.toLowerCase() ?? 'mp4';
+    const path = `${user.id}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage
+      .from("school-reels")
+      .upload(path, file, { cacheControl: "3600", upsert: true });
+    if (error) {
+      setSaveError(`Upload échoué: ${error.message}`);
+      setUploadProgress(null);
+      return;
+    }
+    setUploadProgress(100);
+    const { data: pub } = supabase.storage.from("school-reels").getPublicUrl(path);
+    setReelUrl(pub.publicUrl);
+    setTimeout(() => setUploadProgress(null), 1500);
   }
 
   async function handleSave() {
+    if (!user?.id) return;
+    setSaving(true);
+    setSaveError(null);
     setSaved(false);
-    await new Promise((r) => setTimeout(r, 800));
+
+    const supabase = getSupabase();
+    const payload = {
+      user_id:        user.id,
+      name:           schoolName.trim(),
+      city:           city.trim(),
+      type:           schoolType.trim(),
+      description:    description.trim() || null,
+      target_levels:  selectedLevels,
+      target_fields:  selectedFields,
+      cover_image_url: coverUrl,
+    };
+
+    let currentSchoolId = schoolId;
+    if (currentSchoolId) {
+      const { error } = await supabase
+        .from("schools")
+        .update(payload)
+        .eq("id", currentSchoolId)
+        .eq("user_id", user.id);
+      if (error) {
+        setSaveError(error.message);
+        setSaving(false);
+        return;
+      }
+    } else {
+      const { data, error } = await supabase
+        .from("schools")
+        .insert(payload)
+        .select("id")
+        .single();
+      if (error || !data) {
+        setSaveError(error?.message ?? "Création impossible");
+        setSaving(false);
+        return;
+      }
+      currentSchoolId = data.id;
+      setSchoolId(currentSchoolId);
+    }
+
+    // Sync formations (programmes) — replace-all strategy, simple for MVP.
+    if (currentSchoolId) {
+      await supabase.from("formations").delete().eq("school_id", currentSchoolId);
+      if (programmes.length) {
+        await supabase.from("formations").insert(
+          programmes.map((name) => ({
+            school_id: currentSchoolId,
+            name,
+            // `duration` / `level` are required columns — default placeholder
+            // until the UI exposes them explicitly.
+            duration: "-",
+            level:    "-",
+          })),
+        );
+      }
+    }
+
+    setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   }
@@ -138,42 +287,53 @@ export default function ExhibitorProfilePage() {
           >
             Image de couverture
           </p>
-          <div
+          <label
             style={{
+              display: "block",
               border: "2px dashed #E8E8E8",
               borderRadius: "8px",
               padding: "40px 24px",
               textAlign: "center",
               cursor: "pointer",
               transition: "border-color 0.15s ease, background 0.15s ease",
-              background: "#F4F4F4",
+              background: coverUrl
+                ? `url(${coverUrl}) center/cover no-repeat`
+                : "#F4F4F4",
+              minHeight: 180,
             }}
             onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              const f = e.dataTransfer.files?.[0];
+              if (f) handleCoverFile(f);
+            }}
           >
-            <div
-              style={{
-                fontSize: "32px",
-                marginBottom: "12px",
+            <input
+              type="file"
+              accept="image/png,image/jpeg"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) handleCoverFile(f);
               }}
-              aria-hidden="true"
-            >
-              🖼️
-            </div>
-            <p
-              style={{ fontWeight: 600, color: "#3D3D3D", marginBottom: "4px" }}
-            >
-              Glissez une image ici
-            </p>
-            <p style={{ fontSize: "13px", color: "#6B6B6B" }}>
-              ou{" "}
-              <span style={{ color: "#EC1F27", cursor: "pointer", fontWeight: 600 }}>
-                parcourez vos fichiers
-              </span>
-            </p>
-            <p style={{ fontSize: "12px", color: "#6B6B6B", marginTop: "8px" }}>
-              JPG, PNG — max 5 Mo — recommandé : 1280×400px
-            </p>
-          </div>
+            />
+            {!coverUrl && (
+              <>
+                <div style={{ fontSize: "32px", marginBottom: "12px" }} aria-hidden="true">
+                  🖼️
+                </div>
+                <p style={{ fontWeight: 600, color: "#3D3D3D", marginBottom: "4px" }}>
+                  Glissez une image ici
+                </p>
+                <p style={{ fontSize: "13px", color: "#6B6B6B" }}>
+                  ou <span style={{ color: "#EC1F27", fontWeight: 600 }}>parcourez vos fichiers</span>
+                </p>
+                <p style={{ fontSize: "12px", color: "#6B6B6B", marginTop: "8px" }}>
+                  JPG, PNG — max 5 Mo — recommandé : 1280×400px
+                </p>
+              </>
+            )}
+          </label>
         </div>
 
         {/* Basic info */}
@@ -421,9 +581,7 @@ export default function ExhibitorProfilePage() {
           </p>
 
           {uploadProgress === null ? (
-            <button
-              type="button"
-              onClick={simulateVideoUpload}
+            <label
               style={{
                 width: "100%",
                 border: "2px dashed #E8E8E8",
@@ -431,23 +589,32 @@ export default function ExhibitorProfilePage() {
                 padding: "32px 24px",
                 textAlign: "center",
                 cursor: "pointer",
-                background: "#F4F4F4",
+                background: reelUrl ? "#E8F5E9" : "#F4F4F4",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 gap: "8px",
               }}
             >
+              <input
+                type="file"
+                accept="video/mp4,video/quicktime"
+                style={{ display: "none" }}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleReelFile(f);
+                }}
+              />
               <span style={{ fontSize: "28px" }} aria-hidden="true">
                 🎥
               </span>
               <span style={{ fontWeight: 600, color: "#3D3D3D" }}>
-                Cliquez pour uploader une vidéo
+                {reelUrl ? "Vidéo uploadée — cliquez pour remplacer" : "Cliquez pour uploader une vidéo"}
               </span>
               <span style={{ fontSize: "13px", color: "#6B6B6B" }}>
                 MP4, MOV — max 100 Mo — 60 secondes max
               </span>
-            </button>
+            </label>
           ) : (
             <div>
               <div

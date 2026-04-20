@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/supabase/require-admin'
 
 type AuthUser = { id: string; email: string; user_metadata?: Record<string, unknown> }
 
@@ -6,9 +7,12 @@ type AuthUser = { id: string; email: string; user_metadata?: Record<string, unkn
  * Update a user's auth.users metadata to add role: admin.
  *   GET /api/admin/setup-auth?email=<user-email>
  *
- * The email is required — no more hardcoded demo account.
+ * Caller must already be admin.
  */
 export async function GET(request: Request) {
+  const guard = await requireAdmin()
+  if (guard.error) return guard.error
+
   try {
     const { searchParams } = new URL(request.url)
     const email = searchParams.get('email')?.trim().toLowerCase()

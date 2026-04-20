@@ -1,7 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/supabase/require-admin'
 
 export async function GET(request: Request) {
+  const guard = await requireAdmin()
+  if (guard.error) return guard.error
+
   try {
     const { searchParams } = new URL(request.url)
     const role = searchParams.get('role')
@@ -12,7 +16,7 @@ export async function GET(request: Request) {
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { persistSession: false } }
+      { auth: { persistSession: false } },
     )
 
     let query = supabase.from('users').select('*', { count: 'exact' })
@@ -21,13 +25,17 @@ export async function GET(request: Request) {
       query = query.eq('role', role)
     }
 
+    // Active = not soft-deleted (deleted_at IS NULL).
+    // Inactive = soft-deleted (deleted_at IS NOT NULL).
     if (status === 'active') {
-      query = query.neq('deleted_at', null)
+      query = query.is('deleted_at', null)
     } else if (status === 'inactive') {
-      query = query.eq('deleted_at', null)
+      query = query.not('deleted_at', 'is', null)
     }
 
-    const { data, count, error } = await query.range(offset, offset + limit - 1).order('created_at', { ascending: false })
+    const { data, count, error } = await query
+      .range(offset, offset + limit - 1)
+      .order('created_at', { ascending: false })
 
     if (error) throw error
 
@@ -40,11 +48,17 @@ export async function GET(request: Request) {
     })
   } catch (err: unknown) {
     console.error('[GET /api/admin/users]', err)
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Server error' }, { status: 500 })
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Server error' },
+      { status: 500 },
+    )
   }
 }
 
 export async function PUT(request: Request) {
+  const guard = await requireAdmin()
+  if (guard.error) return guard.error
+
   try {
     const body = await request.json()
     const { id, ...updates } = body
@@ -52,7 +66,7 @@ export async function PUT(request: Request) {
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { persistSession: false } }
+      { auth: { persistSession: false } },
     )
 
     const { data, error } = await supabase
@@ -67,6 +81,9 @@ export async function PUT(request: Request) {
     return NextResponse.json({ success: true, data })
   } catch (err: unknown) {
     console.error('[PUT /api/admin/users]', err)
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Server error' }, { status: 500 })
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Server error' },
+      { status: 500 },
+    )
   }
 }
