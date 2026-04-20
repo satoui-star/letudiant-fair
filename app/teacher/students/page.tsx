@@ -18,7 +18,6 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import { getSupabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
-import TeacherSideNav from '@/components/layouts/TeacherSideNav'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import Tag from '@/components/ui/Tag'
@@ -89,10 +88,7 @@ export default function TeacherStudentsPage() {
   const totalCheckedIn  = students.filter(s => s.checked_in).length
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#F7F7F7', fontFamily: 'system-ui, sans-serif' }}>
-      <TeacherSideNav />
-
-      <main style={{ flex: 1, padding: '32px 28px', marginLeft: 220, maxWidth: 900 }}>
+    <main style={{ flex: 1, padding: '32px 28px', maxWidth: 900, fontFamily: 'system-ui, sans-serif' }}>
         <h1 style={{ margin: '0 0 4px', fontSize: '1.5rem', fontWeight: 800 }}>Mes élèves</h1>
         <p style={{ margin: '0 0 28px', color: '#6B6B6B', fontSize: '0.9rem' }}>
           Suivi des inscriptions — données logistiques uniquement
@@ -166,7 +162,6 @@ export default function TeacherStudentsPage() {
             ))
           )}
         </div>
-      </main>
-    </div>
+    </main>
   )
 }

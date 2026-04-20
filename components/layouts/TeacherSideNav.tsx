@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Logo from "@/components/ui/Logo";
+import { getSupabase } from "@/lib/supabase/client";
 
 interface NavItem {
   href: string;
@@ -116,6 +117,13 @@ const NAV_ITEMS: NavItem[] = [
 
 export default function TeacherSideNav() {
   const pathname = usePathname();
+  const router   = useRouter();
+
+  async function handleLogout() {
+    const supabase = getSupabase();
+    await supabase.auth.signOut();
+    router.push('/');
+  }
 
   return (
     <aside className="admin-sidebar" aria-label="Navigation enseignant">
@@ -180,18 +188,34 @@ export default function TeacherSideNav() {
           borderTop: "1px solid rgba(255,255,255,0.08)",
           display: "flex",
           flexDirection: "column",
-          gap: "4px",
+          gap: "8px",
         }}
       >
-        <p
+        <button
+          onClick={handleLogout}
           style={{
-            fontSize: "11px",
-            color: "rgba(255,255,255,0.3)",
-            margin: 0,
+            width: "100%",
+            padding: "9px 12px",
+            borderRadius: 8,
+            border: "1px solid rgba(255,255,255,0.15)",
+            background: "transparent",
+            color: "rgba(255,255,255,0.7)",
+            fontSize: "13px",
+            fontWeight: 600,
+            cursor: "pointer",
+            textAlign: "left",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
           }}
         >
-          Espace Enseignant
-        </p>
+          <svg width={14} height={14} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M5 1H2a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" />
+            <path d="M10 10l3-3-3-3" />
+            <path d="M13 7H5" />
+          </svg>
+          Se déconnecter
+        </button>
         <p
           style={{
             fontSize: "10px",
