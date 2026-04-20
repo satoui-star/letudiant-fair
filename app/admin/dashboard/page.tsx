@@ -1,4 +1,6 @@
 'use client'
+export const dynamic = 'force-dynamic'
+
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { getSupabase } from '@/lib/supabase/client'
 import type { EventRow } from '@/lib/supabase/types'
