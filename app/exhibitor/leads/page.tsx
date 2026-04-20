@@ -16,7 +16,6 @@ import QRCode from 'qrcode'
 import { getSupabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { Skeleton } from '@/components/ui/Skeleton'
-import ExhibitorSideNav from '@/components/layouts/ExhibitorSideNav'
 import SectionLabel from '@/components/ui/SectionLabel'
 
 interface AggregateStats {
@@ -139,9 +138,7 @@ export default function ExhibitorLeadsPage() {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#F7F7F7', fontFamily: 'system-ui, sans-serif' }}>
-      <ExhibitorSideNav />
-      <main style={{ flex: 1, padding: '32px 28px', marginLeft: 220 }}>
+    <main style={{ padding: '32px 28px' }}>
 
         <div style={{ marginBottom: 24 }}>
           <h1 style={{ margin: '0 0 4px', fontSize: '1.5rem', fontWeight: 800 }}>Statistiques de stand</h1>
@@ -321,7 +318,6 @@ export default function ExhibitorLeadsPage() {
             </div>
           </div>
         </div>
-      </main>
-    </div>
+    </main>
   )
 }

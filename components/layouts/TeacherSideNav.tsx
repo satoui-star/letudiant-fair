@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Logo from "@/components/ui/Logo";
 
 interface NavItem {
@@ -91,6 +92,26 @@ function IconStudents() {
   );
 }
 
+function IconLogout() {
+  return (
+    <svg
+      width={18}
+      height={18}
+      viewBox="0 0 18 18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M11 16H3C1.895 16 1 15.105 1 14V4C1 2.895 1.895 2 3 2H11" />
+      <polyline points="14 7 17 10 14 13" />
+      <line x1="17" y1="10" x2="6" y2="10" />
+    </svg>
+  );
+}
+
 const NAV_ITEMS: NavItem[] = [
   {
     href: "/teacher/dashboard",
@@ -116,6 +137,18 @@ const NAV_ITEMS: NavItem[] = [
 
 export default function TeacherSideNav() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  async function handleLogout() {
+    try {
+      const res = await fetch("/api/auth/logout", { method: "POST" });
+      if (res.ok) {
+        router.push("/login");
+      }
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  }
 
   return (
     <aside className="admin-sidebar" aria-label="Navigation enseignant">
@@ -127,18 +160,6 @@ export default function TeacherSideNav() {
         }}
       >
         <Logo variant="dark" size="sm" />
-        <p
-          style={{
-            fontSize: "10px",
-            fontWeight: 700,
-            letterSpacing: "0.15em",
-            textTransform: "uppercase",
-            color: "rgba(255,255,255,0.35)",
-            margin: "8px 0 0",
-          }}
-        >
-          Espace Enseignant
-        </p>
       </div>
 
       {/* Navigation */}
@@ -176,27 +197,33 @@ export default function TeacherSideNav() {
       {/* Footer */}
       <div
         style={{
-          padding: "16px",
+          padding: "12px 8px",
           borderTop: "1px solid rgba(255,255,255,0.08)",
           display: "flex",
           flexDirection: "column",
-          gap: "4px",
+          gap: "8px",
         }}
       >
-        <p
+        <button
+          onClick={handleLogout}
+          className="admin-nav-item"
           style={{
-            fontSize: "11px",
-            color: "rgba(255,255,255,0.3)",
-            margin: 0,
+            background: "rgba(236, 31, 39, 0.15)",
+            color: "#ffffff",
+            border: "none",
+            width: "100%",
           }}
+          aria-label="Déconnexion"
         >
-          Espace Enseignant
-        </p>
+          <IconLogout />
+          <span>Déconnexion</span>
+        </button>
         <p
           style={{
             fontSize: "10px",
             color: "rgba(255,255,255,0.2)",
             margin: 0,
+            paddingLeft: "8px",
           }}
         >
           L&apos;Étudiant Salons
