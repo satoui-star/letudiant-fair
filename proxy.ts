@@ -30,6 +30,9 @@ const ROLE_HOME: Record<Role, string> = {
 
 /** Which role (if any) is required for this pathname. */
 function requiredRoleFor(pathname: string): Role | null {
+  // Public shortcuts that live under role-scoped prefixes
+  if (pathname === '/exhibitor/login') return null
+
   if (pathname.startsWith('/admin'))     return 'admin'
   if (pathname.startsWith('/exhibitor')) return 'exhibitor'
   if (pathname.startsWith('/teacher'))   return 'teacher'
@@ -129,8 +132,8 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Run on every route except Next internals, static files, explicit public
-  // surfaces (landing, auth flows, sw/manifest) and API routes.
+  // surfaces (landing, auth flows, admin-setup, sw/manifest) and API routes.
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon\\.ico|manifest\\.json|sw\\.js|workbox-.*|icons/|images/|login|register|onboarding|auth|booth|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)',
+    '/((?!api|_next/static|_next/image|favicon\\.ico|manifest\\.json|sw\\.js|workbox-.*|icons/|images/|login|register|onboarding|auth|booth|admin-setup|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)',
   ],
 }

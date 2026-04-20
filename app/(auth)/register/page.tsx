@@ -80,7 +80,22 @@ function StepIndicator({ current }: { current: number }) {
 function RegisterInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const role = searchParams.get("role") === "teacher" ? "teacher" : "student";
+  const rawRole = searchParams.get("role");
+  type Role = "student" | "teacher" | "exhibitor" | "parent";
+  const validRoles: Role[] = ["student", "teacher", "exhibitor", "parent"];
+  const role: Role = validRoles.includes(rawRole as Role) ? (rawRole as Role) : "student";
+  const ROLE_HOME: Record<Role, string> = {
+    student:   "/home",
+    teacher:   "/teacher/dashboard",
+    exhibitor: "/exhibitor/dashboard",
+    parent:    "/parent/home",
+  };
+  const ROLE_COPY: Record<Role, { label: string; headline: string; subtitle: string; }> = {
+    student:   { label: "Créer mon compte",     headline: "aventure", subtitle: "Trois étapes pour construire votre espace et explorer les 130 salons d'orientation." },
+    teacher:   { label: "Espace enseignant",    headline: "mission",  subtitle: "Gérez vos groupes d'élèves et suivez leur engagement dans les salons L'Étudiant." },
+    exhibitor: { label: "Espace exposant",      headline: "stand",    subtitle: "Créez votre fiche école et suivez vos leads en temps réel pendant les salons." },
+    parent:    { label: "Espace parent",        headline: "rôle",     subtitle: "Suivez l'orientation de votre enfant et validez son inscription aux salons." },
+  };
 
   const [step, setStep] = useState<Step>(1);
   const [firstName, setFirstName] = useState("");
@@ -131,7 +146,8 @@ function RegisterInner() {
     if (role === "student" && !dob) errs.dob = "Date de naissance requise";
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
-    if (role === "teacher") { handleFinalSubmit(); return; }
+    // Students go through interests/level; other roles skip straight to submit.
+    if (role !== "student") { handleFinalSubmit(); return; }
     if (isUnder16()) { setStep("1b"); } else { setStep(2); }
   }
 
@@ -168,15 +184,21 @@ function RegisterInner() {
       const supabase = getSupabase();
       const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) { setErrors({ submit: signInError.message }); setLoading(false); return; }
-      router.push(role === "teacher" ? "/teacher/dashboard" : "/home");
+      router.push(ROLE_HOME[role]);
     } catch (err: unknown) {
       setErrors({ submit: err instanceof Error ? err.message : "Erreur lors de la création du compte" });
       setLoading(false);
     }
   }
 
-  const leftColor = role === "teacher" ? C.piscine : C.tomate;
-  const leftAccent = role === "teacher" ? C.citron : C.citron;
+  const ROLE_COLOR: Record<Role, string> = {
+    student:   C.tomate,
+    teacher:   C.piscine,
+    exhibitor: C.spirit,
+    parent:    C.pourpre,
+  };
+  const leftColor  = ROLE_COLOR[role];
+  const leftAccent = C.citron;
 
   return (
     <div style={{ minHeight: "100vh", background: C.blanc, display: "grid", gridTemplateColumns: "1fr 1.1fr" }}>
@@ -196,7 +218,7 @@ function RegisterInner() {
         <div style={{ display: "flex", gap: 8 }}>
           <span style={{ width: 14, height: 14, borderRadius: "50%", background: leftAccent }} />
           <span style={{ width: 14, height: 14, borderRadius: "50%", background: "#fff" }} />
-          <span style={{ width: 14, height: 14, borderRadius: "50%", background: role === "teacher" ? C.tomate : C.piscine }} />
+          <span style={{ width: 14, height: 14, borderRadius: "50%", background: role === "student" ? C.piscine : C.tomate }} />
         </div>
 
         <div>
@@ -210,7 +232,7 @@ function RegisterInner() {
               marginBottom: 16,
             }}
           >
-            {role === "teacher" ? "Espace enseignant" : "Créer mon compte"}
+            {ROLE_COPY[role].label}
           </div>
           <h1
             style={{
@@ -225,7 +247,7 @@ function RegisterInner() {
             Votre
             <br />
             <span style={{ fontStyle: "italic", color: leftAccent }}>
-              {role === "teacher" ? "mission" : "aventure"}
+              {ROLE_COPY[role].headline}
             </span>
             <br />
             commence
@@ -233,9 +255,7 @@ function RegisterInner() {
             ici.
           </h1>
           <p style={{ margin: "24px 0 0", fontSize: 16, lineHeight: 1.6, maxWidth: 380, opacity: 0.9 }}>
-            {role === "teacher"
-              ? "Gérez vos groupes d'élèves et suivez leur engagement dans les salons L'Étudiant."
-              : "Trois étapes pour construire votre espace et explorer les 130 salons d'orientation."}
+            {ROLE_COPY[role].subtitle}
           </p>
         </div>
 
@@ -273,20 +293,18 @@ function RegisterInner() {
 
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", paddingTop: 40, paddingBottom: 40 }}>
           <div style={{ width: "100%", maxWidth: 480 }}>
-            <StepIndicator current={getStepDot()} />
+            {role === "student" && <StepIndicator current={getStepDot()} />}
 
             {/* ── Step 1 ── */}
             {step === 1 && (
               <>
                 <div style={{ display: "inline-block", position: "relative", paddingBottom: 8, marginBottom: 12 }}>
                   <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.25em", textTransform: "uppercase", color: C.tomate }}>
-                    Étape 01 / {role === "teacher" ? "01" : "03"}
+                    Étape 01 / {role === "student" ? "03" : "01"}
                   </span>
                   <div style={{ position: "absolute", left: 0, bottom: 0, width: 28, height: 3, background: C.tomate }} />
                 </div>
-                <h2 style={sectionTitleStyle}>
-                  {role === "teacher" ? "Vos infos" : "Vos infos"}
-                </h2>
+                <h2 style={sectionTitleStyle}>Vos infos</h2>
                 <p style={{ margin: "10px 0 28px", fontSize: 14, color: C.gray500 }}>
                   Toutes les informations de base pour créer votre compte.
                 </p>
@@ -305,7 +323,7 @@ function RegisterInner() {
                   {errors.submit && <ErrorBox>{errors.submit}</ErrorBox>}
 
                   <PrimaryButton onClick={handleStep1Continue} disabled={loading}>
-                    {loading ? "Création du compte…" : role === "teacher" ? "Créer mon espace →" : "Continuer →"}
+                    {loading ? "Création du compte…" : role === "student" ? "Continuer →" : "Créer mon espace →"}
                   </PrimaryButton>
                 </div>
 

@@ -281,6 +281,14 @@ function LoginInner() {
                 Enseignant·e
                 <span style={{ fontSize: 16 }}>→</span>
               </a>
+              <a href="/register?role=exhibitor" style={registerLinkStyle(C.spirit)}>
+                Exposant
+                <span style={{ fontSize: 16 }}>→</span>
+              </a>
+              <a href="/register?role=parent" style={registerLinkStyle(C.pourpre)}>
+                Parent
+                <span style={{ fontSize: 16 }}>→</span>
+              </a>
             </div>
           </div>
         </div>
