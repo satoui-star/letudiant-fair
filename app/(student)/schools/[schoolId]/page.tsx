@@ -15,6 +15,8 @@ export default function SchoolDetailPage({ params }: { params: Promise<{ schoolI
   const [formations, setFormations] = useState<FormationRow[]>([])
   const [loading, setLoading] = useState(true)
   const [bookmarked, setBookmarked] = useState(false)
+  const [bookmarkId, setBookmarkId] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'info' | 'formations' | 'stats' | 'rdv'>('info')
   const [appointment, setAppointment] = useState<AppointmentRow | null>(null)
   const [bookingSlot, setBookingSlot] = useState<string | null>(null)
@@ -33,6 +35,23 @@ export default function SchoolDetailPage({ params }: { params: Promise<{ schoolI
       ])
       if (schoolRes.data) setSchool(schoolRes.data)
       setFormations(formationsRes.data ?? [])
+      if (user) setUserId(user.id)
+
+      // Check whether the school is already bookmarked as a saved link
+      if (user) {
+        const { data: existingBookmark } = await supabase
+          .from('saved_items')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('school_id', schoolId)
+          .eq('kind', 'link')
+          .maybeSingle()
+        if (existingBookmark) {
+          setBookmarked(true)
+          setBookmarkId(existingBookmark.id)
+        }
+      }
+
       // Load existing appointment for this school (use the first upcoming event)
       if (user) {
         const { data: events } = await supabase
@@ -98,10 +117,38 @@ export default function SchoolDetailPage({ params }: { params: Promise<{ schoolI
     toast('Rendez-vous annulé', 'info')
   }
 
-  function toggleBookmark() {
-    setBookmarked(b => !b)
-    track(bookmarked ? 'unbookmark' : 'bookmark', { school_id: schoolId, source: 'school_detail' })
-    toast(bookmarked ? 'Retiré de vos favoris' : '✓ Ajouté à votre dossier', bookmarked ? 'info' : 'success')
+  async function toggleBookmark() {
+    if (!userId || !school) {
+      toast('Connectez-vous pour sauvegarder', 'error')
+      return
+    }
+    const supabase = getSupabase()
+    if (bookmarked && bookmarkId) {
+      const { error } = await supabase.from('saved_items').delete().eq('id', bookmarkId)
+      if (error) { toast('Impossible de retirer', 'error'); return }
+      setBookmarked(false)
+      setBookmarkId(null)
+      track('unbookmark', { school_id: schoolId, source: 'school_detail' })
+      toast('Retiré de vos favoris', 'info')
+    } else {
+      const { data, error } = await supabase
+        .from('saved_items')
+        .insert({
+          user_id:   userId,
+          school_id: schoolId,
+          kind:      'link',
+          label:     school.name,
+          url:       `/schools/${schoolId}`,
+          meta:      { source: 'school_detail' },
+        })
+        .select('id')
+        .single()
+      if (error || !data) { toast('Impossible de sauvegarder', 'error'); return }
+      setBookmarked(true)
+      setBookmarkId(data.id)
+      track('bookmark', { school_id: schoolId, source: 'school_detail' })
+      toast('✓ Ajouté à votre dossier', 'success')
+    }
   }
 
   if (loading) return (

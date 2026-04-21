@@ -1,11 +1,22 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/supabase/require-admin'
 
 /**
- * Seed endpoint: Generates test data for dashboard
- * GET /api/admin/seed?events=3&scans=500
+ * Seed endpoint: generates test data for the dashboard.
+ * Admin-only + dev-only by default. Set ALLOW_SEED=true in production if you
+ * really need to run it there.
  */
 export async function GET(request: Request) {
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_SEED !== 'true') {
+    return NextResponse.json(
+      { error: 'Seed endpoint disabled in production' },
+      { status: 403 },
+    )
+  }
+  const guard = await requireAdmin()
+  if (guard.error) return guard.error
+
   try {
     const { searchParams } = new URL(request.url)
     const eventCount = parseInt(searchParams.get('events') ?? '3', 10)

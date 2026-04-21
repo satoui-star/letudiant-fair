@@ -1,6 +1,8 @@
 "use client";
 export const dynamic = 'force-dynamic'
 
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Logo from "@/components/ui/Logo";
 
 const C = {
@@ -51,6 +53,19 @@ const roles = [
 ];
 
 export default function LandingPage() {
+  const router = useRouter()
+
+  // Keyboard shortcut: Ctrl+Shift+A to access hidden admin setup
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+        e.preventDefault()
+        router.push('/admin-setup')
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [router])
   return (
     <div style={{ minHeight: "100vh", background: C.blanc, color: C.nuit }}>
       {/* Signature multicolor stripe */}

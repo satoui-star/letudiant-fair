@@ -55,6 +55,7 @@ export default function GroupInvitePage({
   const [firstName,     setFirstName]     = useState('')
   const [lastName,      setLastName]      = useState('')
   const [email,         setEmail]         = useState('')
+  const [password,      setPassword]      = useState('')
   const [educationLevel,setEducationLevel]= useState('')
   const [gdprAccepted,  setGdprAccepted]  = useState(false)
   const [submitting,    setSubmitting]    = useState(false)
@@ -115,7 +116,7 @@ export default function GroupInvitePage({
     const res = await fetch('/api/group/join', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, firstName, lastName, email, gdprAccepted, educationLevel }),
+      body: JSON.stringify({ token, firstName, lastName, email, password, gdprAccepted, educationLevel }),
     })
 
     const json = await res.json()
@@ -270,6 +271,11 @@ export default function GroupInvitePage({
                 Sans email, vous ne pourrez pas retrouver votre dossier après le salon.
               </p>
 
+              <Input id="password" type="password" label="Mot de passe *" placeholder="Choisissez un mot de passe" value={password} onChange={e => setPassword(e.target.value)} required />
+              <p style={{ margin: '-8px 0 0', fontSize: '0.75rem', color: '#6B6B6B', lineHeight: 1.4 }}>
+                Utilisez ce mot de passe pour vous connecter à votre espace étudiant.
+              </p>
+
               {/* Education level */}
               <div>
                 <label htmlFor="level" style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#1A1A1A', marginBottom: 6 }}>
@@ -303,7 +309,7 @@ export default function GroupInvitePage({
                 </div>
               )}
 
-              <Button type="submit" variant="primary" disabled={submitting || !gdprAccepted || !firstName.trim() || !lastName.trim()}>
+              <Button type="submit" variant="primary" disabled={submitting || !gdprAccepted || !firstName.trim() || !lastName.trim() || !password.trim()}>
                 {submitting ? 'Inscription…' : 'Rejoindre le salon →'}
               </Button>
             </div>

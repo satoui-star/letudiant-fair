@@ -1,14 +1,18 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/supabase/require-admin'
 
 /**
  * Promote a user to admin role in public.users.
  *   GET /api/admin/setup?email=<user-email>
  *
- * Requires the caller to provide an email (no more hardcoded demo account).
- * Intended for bootstrap / ops use; guard at the infra layer.
+ * Caller must already be an admin (bootstrap the very first admin via the
+ * Supabase console / SQL).
  */
 export async function GET(request: Request) {
+  const guard = await requireAdmin()
+  if (guard.error) return guard.error
+
   try {
     const { searchParams } = new URL(request.url)
     const email = searchParams.get('email')?.trim().toLowerCase()

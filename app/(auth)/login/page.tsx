@@ -1,4 +1,6 @@
 'use client'
+export const dynamic = 'force-dynamic'
+
 import { Suspense, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Logo from '@/components/ui/Logo'
@@ -279,6 +281,14 @@ function LoginInner() {
               </a>
               <a href="/register?role=teacher" style={registerLinkStyle(C.piscine)}>
                 Enseignant·e
+                <span style={{ fontSize: 16 }}>→</span>
+              </a>
+              <a href="/register?role=exhibitor" style={registerLinkStyle(C.spirit)}>
+                Exposant
+                <span style={{ fontSize: 16 }}>→</span>
+              </a>
+              <a href="/register?role=parent" style={registerLinkStyle(C.pourpre)}>
+                Parent
                 <span style={{ fontSize: 16 }}>→</span>
               </a>
             </div>

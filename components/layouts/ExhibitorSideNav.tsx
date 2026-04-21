@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Logo from "@/components/ui/Logo";
 
 interface NavItem {
@@ -79,8 +80,40 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/exhibitor/profile", label: "Profil", icon: <IconProfile /> },
 ];
 
+function IconLogout() {
+  return (
+    <svg
+      width={18}
+      height={18}
+      viewBox="0 0 18 18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M11 16H3C1.895 16 1 15.105 1 14V4C1 2.895 1.895 2 3 2H11" />
+      <polyline points="14 7 17 10 14 13" />
+      <line x1="17" y1="10" x2="6" y2="10" />
+    </svg>
+  );
+}
+
 export default function ExhibitorSideNav() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  async function handleLogout() {
+    try {
+      const res = await fetch("/api/auth/logout", { method: "POST" });
+      if (res.ok) {
+        router.push("/login");
+      }
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  }
 
   return (
     <aside className="admin-sidebar" aria-label="Navigation exposant">
@@ -120,15 +153,33 @@ export default function ExhibitorSideNav() {
       {/* Footer branding */}
       <div
         style={{
-          padding: "16px",
+          padding: "12px 8px",
           borderTop: "1px solid rgba(255,255,255,0.08)",
+          display: "flex",
+          flexDirection: "column",
+          gap: "8px",
         }}
       >
+        <button
+          onClick={handleLogout}
+          className="admin-nav-item"
+          style={{
+            background: "rgba(236, 31, 39, 0.15)",
+            color: "#ffffff",
+            border: "none",
+            width: "100%",
+          }}
+          aria-label="Déconnexion"
+        >
+          <IconLogout />
+          <span>Déconnexion</span>
+        </button>
         <p
           style={{
             fontSize: "11px",
             color: "rgba(255,255,255,0.3)",
             margin: 0,
+            paddingLeft: "8px",
           }}
         >
           Espace Exposant

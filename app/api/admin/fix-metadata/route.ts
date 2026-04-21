@@ -1,11 +1,17 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/supabase/require-admin'
 
 /**
  * Set role: admin in auth.users.raw_user_meta_data for a given user.
  *   GET /api/admin/fix-metadata?email=<user-email>
+ *
+ * Caller must already be admin.
  */
 export async function GET(request: Request) {
+  const guard = await requireAdmin()
+  if (guard.error) return guard.error
+
   try {
     const { searchParams } = new URL(request.url)
     const email = searchParams.get('email')?.trim().toLowerCase()

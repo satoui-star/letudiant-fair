@@ -42,6 +42,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Le mot de passe doit contenir au moins 8 caractères' }, { status: 400 })
   }
 
+  // Admin accounts are never self-registered. They are seeded via
+  // /api/admin/setup (itself admin-gated once the first admin exists).
+  const ALLOWED_ROLES = ['student', 'teacher', 'exhibitor', 'parent'] as const
+  if (!ALLOWED_ROLES.includes(role as typeof ALLOWED_ROLES[number])) {
+    return NextResponse.json({ error: 'Rôle non autorisé' }, { status: 400 })
+  }
+
   const supabase = createAdminClient()
 
   // ── 1. Create auth user (admin API — confirms immediately, no email needed) ──

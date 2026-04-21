@@ -17,9 +17,9 @@ import { createServiceClient, createAdminClient } from '@/lib/supabase/server'
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { token, firstName, lastName, email, gdprAccepted, educationLevel } = body
+    const { token, firstName, lastName, email, password, gdprAccepted, educationLevel } = body
 
-    if (!token || !firstName?.trim() || !lastName?.trim() || !gdprAccepted) {
+    if (!token || !firstName?.trim() || !lastName?.trim() || !password?.trim() || !gdprAccepted) {
       return NextResponse.json({ error: 'Champs requis manquants' }, { status: 400 })
     }
 
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     // ── 3. Create pre-confirmed auth user ─────────────────────────────────────
     const { data: authData, error: authError } = await admin.auth.admin.createUser({
       email: resolvedEmail,
-      password: crypto.randomUUID(),   // random — student never needs this password
+      password: password.trim(),
       email_confirm: true,             // skip email verification for day-of registration
       user_metadata: {
         name:  `${firstName.trim()} ${lastName.trim()}`,
