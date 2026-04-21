@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button';
 import StripeRule from '@/components/ui/StripeRule';
 import { getSchools } from '@/lib/supabase/database';
 import { upsertMatch } from '@/lib/supabase/database';
+import { rankSchoolsForStudent } from '@/lib/supabase/schoolRanking';
 import { useAuth } from '@/hooks/useAuth';
 import type { SchoolRow } from '@/lib/supabase/types';
 
@@ -320,14 +321,23 @@ export default function DiscoverPage() {
   const reels: Reel[] = [];
   const articles: Article[] = [];
 
-  // ── Load real schools from Supabase ──────────────────────────────────────
+  // ── Load real schools from Supabase with smart ranking ──────────────────────
   useEffect(() => {
-    getSchools().then((data) => {
-      // Reverse so first school shows on top of TinderCard stack
-      setSchools([...data].reverse());
-      setLoadingSchools(false);
+    getSchools().then((allSchools) => {
+      // If user is logged in and has a profile, rank schools by relevance
+      if (user?.id && user?.profile) {
+        rankSchoolsForStudent(user.id, user.profile, allSchools).then((rankedSchools) => {
+          // Reverse so first school shows on top of TinderCard stack
+          setSchools([...rankedSchools].reverse());
+          setLoadingSchools(false);
+        });
+      } else {
+        // Fallback: show schools in default order if not logged in or no profile
+        setSchools([...allSchools].reverse());
+        setLoadingSchools(false);
+      }
     });
-  }, []);
+  }, [user?.id, user?.profile]);
 
   const showToast = (msg: string) => {
     setToast(msg);

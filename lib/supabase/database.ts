@@ -122,6 +122,15 @@ export async function getMatchesForStudent(studentId: string): Promise<MatchRow[
   return data ?? []
 }
 
+export async function getStudentRightSwipes(studentId: string): Promise<string[]> {
+  const { data } = await getSupabase()
+    .from('matches')
+    .select('school_id')
+    .eq('student_id', studentId)
+    .eq('student_swipe', 'right')
+  return data?.map((m) => m.school_id) ?? []
+}
+
 // ─── Groups ───────────────────────────────────────────────────────────────────
 
 export async function getGroupByInviteLink(token: string): Promise<GroupRow | null> {
