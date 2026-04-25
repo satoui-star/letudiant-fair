@@ -105,6 +105,21 @@ export type FormationRow = {
   created_at: string
 }
 
+export type SchoolReelRow = {
+  id: string
+  school_id: string
+  title: string
+  description: string | null
+  video_url: string
+  duration_seconds: number | null
+  thumbnail_color: string
+  tags: string[]
+  view_count: number
+  published_at: string
+  created_at: string
+  updated_at: string
+}
+
 export type StandRow = {
   id: string
   event_id: string

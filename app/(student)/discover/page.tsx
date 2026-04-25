@@ -8,12 +8,12 @@ import TinderCard from 'react-tinder-card';
 import Tag from '@/components/ui/Tag';
 import Button from '@/components/ui/Button';
 import StripeRule from '@/components/ui/StripeRule';
-import { getSchools, upsertMatch, saveSchoolToWishlist, getSchoolFormations, saveFormationToWishlist } from '@/lib/supabase/database';
+import { getSchools, upsertMatch, saveSchoolToWishlist, getSchoolFormations, saveFormationToWishlist, getAllReels } from '@/lib/supabase/database';
 import { getSupabase } from '@/lib/supabase/client';
 import { rankSchoolsForStudent } from '@/lib/supabase/schoolRanking';
 import { rankFormationsForStudent } from '@/lib/supabase/programRanking';
 import { useAuth } from '@/hooks/useAuth';
-import type { SchoolRow, FormationRow } from '@/lib/supabase/types';
+import type { SchoolRow, FormationRow, SchoolReelRow } from '@/lib/supabase/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -328,14 +328,14 @@ export default function DiscoverPage() {
   const [activeTab, setActiveTab] = useState<TabId>('swipe');
   const [formations, setFormations] = useState<FormationWithSchool[]>([]);
   const [loadingFormations, setLoadingFormations] = useState(true);
+  const [loadingReels, setLoadingReels] = useState(true);
   const [rightCount, setRightCount] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
   const [gone, setGone] = useState<Set<string>>(new Set());
   const [flipped, setFlipped] = useState<Set<string>>(new Set()); // For card flip animation
   const [pendingSaves, setPendingSaves] = useState(0); // Track pending database saves
-  // Empty arrays until reel/article tables are wired in Supabase
-  const reels: Reel[] = [];
-  const articles: Article[] = [];
+  const [reels, setReels] = useState<Reel[]>([]); // Load from getAllReels()
+  const articles: Article[] = []; // TODO: Implement articles once table is wired
 
   // ── Load formations from all schools with smart ranking ──────────────────────
   useEffect(() => {
@@ -518,6 +518,39 @@ export default function DiscoverPage() {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, [user?.id]);
+
+  // ── Load reels (MOCK DATA FOR NOW) ─────────────────────────────────────────
+  useEffect(() => {
+    const loadReels = async () => {
+      try {
+        console.log('🎬 Loading reels...');
+        setLoadingReels(true);
+
+        const reelData = await getAllReels();
+        console.log('✅ Loaded', reelData.length, 'reels');
+
+        // Transform SchoolReelRow to Reel format for display
+        const transformedReels: Reel[] = reelData.map((reel: SchoolReelRow) => ({
+          id: reel.id,
+          schoolName: reel.school_id, // TODO: Fetch actual school name from schools table join when ready
+          title: reel.title,
+          duration: reel.duration_seconds ? `${Math.floor(reel.duration_seconds / 60)}:${String(reel.duration_seconds % 60).padStart(2, '0')}` : '0:00',
+          views: reel.view_count > 1000 ? `${(reel.view_count / 1000).toFixed(1)}K` : String(reel.view_count),
+          thumbnail_color: reel.thumbnail_color,
+          tags: reel.tags,
+        }));
+
+        setReels(transformedReels);
+      } catch (err) {
+        console.error('Error loading reels:', err);
+        setReels([]);
+      } finally {
+        setLoadingReels(false);
+      }
+    };
+
+    loadReels();
+  }, []);
 
   const showToast = (msg: string) => {
     setToast(msg);

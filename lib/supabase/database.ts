@@ -41,6 +41,92 @@ export async function getSchoolFormations(schoolId: string) {
   return data ?? []
 }
 
+// ─── Reels (MOCK DATA FOR NOW) ────────────────────────────────────────────────
+// TODO: Replace with real data from school_reels table once approved
+// Table migration 012_school_reels.sql is ready to use when needed
+
+import type { SchoolReelRow } from './types'
+
+export async function getAllReels(): Promise<SchoolReelRow[]> {
+  // MOCK DATA - Will be replaced with real database query once approved
+  // Format: Matches SchoolReelRow structure for easy swap later
+
+  const mockReels: SchoolReelRow[] = [
+    {
+      id: 'reel-001',
+      school_id: 'school-hec',
+      title: 'Campus Tour - HEC Paris',
+      description: 'Discover the beautiful HEC Paris campus in Jouy-en-Josas. Walk through our classrooms, library, and student spaces.',
+      video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      duration_seconds: 120,
+      thumbnail_color: '#EC1F27',
+      tags: ['Campus', 'Tour', 'HEC'],
+      view_count: 2400,
+      published_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'reel-002',
+      school_id: 'school-polytechnique',
+      title: 'Engineering Life at Polytechnique',
+      description: 'What is it really like to study engineering at Polytechnique? Hear from current students about their experience.',
+      video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      duration_seconds: 180,
+      thumbnail_color: '#0066CC',
+      tags: ['Engineering', 'Student Life', 'Polytechnique'],
+      view_count: 3150,
+      published_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'reel-003',
+      school_id: 'school-sorbonne',
+      title: 'Sorbonne Université - Research Excellence',
+      description: 'Join us as we explore groundbreaking research happening at Sorbonne. From physics to literature, discover innovation.',
+      video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      duration_seconds: 150,
+      thumbnail_color: '#FFC0D9',
+      tags: ['Research', 'University', 'Innovation'],
+      view_count: 1820,
+      published_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'reel-004',
+      school_id: 'school-essec',
+      title: 'ESSEC Business School - MBA Experience',
+      description: 'Our MBA students share their journey and what makes ESSEC unique in the business education landscape.',
+      video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      duration_seconds: 200,
+      thumbnail_color: '#00BFB3',
+      tags: ['MBA', 'Business', 'Experience'],
+      view_count: 2890,
+      published_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      created_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'reel-005',
+      school_id: 'school-isen',
+      title: 'ISEN Yncréa - Tech Innovation Lab',
+      description: 'Step inside our innovation lab where students build cutting-edge projects in AI, robotics, and IoT.',
+      video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      duration_seconds: 160,
+      thumbnail_color: '#E6A800',
+      tags: ['Tech', 'Innovation', 'Lab'],
+      view_count: 1950,
+      published_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+  ];
+
+  return mockReels;
+}
+
 // ─── Stands ───────────────────────────────────────────────────────────────────
 
 export async function getEventStands(eventId: string) {
