@@ -2,14 +2,18 @@
 export const dynamic = 'force-dynamic';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import TinderCard from 'react-tinder-card';
 import Tag from '@/components/ui/Tag';
 import Button from '@/components/ui/Button';
 import StripeRule from '@/components/ui/StripeRule';
-import { getSchools, upsertMatch, saveSchoolToWishlist } from '@/lib/supabase/database';
+import { getSchools, upsertMatch, saveSchoolToWishlist, getSchoolFormations, saveFormationToWishlist } from '@/lib/supabase/database';
+import { getSupabase } from '@/lib/supabase/client';
 import { rankSchoolsForStudent } from '@/lib/supabase/schoolRanking';
+import { rankFormationsForStudent } from '@/lib/supabase/programRanking';
 import { useAuth } from '@/hooks/useAuth';
-import type { SchoolRow } from '@/lib/supabase/types';
+import type { SchoolRow, FormationRow } from '@/lib/supabase/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -309,96 +313,283 @@ function ArticleCard({ article }: { article: Article; key?: string }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+type FormationWithSchool = FormationRow & {
+  schoolId: string;
+  schoolName: string;
+  schoolCity: string;
+  schoolType: string;
+  schoolImage?: string;
+  score?: number;
+};
+
 export default function DiscoverPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>('swipe');
-  const [schools, setSchools] = useState<SchoolRow[]>([]);
-  const [loadingSchools, setLoadingSchools] = useState(true);
+  const [formations, setFormations] = useState<FormationWithSchool[]>([]);
+  const [loadingFormations, setLoadingFormations] = useState(true);
   const [rightCount, setRightCount] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
   const [gone, setGone] = useState<Set<string>>(new Set());
+  const [flipped, setFlipped] = useState<Set<string>>(new Set()); // For card flip animation
+  const [pendingSaves, setPendingSaves] = useState(0); // Track pending database saves
   // Empty arrays until reel/article tables are wired in Supabase
   const reels: Reel[] = [];
   const articles: Article[] = [];
 
-  // ── Load real schools from Supabase with smart ranking ──────────────────────
+  // ── Load formations from all schools with smart ranking ──────────────────────
   useEffect(() => {
-    getSchools().then((allSchools) => {
-      // If user is logged in and has a profile, rank schools by relevance
-      if (user?.id && user?.profile) {
-        rankSchoolsForStudent(user.id, user.profile, allSchools).then((rankedSchools) => {
-          // Reverse so first school shows on top of TinderCard stack
-          setSchools([...rankedSchools].reverse());
-          setLoadingSchools(false);
+    const loadFormations = async () => {
+      try {
+        console.log('🟢 loadFormations() START - user.id:', user?.id);
+
+        if (!user?.id) {
+          console.warn('No authenticated user');
+          setFormations([]);
+          setLoadingFormations(false);
+          return;
+        }
+
+        // STEP 1: Fetch user's wishlist from Supabase
+        console.log('📖 Fetching user wishlist...');
+        const supabase = getSupabase();
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('wishlist, education_branches, orientation_stage, name, email')
+          .eq('id', user.id)
+          .single();
+
+        if (userError) {
+          console.error('❌ Error fetching user data:', userError);
+          setFormations([]);
+          setLoadingFormations(false);
+          return;
+        }
+
+        const userWishlist = userData?.wishlist ?? [];
+        console.log('💾 User wishlist:', userWishlist, 'Count:', userWishlist.length);
+        console.log('📊 User profile:', {
+          education_branches: userData?.education_branches,
+          orientation_stage: userData?.orientation_stage,
+          name: userData?.name
         });
-      } else {
-        // Fallback: show schools in default order if not logged in or no profile
-        setSchools([...allSchools].reverse());
-        setLoadingSchools(false);
+
+        // STEP 2: Load all schools and formations
+        const allSchools = await getSchools();
+        console.log('🏫 Loaded schools:', allSchools.length);
+
+        if (!allSchools || allSchools.length === 0) {
+          console.warn('No schools found');
+          setFormations([]);
+          setLoadingFormations(false);
+          return;
+        }
+
+        const allFormations: FormationWithSchool[] = [];
+
+        // Fetch formations for each school
+        for (const school of allSchools) {
+          try {
+            const schoolFormations = await getSchoolFormations(school.id);
+            console.log(`📚 Loaded ${schoolFormations?.length || 0} formations for ${school.name}`);
+
+            if (schoolFormations && schoolFormations.length > 0) {
+              allFormations.push(
+                ...schoolFormations.map((formation) => ({
+                  ...formation,
+                  schoolId: school.id,
+                  schoolName: school.name,
+                  schoolCity: school.city,
+                  schoolType: school.type,
+                  schoolImage: school.cover_image_url,
+                }))
+              );
+            }
+          } catch (err) {
+            console.error(`Error loading formations for ${school.name}:`, err);
+          }
+        }
+
+        console.log('📊 Total formations loaded (before filter):', allFormations.length);
+
+        if (allFormations.length === 0) {
+          console.warn('No formations found across all schools');
+          setFormations([]);
+          setLoadingFormations(false);
+          return;
+        }
+
+        // STEP 3: Filter out formations already in wishlist
+        const newFormations = allFormations.filter(
+          (formation) => !userWishlist.includes(formation.id)
+        );
+        console.log(`🔥 Filtered formations (removed ${userWishlist.length} already saved):`, newFormations.length);
+
+        if (newFormations.length === 0) {
+          console.warn('⚠️ No new formations available (all are already saved)');
+          setFormations([]);
+          setLoadingFormations(false);
+          return;
+        }
+
+        // STEP 4: Rank formations by relevance if user has profile data
+        let finalFormations = newFormations;
+        if (userData?.education_branches && userData.education_branches.length > 0) {
+          console.log('🎯 Ranking formations for user with branches:', userData.education_branches);
+          finalFormations = await rankFormationsForStudent(user.id, userData, newFormations);
+          console.log('🏆 Ranked formations:', finalFormations.length);
+        } else {
+          console.log('⚠️ No education branches, showing formations in default order');
+        }
+
+        // Reverse so first formation shows on top of TinderCard stack
+        setFormations([...finalFormations].reverse());
+        setRightCount(userWishlist.length); // Set counter to total saved (sync with /saved page)
+        setGone(new Set()); // Reset swiped cards
+        console.log('✅ Final formations ready for display:', finalFormations.length);
+        console.log('📊 Counter synced to wishlist total:', userWishlist.length);
+
+      } catch (err) {
+        console.error('❌ Error loading formations:', err);
+        setFormations([]);
+      } finally {
+        setLoadingFormations(false);
       }
-    });
+    };
+
+    loadFormations();
   }, [user?.id, user?.profile]);
+
+  // ── Load rightCount from user's wishlist ────────────────────────────────────
+  const loadWishlistCount = async (userId: string) => {
+    try {
+      const { data: userData } = await getSupabase()
+        .from('users')
+        .select('wishlist')
+        .eq('id', userId)
+        .maybeSingle();
+
+      const wishlist = (userData?.wishlist as string[]) ?? [];
+      setRightCount(wishlist.length);
+      console.log('Loaded wishlist count:', wishlist.length);
+    } catch (err) {
+      console.error('Error loading wishlist count:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (!user?.id) {
+      setRightCount(0);
+      return;
+    }
+    loadWishlistCount(user.id);
+  }, [user?.id]);
+
+  // Refresh counter when page becomes visible (tab switching, returning from saved page, etc)
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible') {
+        console.log('DiscoverPage: Page became visible, refreshing counter...');
+        await loadWishlistCount(user.id);
+      }
+    };
+
+    // Also refresh immediately if page is already visible
+    if (document.visibilityState === 'visible') {
+      console.log('DiscoverPage: Page is visible, refreshing counter...');
+      loadWishlistCount(user.id);
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [user?.id]);
+
+  // Refresh counter when user presses back button
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const handlePopState = () => {
+      console.log('DiscoverPage: Browser back/forward detected, refreshing counter...');
+      loadWishlistCount(user.id);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [user?.id]);
 
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 2500);
   };
 
-  const handleSwipe = async (direction: string, school: SchoolRow) => {
-    setGone((prev) => new Set(prev).add(school.id));
+  const toggleFlip = (cardId: string) => {
+    setFlipped((prev) => {
+      const next = new Set(prev);
+      if (next.has(cardId)) {
+        next.delete(cardId);
+      } else {
+        next.add(cardId);
+      }
+      return next;
+    });
+  };
 
-    if (direction === 'right') {
-      setRightCount((n) => n + 1);
-      showToast(`Match avec ${school.name} !`);
+  const handleSwipe = async (direction: string, formation: FormationWithSchool) => {
+    console.log('handleSwipe called - direction:', direction, 'formation:', formation.name);
 
-      // ── Write to Supabase if user is logged in ──────────────────────────
-      if (user?.id) {
-        try {
-          await upsertMatch({
-            student_id: user.id,
-            school_id: school.id,
-            student_swipe: 'right',
-            school_interest: false,
-            appointment_booked: false,
-          });
-        } catch (err) {
-          // Don't block the UI if the write fails
-          console.error('upsertMatch failed:', err);
+    try {
+      setGone((prev) => new Set(prev).add(formation.id));
+
+      if (direction === 'right') {
+        console.log('RIGHT swipe detected - incrementing counter from:', rightCount);
+        setRightCount((n) => {
+          const newCount = n + 1;
+          console.log('Counter updated:', n, '→', newCount);
+          return newCount;
+        });
+        showToast(`💾 ${formation.name} enregistrée !`);
+
+        // Save formation to wishlist if user is logged in
+        if (user?.id) {
+          setPendingSaves((n) => n + 1);
+          try {
+            await saveFormationToWishlist(user.id, formation.id);
+            console.log('Saved formation to wishlist');
+          } catch (err) {
+            console.error('saveFormationToWishlist failed:', err);
+          } finally {
+            setPendingSaves((n) => Math.max(0, n - 1));
+          }
         }
+      } else if (direction === 'left') {
+        console.log('Card dismissed');
       }
-    } else if (direction === 'left') {
-      // Record left swipe too so the exposant knows who passed
-      if (user?.id) {
-        try {
-          await upsertMatch({
-            student_id: user.id,
-            school_id: school.id,
-            student_swipe: 'left',
-            school_interest: false,
-            appointment_booked: false,
-          });
-        } catch (err) {
-          console.error('upsertMatch failed:', err);
-        }
-      }
-    } else if (direction === 'up') {
-      // Save school to wishlist
-      showToast(`💾 ${school.name} enregistrée`);
-      if (user?.id) {
-        try {
-          await saveSchoolToWishlist(user.id, school.id);
-        } catch (err) {
-          console.error('saveSchoolToWishlist failed:', err);
-        }
-      }
+    } catch (err) {
+      console.error('Error in handleSwipe:', err);
     }
   };
 
-  const currentCard = schools.find((c) => !gone.has(c.id));
+  const currentCard = formations.find((c) => !gone.has(c.id));
 
-  const handleAction = (direction: 'left' | 'right' | 'up') => {
-    if (!currentCard) return;
-    handleSwipe(direction, currentCard);
+  const handleAction = (direction: 'left' | 'center' | 'right') => {
+    console.log('Button clicked:', direction, 'currentCard:', currentCard?.name);
+
+    if (!currentCard) {
+      console.warn('No current card to act on');
+      return;
+    }
+
+    if (direction === 'center') {
+      // 💡 Flip button: toggle card flip animation
+      console.log('Toggling flip for', currentCard.name);
+      toggleFlip(currentCard.id);
+    } else {
+      // X (left) or ✓ (right): swipe and remove card
+      console.log('Triggering swipe:', direction);
+      handleSwipe(direction, currentCard);
+    }
   };
 
   const TABS: { id: TabId; label: string }[] = [
@@ -437,19 +628,48 @@ export default function DiscoverPage() {
             <h1 className="le-h2" style={{ margin: 0 }}>Découvrir</h1>
             <p className="le-caption" style={{ margin: 0 }}>Explorez écoles, vidéos et actualités</p>
           </div>
-          {activeTab === 'swipe' && (
-            <div
+          {activeTab === 'swipe' && rightCount > 0 && (
+            <>
+              {console.log('Render counter button - rightCount:', rightCount, 'pendingSaves:', pendingSaves)}
+              <button
+                onClick={() => {
+                  console.log('Counter button clicked - navigating to saved page');
+                  router.push('/saved?tab=liens');
+                }}
+                disabled={pendingSaves > 0}
               style={{
-                background: 'var(--le-red)',
+                background: pendingSaves > 0 ? 'var(--le-gray-400)' : 'var(--le-red)',
                 color: '#fff',
                 borderRadius: 20,
-                padding: '4px 12px',
+                padding: '6px 14px',
                 fontSize: 13,
                 fontWeight: 700,
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                cursor: pendingSaves > 0 ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s ease',
+                border: 'none',
+                fontFamily: 'inherit',
+                opacity: pendingSaves > 0 ? 0.7 : 1,
               }}
+              onMouseEnter={(e) => {
+                if (pendingSaves === 0) {
+                  (e.currentTarget as HTMLElement).style.background = 'var(--le-red-dark)';
+                  (e.currentTarget as HTMLElement).style.transform = 'scale(1.05)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (pendingSaves === 0) {
+                  (e.currentTarget as HTMLElement).style.background = 'var(--le-red)';
+                  (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
+                }
+              }}
+              title={pendingSaves > 0 ? 'Enregistrement en cours...' : ''}
             >
-              {rightCount} intérêt{rightCount !== 1 ? 's' : ''}
-            </div>
+              {pendingSaves > 0 ? '⏳ Enregistrement...' : `${rightCount} intérêt${rightCount !== 1 ? 's' : ''}`}
+            </button>
+            </>
           )}
         </div>
 
@@ -523,11 +743,11 @@ export default function DiscoverPage() {
             className="swipe-container"
             style={{ height: 420, width: '100%', maxWidth: 380, position: 'relative' }}
           >
-            {loadingSchools ? (
+            {loadingFormations ? (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                <p style={{ color: 'var(--le-gray-500)', fontSize: 14 }}>Chargement des écoles…</p>
+                <p style={{ color: 'var(--le-gray-500)', fontSize: 14 }}>Chargement des formations…</p>
               </div>
-            ) : schools.length === 0 || schools.every((c) => gone.has(c.id)) ? (
+            ) : formations.length === 0 || formations.every((c) => gone.has(c.id)) ? (
               <div
                 style={{
                   display: 'flex',
@@ -540,9 +760,9 @@ export default function DiscoverPage() {
                 }}
               >
                 <span style={{ fontSize: 48 }}>🎓</span>
-                <p style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Plus d&apos;écoles disponibles</p>
+                <p style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Plus de formations disponibles</p>
                 <p className="le-caption" style={{ textAlign: 'center', margin: 0 }}>
-                  Vous avez exploré toutes les écoles !<br />
+                  Vous avez exploré toutes les formations !<br />
                   Revenez bientôt pour de nouvelles suggestions.
                 </p>
                 <Button
@@ -550,85 +770,181 @@ export default function DiscoverPage() {
                   size="sm"
                   onClick={() => {
                     setGone(new Set());
+                    setFlipped(new Set());
                   }}
                 >
                   Recommencer
                 </Button>
               </div>
-            ) : (
-              schools.map((school, index) => (
-                <TinderCard
-                  key={school.id}
-                  onSwipe={(dir) => handleSwipe(dir, school)}
-                  preventSwipe={['up', 'down']}
-                  className="swipe-card"
-                >
+            ) : currentCard ? (
+              <TinderCard
+                key={currentCard.id}
+                onSwipe={(dir) => {
+                  console.log('TinderCard onSwipe called with direction:', dir, 'formation:', currentCard.name);
+                  handleSwipe(dir, currentCard);
+                }}
+                preventSwipe={['up', 'down']}
+                className="swipe-card"
+              >
                   <div
                     style={{
                       height: 420,
                       borderRadius: 16,
-                      background: gradientFor(index),
+                      background: gradientFor(formations.indexOf(currentCard)),
                       position: 'relative',
                       overflow: 'hidden',
                       boxShadow: '0 8px 40px rgba(26,26,26,0.15)',
                       cursor: 'grab',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'flex-end',
                     }}
                   >
-                    {/* Background emoji */}
+                    {!flipped.has(currentCard.id) ? (
                     <div
                       style={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -60%)',
-                        fontSize: 100,
-                        opacity: 0.25,
-                        userSelect: 'none',
+                        padding: '20px 16px 16px',
                       }}
                     >
-                      {emojiFor(index)}
-                    </div>
+                        {/* Background emoji */}
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -60%)',
+                            fontSize: 100,
+                            opacity: 0.25,
+                            userSelect: 'none',
+                          }}
+                        >
+                          {emojiFor(formations.indexOf(currentCard))}
+                        </div>
 
-                    <div className="school-card-overlay">
-                      <p
-                        style={{
-                          color: '#fff',
-                          fontWeight: 700,
-                          fontSize: 22,
-                          margin: '0 0 8px',
-                          lineHeight: 1.2,
-                        }}
-                      >
-                        {school.name}
-                      </p>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-                        <Tag variant={typeVariant(school.type)}>{school.type}</Tag>
-                        <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13 }}>
-                          📍 {school.city}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        {(school.target_fields ?? []).slice(0, 3).map((f) => (
-                          <span
-                            key={f}
+                        <div className="school-card-overlay">
+                          <p
                             style={{
-                              background: 'rgba(255,255,255,0.18)',
                               color: '#fff',
-                              padding: '3px 10px',
-                              borderRadius: 20,
-                              fontSize: 11,
-                              fontWeight: 600,
-                              border: '1px solid rgba(255,255,255,0.25)',
+                              fontWeight: 700,
+                              fontSize: 20,
+                              margin: '0 0 6px',
+                              lineHeight: 1.2,
                             }}
                           >
-                            {f}
-                          </span>
-                        ))}
+                            {currentCard.name}
+                          </p>
+                          <p
+                            style={{
+                              color: 'rgba(255,255,255,0.9)',
+                              fontSize: 14,
+                              fontWeight: 500,
+                              margin: '0 0 10px',
+                            }}
+                          >
+                            {currentCard.schoolName}
+                          </p>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
+                            <Tag variant={typeVariant(currentCard.schoolType)}>{currentCard.schoolType}</Tag>
+                            <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13 }}>
+                              📍 {currentCard.schoolCity}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            {(currentCard.fields ?? []).slice(0, 3).map((f) => (
+                              <span
+                                key={f}
+                                style={{
+                                  background: 'rgba(255,255,255,0.18)',
+                                  color: '#fff',
+                                  padding: '3px 10px',
+                                  borderRadius: 20,
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                  border: '1px solid rgba(255,255,255,0.25)',
+                                }}
+                              >
+                                {f}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                    <div
+                      style={{
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        padding: '20px 16px 16px',
+                        color: 'white',
+                      }}
+                    >
+                        <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: '#fff' }}>
+                          {currentCard.name}
+                        </h3>
+
+                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.95)', lineHeight: 1.5 }}>
+                          {currentCard.duration && (
+                            <p style={{ margin: '4px 0' }}>
+                              <strong>Durée:</strong> {currentCard.duration}
+                            </p>
+                          )}
+                          {currentCard.level && (
+                            <p style={{ margin: '4px 0' }}>
+                              <strong>Niveau:</strong> {currentCard.level}
+                            </p>
+                          )}
+                          {currentCard.study_modality && (
+                            <p style={{ margin: '4px 0' }}>
+                              <strong>Modalité:</strong> {currentCard.study_modality}
+                            </p>
+                          )}
+                          {currentCard.admission_requirements && (
+                            <p style={{ margin: '4px 0', fontSize: 12 }}>
+                              <strong>Admission:</strong> {currentCard.admission_requirements}
+                            </p>
+                          )}
+                          {currentCard.cost !== null && currentCard.cost !== undefined && (
+                            <p style={{ margin: '4px 0' }}>
+                              <strong>Coût:</strong> {currentCard.cost > 0 ? `${currentCard.cost.toLocaleString()}€` : 'Gratuit'}
+                            </p>
+                          )}
+                        </div>
+
+                        <p style={{ fontSize: 12, margin: '8px 0 0 0', fontStyle: 'italic', color: 'rgba(255,255,255,0.85)' }}>
+                          Cliquez sur 💡 pour fermer
+                        </p>
+                      </div>
+                    )}
                   </div>
-                </TinderCard>
-              ))
+              </TinderCard>
+            ) : (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100%',
+                  gap: 16,
+                  color: 'var(--le-gray-500)',
+                }}
+              >
+                <span style={{ fontSize: 48 }}>🎓</span>
+                <p style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Plus de formations disponibles</p>
+                <p className="le-caption" style={{ textAlign: 'center', margin: 0 }}>
+                  Vous avez exploré toutes les formations !<br />
+                  Revenez bientôt pour de nouvelles suggestions.
+                </p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setGone(new Set());
+                    setFlipped(new Set());
+                  }}
+                >
+                  Recommencer
+                </Button>
+              </div>
             )}
           </div>
 
@@ -647,29 +963,32 @@ export default function DiscoverPage() {
               style={{ width: 56, height: 56, borderRadius: '50%', padding: 0, fontSize: 22 }}
               onClick={() => handleAction('left')}
               aria-label="Passer"
+              title="Passer (X)"
             >
               ✕
             </button>
             <button
               className="le-btn-base le-btn-ghost"
               style={{ width: 52, height: 52, borderRadius: '50%', padding: 0, fontSize: 20, color: 'var(--le-gray-500)' }}
-              onClick={() => handleAction('up')}
-              aria-label="Enregistrer"
+              onClick={() => handleAction('center')}
+              aria-label="En savoir plus"
+              title="En savoir plus (💡)"
             >
-              ♡
+              💡
             </button>
             <button
               className="le-btn-base le-btn-primary"
               style={{ width: 64, height: 64, borderRadius: '50%', padding: 0, fontSize: 24 }}
               onClick={() => handleAction('right')}
               aria-label="Intéressé"
+              title="Enregistrer (✓)"
             >
               ✓
             </button>
           </div>
 
           <p className="le-caption" style={{ textAlign: 'center', marginTop: 14 }}>
-            Swipez à droite pour manifester votre intérêt
+            Swipez ou cliquez sur les boutons pour explorer
           </p>
         </div>
       )}

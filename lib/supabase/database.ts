@@ -396,6 +396,152 @@ export async function resolvePreRegistration(email: string, userId: string): Pro
     .is('resolved_user_id', null)
 }
 
+// ─── Formations (Programs) ────────────────────────────────────────────────────
+
+export async function saveFormationToWishlist(userId: string, formationId: string): Promise<void> {
+  console.log('🟢 saveFormationToWishlist() START - userId:', userId, 'formationId:', formationId);
+
+  const supabase = getSupabase()
+
+  // Step 1: Update users.wishlist array (keep for backward compatibility)
+  const { data: user, error: fetchError } = await supabase
+    .from('users')
+    .select('wishlist')
+    .eq('id', userId)
+    .single()
+
+  console.log('📖 Wishlist fetched - error:', fetchError, 'data:', user?.wishlist);
+
+  if (fetchError) {
+    console.error('❌ Error fetching user wishlist:', fetchError);
+    return;
+  }
+
+  const wishlist = user?.wishlist ?? []
+  console.log('📋 Current wishlist:', wishlist, 'Length:', wishlist.length);
+  console.log('🔍 Checking if', formationId, 'is in wishlist:', wishlist.includes(formationId));
+
+  if (!wishlist.includes(formationId)) {
+    console.log('✨ Formation NOT in wishlist, attempting to ADD');
+    const newWishlist = [...wishlist, formationId];
+    console.log('📝 New wishlist array:', newWishlist);
+
+    const { data: updateData, error: updateError } = await supabase
+      .from('users')
+      .update({ wishlist: newWishlist })
+      .eq('id', userId)
+      .select();
+
+    console.log('🔄 Update response - data:', updateData, 'error:', updateError);
+
+    if (updateError) {
+      console.error('❌ Error updating wishlist:', updateError);
+      return;
+    }
+
+    // Step 2: Also insert into user_saved_formations table with timestamp
+    console.log('⏰ Registering save timestamp in user_saved_formations...');
+    const { error: insertError } = await supabase
+      .from('user_saved_formations')
+      .insert({
+        user_id: userId,
+        formation_id: formationId,
+        saved_at: new Date().toISOString(),
+      });
+
+    if (insertError) {
+      console.error('⚠️ Error registering save timestamp:', insertError);
+      // Don't return - wishlist was already updated, this is just tracking
+    } else {
+      console.log('✅ Successfully saved formation to wishlist with timestamp:', formationId);
+    }
+  } else {
+    console.log('⚠️ Formation already in wishlist, skipping');
+  }
+}
+
+// ─── Get saved formations from wishlist ────────────────────────────────────
+
+export async function getSavedFormations(formationIds: string[]) {
+  if (formationIds.length === 0) {
+    return []
+  }
+
+  // Get formations directly by ID
+  const { data: formations } = await getSupabase()
+    .from('formations')
+    .select('*, schools(name, city, type)')
+    .in('id', formationIds)
+
+  return formations?.map((f: any) => ({
+    ...f,
+    schoolId: f.school_id,
+    schoolName: f.schools?.name ?? 'École',
+    schoolCity: f.schools?.city ?? '',
+    schoolType: f.schools?.type ?? '',
+  })) ?? []
+}
+
+// ─── Get saved formations with save date (from user_saved_formations table) ───
+
+export async function getSavedFormationsWithDates(userId: string) {
+  console.log('📅 getSavedFormationsWithDates() - userId:', userId);
+
+  const supabase = getSupabase()
+
+  // Get all saved formations with their save timestamps
+  const { data: savedRecords, error: recordError } = await supabase
+    .from('user_saved_formations')
+    .select('formation_id, saved_at')
+    .eq('user_id', userId)
+    .order('saved_at', { ascending: false })
+
+  if (recordError) {
+    console.error('❌ Error fetching saved formation records:', recordError);
+    return []
+  }
+
+  if (!savedRecords || savedRecords.length === 0) {
+    console.log('⚠️ No saved formations found');
+    return []
+  }
+
+  const formationIds = savedRecords.map((r: any) => r.formation_id)
+  console.log('🔍 Found', formationIds.length, 'saved formations');
+
+  // Get formation details
+  const { data: formations, error: formError } = await supabase
+    .from('formations')
+    .select('*, schools(name, city, type)')
+    .in('id', formationIds)
+
+  if (formError) {
+    console.error('❌ Error fetching formation details:', formError);
+    return []
+  }
+
+  // Map formations with their save dates
+  const formationsMap = new Map(formations?.map((f: any) => [f.id, f]) ?? []);
+  const result = savedRecords
+    .map((record: any) => {
+      const formation = formationsMap.get(record.formation_id);
+      if (!formation) return null;
+
+      return {
+        ...formation,
+        schoolId: formation.school_id,
+        schoolName: formation.schools?.name ?? 'École',
+        schoolCity: formation.schools?.city ?? '',
+        schoolType: formation.schools?.type ?? '',
+        saved_at: record.saved_at, // ← The actual save date, not created_at
+      };
+    })
+    .filter((f: any) => f !== null);
+
+  console.log('✅ Loaded', result.length, 'formations with save dates');
+  return result;
+}
+
 // ─── Auth helpers ─────────────────────────────────────────────────────────────
 
 export async function getAdminStats(eventId: string) {

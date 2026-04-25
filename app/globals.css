@@ -687,3 +687,6 @@ body {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* ─── Card flip (simple show/hide, no 3D transforms) ─── */
+/* Using conditional rendering instead of CSS transforms for compatibility with TinderCard */
