@@ -23,10 +23,12 @@ interface Reel {
   id: string;
   schoolName: string;
   title: string;
+  description?: string;
   duration: string;
   views: string;
   thumbnail_color: string;
   tags: string[];
+  video_url: string; // YouTube embed URL or Supabase Storage URL
 }
 
 interface Article {
@@ -72,9 +74,7 @@ type TabId = 'swipe' | 'reels' | 'actualites';
 
 // ─── Reel card component ──────────────────────────────────────────────────────
 
-function ReelCard({ reel }: { reel: Reel; key?: string }) {
-  const [playing, setPlaying] = useState(false);
-
+function ReelCard({ reel, onPlay }: { reel: Reel; onPlay: (reel: Reel) => void; key?: string }) {
   const textOnDark = reel.thumbnail_color === '#FCD716' ? '#1A1A1A' : '#fff';
 
   return (
@@ -89,7 +89,7 @@ function ReelCard({ reel }: { reel: Reel; key?: string }) {
         background: `linear-gradient(160deg, ${reel.thumbnail_color} 0%, ${reel.thumbnail_color}99 100%)`,
         boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
       }}
-      onClick={() => setPlaying((p) => !p)}
+      onClick={() => onPlay(reel)}
     >
       {/* Noise texture overlay */}
       <div
@@ -161,53 +161,36 @@ function ReelCard({ reel }: { reel: Reel; key?: string }) {
       </div>
 
       {/* Play button — center */}
-      {!playing ? (
-        <div
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 52,
-            height: 52,
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.9)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
-          }}
+      <div
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 52,
+          height: 52,
+          borderRadius: '50%',
+          background: 'rgba(255,255,255,0.9)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
+          transition: 'transform 0.2s',
+          '&:hover': {
+            transform: 'translate(-50%, -50%) scale(1.1)',
+          },
+        }}
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="var(--le-gray-900)"
+          style={{ marginLeft: 3 }}
         >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="var(--le-gray-900)"
-            style={{ marginLeft: 3 }}
-          >
-            <polygon points="5,3 19,12 5,21" />
-          </svg>
-        </div>
-      ) : (
-        <div
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            color: '#fff',
-            fontWeight: 700,
-            fontSize: 14,
-            background: 'rgba(0,0,0,0.45)',
-            padding: '8px 16px',
-            borderRadius: 24,
-            backdropFilter: 'blur(4px)',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          ▶ Lecture en cours...
-        </div>
-      )}
+          <polygon points="5,3 19,12 5,21" />
+        </svg>
+      </div>
 
       {/* Views — bottom left */}
       <div
@@ -277,6 +260,112 @@ function ReelCard({ reel }: { reel: Reel; key?: string }) {
   );
 }
 
+// ─── Video modal component ────────────────────────────────────────────────────
+
+function VideoModal({ reel, onClose }: { reel: Reel | null; onClose: () => void }) {
+  if (!reel) return null;
+
+  // Detect if URL is YouTube embed
+  const isYouTube = reel.video_url.includes('youtube.com');
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0, 0, 0, 0.9)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999,
+        padding: '20px',
+      }}
+      onClick={onClose}
+    >
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        style={{
+          position: 'absolute',
+          top: '20px',
+          right: '20px',
+          background: 'rgba(255, 255, 255, 0.2)',
+          border: 'none',
+          color: '#fff',
+          fontSize: '28px',
+          width: '44px',
+          height: '44px',
+          borderRadius: '50%',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'background 0.2s',
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)')}
+        onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)')}
+      >
+        ✕
+      </button>
+
+      {/* Modal content */}
+      <div
+        style={{
+          background: '#000',
+          borderRadius: '12px',
+          overflow: 'hidden',
+          maxWidth: '90vw',
+          maxHeight: '90vh',
+          width: '100%',
+          aspectRatio: isYouTube ? '16 / 9' : 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Video player */}
+        {isYouTube ? (
+          <iframe
+            width="100%"
+            height="100%"
+            src={reel.video_url}
+            title={reel.title}
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            style={{ flex: 1 }}
+          />
+        ) : (
+          <video
+            width="100%"
+            height="100%"
+            controls
+            autoPlay
+            style={{ flex: 1, background: '#000' }}
+          >
+            <source src={reel.video_url} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        )}
+
+        {/* Video info */}
+        <div style={{ padding: '16px', background: '#000', color: '#fff', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 8px' }}>{reel.title}</h3>
+          <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', margin: '0 0 8px' }}>
+            {reel.schoolName} · {reel.duration}
+          </p>
+          {reel.description && (
+            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', margin: 0, lineHeight: '1.5' }}>
+              {reel.description}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Article card component ───────────────────────────────────────────────────
 
 function ArticleCard({ article }: { article: Article; key?: string }) {
@@ -335,6 +424,7 @@ export default function DiscoverPage() {
   const [flipped, setFlipped] = useState<Set<string>>(new Set()); // For card flip animation
   const [pendingSaves, setPendingSaves] = useState(0); // Track pending database saves
   const [reels, setReels] = useState<Reel[]>([]); // Load from getAllReels()
+  const [playingReelId, setPlayingReelId] = useState<string | null>(null); // Track which reel is playing
   const articles: Article[] = []; // TODO: Implement articles once table is wired
 
   // ── Load formations from all schools with smart ranking ──────────────────────
@@ -534,10 +624,12 @@ export default function DiscoverPage() {
           id: reel.id,
           schoolName: reel.school_id, // TODO: Fetch actual school name from schools table join when ready
           title: reel.title,
+          description: reel.description || undefined,
           duration: reel.duration_seconds ? `${Math.floor(reel.duration_seconds / 60)}:${String(reel.duration_seconds % 60).padStart(2, '0')}` : '0:00',
           views: reel.view_count > 1000 ? `${(reel.view_count / 1000).toFixed(1)}K` : String(reel.view_count),
           thumbnail_color: reel.thumbnail_color,
           tags: reel.tags,
+          video_url: reel.video_url,
         }));
 
         setReels(transformedReels);
@@ -1054,7 +1146,7 @@ export default function DiscoverPage() {
                 </span>
               </div>
               {reels.map((reel) => (
-                <ReelCard key={reel.id} reel={reel} />
+                <ReelCard key={reel.id} reel={reel} onPlay={(r) => setPlayingReelId(r.id)} />
               ))}
               <p className="le-caption" style={{ textAlign: 'center', paddingBottom: 16 }}>
                 Nouvelles vidéos ajoutées chaque semaine
@@ -1102,6 +1194,12 @@ export default function DiscoverPage() {
           )}
         </div>
       )}
+
+      {/* Video modal */}
+      <VideoModal
+        reel={playingReelId ? reels.find((r) => r.id === playingReelId) || null : null}
+        onClose={() => setPlayingReelId(null)}
+      />
     </div>
   );
 }
