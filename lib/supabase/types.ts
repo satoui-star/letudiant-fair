@@ -105,6 +105,29 @@ export type FormationRow = {
   created_at: string
 }
 
+export type SchoolReelRow = {
+  id: string
+  school_id: string
+  title: string
+  description: string | null
+  video_url: string
+  duration_seconds: number | null
+  thumbnail_color: string
+  tags: string[]
+  view_count: number
+  published_at: string
+  created_at: string
+  updated_at: string
+}
+
+export type SavedReelRow = {
+  id: string
+  user_id: string
+  reel_id: string
+  saved_at: string
+  created_at: string
+}
+
 export type StandRow = {
   id: string
   event_id: string
@@ -286,6 +309,18 @@ export type Database = {
         Row: PreRegistrationRow
         Insert: Partial<PreRegistrationRow> & { email: string; first_name: string; last_name: string; event_id: string }
         Update: Partial<PreRegistrationRow>
+        Relationships: []
+      }
+      school_reels: {
+        Row: SchoolReelRow
+        Insert: Partial<SchoolReelRow> & { school_id: string; title: string; video_url: string }
+        Update: Partial<SchoolReelRow>
+        Relationships: []
+      }
+      user_saved_reels: {
+        Row: SavedReelRow
+        Insert: Partial<SavedReelRow> & { user_id: string; reel_id: string }
+        Update: Partial<SavedReelRow>
         Relationships: []
       }
     }

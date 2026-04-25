@@ -1,5 +1,5 @@
 import { getSupabase } from './client'
-import type { UserRow, EventRow, SchoolRow, ScanRow, LeadRow, MatchRow, GroupRow, AppointmentRow } from './types'
+import type { UserRow, EventRow, SchoolRow, ScanRow, LeadRow, MatchRow, GroupRow, AppointmentRow, SchoolReelRow, SavedReelRow } from './types'
 
 // ─── Users ────────────────────────────────────────────────────────────────────
 
@@ -39,6 +39,85 @@ export async function getSchool(id: string): Promise<SchoolRow | null> {
 export async function getSchoolFormations(schoolId: string) {
   const { data } = await getSupabase().from('formations').select('*').eq('school_id', schoolId)
   return data ?? []
+}
+
+// ─── Reels (MOCK DATA FOR NOW) ────────────────────────────────────────────────
+// TODO: Replace with real data from school_reels table once approved
+// Table migration 012_school_reels.sql is ready to use when needed
+
+export async function getAllReels(): Promise<(SchoolReelRow & { school_name?: string })[]> {
+  const supabase = getSupabase()
+
+  try {
+    const { data, error } = await supabase
+      .from('school_reels')
+      .select('*, schools(name)')
+      .order('published_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching reels:', error)
+      return []
+    }
+
+    return data || []
+  } catch (err) {
+    console.error('Failed to fetch reels:', err)
+    return []
+  }
+}
+
+// Save a reel to user's wishlist
+export async function saveReelToWishlist(userId: string, reelId: string): Promise<{ alreadySaved: boolean }> {
+  const supabase = getSupabase()
+  const { error } = await supabase
+    .from('user_saved_reels')
+    .insert([{ user_id: userId, reel_id: reelId }])
+
+  if (error) {
+    // Check if it's a duplicate key error
+    if (error.message.includes('duplicate key')) {
+      return { alreadySaved: true }
+    }
+    throw new Error(`Failed to save reel: ${error.message}`)
+  }
+
+  return { alreadySaved: false }
+}
+
+// Get all reels saved by a user with full reel details
+export async function getSavedReels(userId: string): Promise<(SchoolReelRow & { saved_at: string })[]> {
+  const supabase = getSupabase()
+  const { data, error } = await supabase
+    .from('user_saved_reels')
+    .select(`
+      saved_at,
+      reel:reel_id(*)
+    `)
+    .eq('user_id', userId)
+    .order('saved_at', { ascending: false })
+
+  if (error) {
+    console.error('Failed to fetch saved reels:', error)
+    throw new Error(`Failed to fetch saved reels: ${error.message}`)
+  }
+
+  // Map the joined data to flatten it
+  return (data || []).map((row: any) => ({
+    ...row.reel,
+    saved_at: row.saved_at
+  }))
+}
+
+// Delete a reel from user's wishlist
+export async function deleteReelFromWishlist(userId: string, reelId: string): Promise<void> {
+  const supabase = getSupabase()
+  const { error } = await supabase
+    .from('user_saved_reels')
+    .delete()
+    .eq('user_id', userId)
+    .eq('reel_id', reelId)
+
+  if (error) throw new Error(`Failed to delete saved reel: ${error.message}`)
 }
 
 // ─── Stands ───────────────────────────────────────────────────────────────────
@@ -129,6 +208,23 @@ export async function getStudentRightSwipes(studentId: string): Promise<string[]
     .eq('student_id', studentId)
     .eq('student_swipe', 'right')
   return data?.map((m) => m.school_id) ?? []
+}
+
+export async function saveSchoolToWishlist(userId: string, schoolId: string): Promise<void> {
+  const { data: user } = await getSupabase()
+    .from('users')
+    .select('wishlist')
+    .eq('id', userId)
+    .single()
+
+  const wishlist = user?.wishlist ?? []
+
+  if (!wishlist.includes(schoolId)) {
+    await getSupabase()
+      .from('users')
+      .update({ wishlist: [...wishlist, schoolId] })
+      .eq('id', userId)
+  }
 }
 
 // ─── Groups ───────────────────────────────────────────────────────────────────
@@ -377,6 +473,163 @@ export async function resolvePreRegistration(email: string, userId: string): Pro
     .update({ resolved_user_id: userId, resolved_at: new Date().toISOString() })
     .eq('email', email.toLowerCase())
     .is('resolved_user_id', null)
+}
+
+// ─── Formations (Programs) ────────────────────────────────────────────────────
+
+export async function saveFormationToWishlist(userId: string, formationId: string): Promise<void> {
+  console.log('🟢 saveFormationToWishlist() START - userId:', userId, 'formationId:', formationId);
+
+  const supabase = getSupabase()
+
+  // Step 1: Update users.wishlist array (keep for backward compatibility)
+  const { data: user, error: fetchError } = await supabase
+    .from('users')
+    .select('wishlist')
+    .eq('id', userId)
+    .single()
+
+  console.log('📖 Wishlist fetched - error:', fetchError, 'data:', user?.wishlist);
+
+  if (fetchError) {
+    console.error('❌ Error fetching user wishlist:', fetchError);
+    return;
+  }
+
+  const wishlist = user?.wishlist ?? []
+  console.log('📋 Current wishlist:', wishlist, 'Length:', wishlist.length);
+  console.log('🔍 Checking if', formationId, 'is in wishlist:', wishlist.includes(formationId));
+
+  if (!wishlist.includes(formationId)) {
+    console.log('✨ Formation NOT in wishlist, attempting to ADD');
+    const newWishlist = [...wishlist, formationId];
+    console.log('📝 New wishlist array:', newWishlist);
+
+    const { data: updateData, error: updateError } = await supabase
+      .from('users')
+      .update({ wishlist: newWishlist })
+      .eq('id', userId)
+      .select();
+
+    console.log('🔄 Update response - data:', updateData, 'error:', updateError);
+
+    if (updateError) {
+      console.error('❌ Error updating wishlist:', updateError);
+      return;
+    }
+
+    // Step 2: Also insert into user_saved_formations table with timestamp
+    console.log('⏰ Registering save timestamp in user_saved_formations...');
+    const { error: insertError } = await supabase
+      .from('user_saved_formations')
+      .insert({
+        user_id: userId,
+        formation_id: formationId,
+        saved_at: new Date().toISOString(),
+      });
+
+    if (insertError) {
+      console.error('⚠️ Error registering save timestamp:', insertError);
+      // Don't return - wishlist was already updated, this is just tracking
+    } else {
+      console.log('✅ Successfully saved formation to wishlist with timestamp:', formationId);
+    }
+  } else {
+    console.log('⚠️ Formation already in wishlist, skipping');
+  }
+}
+
+// ─── Get saved formations from wishlist ────────────────────────────────────
+
+export async function getSavedFormations(formationIds: string[]) {
+  if (formationIds.length === 0) {
+    return []
+  }
+
+  // Get formations directly by ID
+  const { data: formations } = await getSupabase()
+    .from('formations')
+    .select('*, schools(name, city, type)')
+    .in('id', formationIds)
+
+  return formations?.map((f: any) => ({
+    ...f,
+    schoolId: f.school_id,
+    schoolName: f.schools?.name ?? 'École',
+    schoolCity: f.schools?.city ?? '',
+    schoolType: f.schools?.type ?? '',
+  })) ?? []
+}
+
+// ─── Get saved formations with save date (from wishlist + user_saved_formations table) ───
+
+export async function getSavedFormationsWithDates(userId: string) {
+  console.log('📅 getSavedFormationsWithDates() - userId:', userId);
+
+  const supabase = getSupabase()
+
+  // Step 1: Get user's wishlist (all saved formations)
+  const { data: userData, error: userError } = await supabase
+    .from('users')
+    .select('wishlist')
+    .eq('id', userId)
+    .single()
+
+  if (userError) {
+    console.error('❌ Error fetching user wishlist:', userError);
+    return []
+  }
+
+  const wishlist = (userData?.wishlist as string[]) ?? [];
+  console.log('💾 Wishlist has', wishlist.length, 'formations');
+
+  if (wishlist.length === 0) {
+    console.log('⚠️ No saved formations found');
+    return []
+  }
+
+  // Step 2: Get save dates from user_saved_formations table
+  const { data: savedRecords } = await supabase
+    .from('user_saved_formations')
+    .select('formation_id, saved_at')
+    .eq('user_id', userId);
+
+  // Create map of formation_id → saved_at
+  const saveDatesMap = new Map(
+    savedRecords?.map((r: any) => [r.formation_id, r.saved_at]) ?? []
+  );
+  console.log('📅 Found save dates for', saveDatesMap.size, 'formations');
+
+  // Step 3: Get formation details for all wishlist items
+  const { data: formations, error: formError } = await supabase
+    .from('formations')
+    .select('*, schools(name, city, type)')
+    .in('id', wishlist);
+
+  if (formError) {
+    console.error('❌ Error fetching formation details:', formError);
+    return []
+  }
+
+  // Step 4: Map formations with their save dates (if available)
+  const result = formations
+    ?.map((f: any) => ({
+      ...f,
+      schoolId: f.school_id,
+      schoolName: f.schools?.name ?? 'École',
+      schoolCity: f.schools?.city ?? '',
+      schoolType: f.schools?.type ?? '',
+      saved_at: saveDatesMap.get(f.id) ?? f.created_at, // ← Use saved_at if available, else fall back to formation created_at
+    }))
+    .sort((a: any, b: any) => {
+      // Sort by saved_at descending (newest first)
+      const dateA = new Date(a.saved_at).getTime();
+      const dateB = new Date(b.saved_at).getTime();
+      return dateB - dateA;
+    }) ?? [];
+
+  console.log('✅ Loaded', result.length, 'formations with save dates');
+  return result;
 }
 
 // ─── Auth helpers ─────────────────────────────────────────────────────────────
