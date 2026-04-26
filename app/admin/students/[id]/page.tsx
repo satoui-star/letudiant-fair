@@ -1,168 +1,330 @@
 'use client'
-export const dynamic = 'force-dynamic'
 
-import { use, useEffect, useState } from 'react'
-import { getSupabase } from '@/lib/supabase/client'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useParams, useRouter } from 'next/navigation'
+import { createBrowserClient } from '@supabase/ssr'
 
-interface StudentProfile {
-  id: string
-  email: string
-  name: string | null
-  role: string
-  created_at: string
-  last_login: string | null
-  deleted_at: string | null
-  orientation_score?: number | null
-  interests?: string[] | null
+// ─── Types ───────────────────────────────────────────────────────────────
+type JourneyEvent = {
+  user_id: string
+  event_id: string
+  occurred_at: string
+  event_type: 'entry' | 'stand' | 'conference' | 'appointment'
+  event_label: string
+  ref_id: string | null
+  ref_name: string | null
+  metadata: any
 }
 
-interface ScanRow { id: string; event_id: string; stand_id: string; channel: string; created_at: string }
-interface MatchRow { id: string; school_id: string; student_swipe: string | null; created_at: string }
-interface SavedItemRow { id: string; kind: string; label: string; created_at: string }
+type StudentSummary = {
+  user_id: string
+  student_name: string
+  email: string
+  education_level: string | null
+  bac_series: string | null
+  education_branches: string[] | null
+  event_id: string | null
+  event_name: string | null
+  entered_at: string | null
+  last_seen_at: string | null
+  dwell_minutes: number | null
+  unique_stands_visited: number
+  total_stand_scans: number
+  conferences_attended: number
+  appointments_total: number
+  appointments_confirmed: number
+  engagement_score: number
+  behavioral_profile: string
+}
 
-export default function AdminStudentDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
-  const [student, setStudent] = useState<StudentProfile | null>(null)
-  const [scans, setScans] = useState<ScanRow[]>([])
-  const [matches, setMatches] = useState<MatchRow[]>([])
-  const [saved, setSaved] = useState<SavedItemRow[]>([])
+// ─── Supabase client ─────────────────────────────────────────────────────
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+// ─── Icônes d'événement ──────────────────────────────────────────────────
+const EVENT_ICONS: Record<JourneyEvent['event_type'], string> = {
+  entry: '→',
+  stand: '●',
+  conference: '▲',
+  appointment: '✓',
+}
+
+const EVENT_COLORS: Record<JourneyEvent['event_type'], string> = {
+  entry:       'bg-neutral-900 text-white',
+  stand:       'bg-[#003DA5] text-white',
+  conference:  'bg-[#FFD100] text-black',
+  appointment: 'bg-[#E30613] text-white',
+}
+
+// ─── Composant principal ─────────────────────────────────────────────────
+export default function StudentDetailPage() {
+  const params = useParams()
+  const router = useRouter()
+  const userId = params?.id as string
+
+  const [summary, setSummary] = useState<StudentSummary | null>(null)
+  const [journey, setJourney] = useState<JourneyEvent[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      try {
-        const supabase = getSupabase()
-        const [userRes, scansRes, matchesRes, savedRes] = await Promise.all([
-          supabase.from('users').select('*').eq('id', id).maybeSingle(),
-          supabase.from('scans').select('id, event_id, stand_id, channel, created_at').eq('user_id', id).order('created_at', { ascending: false }).limit(50),
-          supabase.from('matches').select('id, school_id, student_swipe, created_at').eq('student_id', id).order('created_at', { ascending: false }).limit(50),
-          supabase.from('saved_items').select('id, kind, label, created_at').eq('user_id', id).order('created_at', { ascending: false }).limit(50),
-        ])
-        if (cancelled) return
-        if (userRes.error) throw userRes.error
-        setStudent(userRes.data as StudentProfile)
-        setScans(scansRes.data ?? [])
-        setMatches(matchesRes.data ?? [])
-        setSaved(savedRes.data ?? [])
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Erreur')
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    })()
-    return () => { cancelled = true }
-  }, [id])
+    if (!userId) return
 
-  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: '#6B6B6B' }}>Chargement…</div>
-  if (error || !student) return (
-    <div style={{ padding: 40, textAlign: 'center' }}>
-      <p style={{ color: '#B0001A', fontWeight: 600 }}>{error ?? 'Étudiant introuvable'}</p>
-      <Link href="/admin/students" style={{ color: '#E3001B', fontWeight: 600 }}>← Retour</Link>
-    </div>
-  )
+    Promise.all([
+      supabase
+        .from('v_student_summary')
+        .select('*')
+        .eq('user_id', userId)
+        .not('event_id', 'is', null)
+        .order('entered_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from('v_student_journey')
+        .select('*')
+        .eq('user_id', userId)
+        .order('occurred_at', { ascending: true }),
+    ]).then(([summaryRes, journeyRes]) => {
+      setSummary(summaryRes.data)
+      setJourney(journeyRes.data ?? [])
+      setLoading(false)
+    })
+  }, [userId])
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-[#FAFAF7] flex items-center justify-center">
+        <p className="text-neutral-500">Chargement du parcours…</p>
+      </main>
+    )
+  }
+
+  if (!summary) {
+    return (
+      <main className="min-h-screen bg-[#FAFAF7] flex flex-col items-center justify-center gap-4">
+        <p className="text-neutral-500">Étudiant introuvable.</p>
+        <Link
+          href="/admin/students"
+          className="text-sm text-[#E30613] hover:underline"
+        >
+          ← Retour à la liste
+        </Link>
+      </main>
+    )
+  }
+
+  const initials = (summary.student_name ?? '??')
+    .split(' ')
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
+
+  const standCount = journey.filter((j) => j.event_type === 'stand').length
+  const uniqueStands = new Set(
+    journey.filter((j) => j.event_type === 'stand').map((j) => j.ref_id),
+  ).size
 
   return (
-    <div style={{ padding: '32px 28px', maxWidth: 1000, margin: '0 auto' }}>
-      <Link href="/admin/students" style={{ fontSize: 13, color: '#6B6B6B', textDecoration: 'none' }}>← Étudiants</Link>
-
-      <header style={{ marginTop: 16, marginBottom: 24 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 4px', color: '#1A1A1A' }}>
-          {student.name ?? student.email}
-        </h1>
-        <p style={{ fontSize: 14, color: '#6B6B6B', margin: 0 }}>
-          {student.email} · Inscrit le {new Date(student.created_at).toLocaleDateString('fr-FR')}
-        </p>
-      </header>
-
-      {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 28 }}>
-        <KPI label="Scans" value={scans.length} />
-        <KPI label="Swipes" value={matches.length} />
-        <KPI label="Sauvegardés" value={saved.length} />
-        <KPI label="Score orientation" value={student.orientation_score ?? '—'} />
+    <main className="min-h-screen bg-[#FAFAF7] text-neutral-900">
+      {/* ─── Back nav ──────────────────────────────────────────────── */}
+      <div className="max-w-5xl mx-auto px-8 pt-6">
+        <button
+          onClick={() => router.back()}
+          className="text-xs tracking-wider uppercase text-neutral-500 hover:text-black transition"
+        >
+          ← Retour
+        </button>
       </div>
 
-      {/* Interests */}
-      {student.interests && student.interests.length > 0 && (
-        <section style={section}>
-          <h2 style={sectionTitle}>Centres d&apos;intérêt</h2>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {student.interests.map((i) => (
-              <span key={i} style={{ background: '#E6ECF8', color: '#003C8F', fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 20 }}>
-                {i}
-              </span>
-            ))}
+      {/* ─── Header éditorial ─────────────────────────────────────── */}
+      <header className="max-w-5xl mx-auto px-8 pt-8 pb-12 border-b border-neutral-200">
+        <div className="flex items-start gap-8 flex-wrap">
+          <div className="w-24 h-24 rounded-full bg-neutral-900 text-white flex items-center justify-center font-mono text-2xl">
+            {initials}
           </div>
+
+          <div className="flex-1">
+            <p className="text-xs tracking-[0.2em] uppercase text-neutral-500 mb-2">
+              Fiche parcours · {summary.event_name}
+            </p>
+            <h1 className="font-serif text-5xl leading-none tracking-tight">
+              {summary.student_name}
+            </h1>
+            <p className="mt-3 text-neutral-600">
+              {summary.education_level}
+              {summary.bac_series && ` · Série ${summary.bac_series}`}
+              {summary.education_branches && summary.education_branches.length > 0 && (
+                <> · Intéressé·e par {summary.education_branches.join(', ')}</>
+              )}
+            </p>
+            <p className="text-sm text-neutral-500 mt-1">{summary.email}</p>
+          </div>
+
+          <div className="text-right">
+            <p className="font-mono text-6xl font-light tabular-nums">
+              {summary.engagement_score}
+            </p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-neutral-500">
+              Score / 100
+            </p>
+            <span
+              className={`mt-3 inline-block px-3 py-1 text-[10px] tracking-wider uppercase ${
+                {
+                  Décideur: 'bg-[#E30613] text-white',
+                  Explorateur: 'bg-[#FFD100] text-black',
+                  Comparateur: 'bg-[#003DA5] text-white',
+                  Observateur: 'bg-neutral-200 text-neutral-700',
+                  Inscrit: 'bg-neutral-100 text-neutral-500',
+                }[summary.behavioral_profile] ?? 'bg-neutral-100'
+              }`}
+            >
+              {summary.behavioral_profile}
+            </span>
+          </div>
+        </div>
+      </header>
+
+      {/* ─── Bande de stats ───────────────────────────────────────── */}
+      <section className="max-w-5xl mx-auto px-8 py-10 grid grid-cols-2 md:grid-cols-5 gap-6 border-b border-neutral-200">
+        <MetricBlock label="Durée sur place" value={`${summary.dwell_minutes ?? 0} min`} />
+        <MetricBlock label="Stands uniques" value={uniqueStands} />
+        <MetricBlock label="Scans total" value={summary.total_stand_scans} />
+        <MetricBlock label="Conférences" value={summary.conferences_attended} />
+        <MetricBlock
+          label="Rendez-vous"
+          value={`${summary.appointments_confirmed}/${summary.appointments_total}`}
+        />
+      </section>
+
+      {/* ─── Timeline ─────────────────────────────────────────────── */}
+      <section className="max-w-5xl mx-auto px-8 py-12">
+        <h2 className="font-serif text-3xl mb-2">
+          Le <span className="italic">cheminement</span>
+        </h2>
+        <p className="text-sm text-neutral-500 mb-10">
+          Chaque étape, dans l'ordre où elle a eu lieu.
+        </p>
+
+        {journey.length === 0 ? (
+          <p className="text-neutral-500 italic">
+            Aucune activité enregistrée pour cet étudiant.
+          </p>
+        ) : (
+          <ol className="relative">
+            {/* Ligne verticale */}
+            <div className="absolute left-[19px] top-2 bottom-2 w-px bg-neutral-300" />
+
+            {journey.map((event, idx) => (
+              <TimelineItem key={idx} event={event} index={idx} />
+            ))}
+          </ol>
+        )}
+      </section>
+
+      {/* ─── Map visuelle des stands ──────────────────────────────── */}
+      {uniqueStands > 0 && (
+        <section className="max-w-5xl mx-auto px-8 py-12 border-t border-neutral-200">
+          <h2 className="font-serif text-3xl mb-2">
+            Ordre <span className="italic">des visites</span>
+          </h2>
+          <p className="text-sm text-neutral-500 mb-8">
+            Flow des stands visités (ordre chronologique).
+          </p>
+
+          <StandFlow journey={journey} />
         </section>
       )}
-
-      <section style={section}>
-        <h2 style={sectionTitle}>Derniers scans ({scans.length})</h2>
-        {scans.length === 0 ? <p style={empty}>Aucun scan.</p> : (
-          <ul style={list}>
-            {scans.slice(0, 10).map((s) => (
-              <li key={s.id} style={listRow}>
-                <span style={{ fontWeight: 600 }}>{s.channel}</span>
-                <span style={{ color: '#6B6B6B', fontSize: 12 }}>
-                  {new Date(s.created_at).toLocaleString('fr-FR')}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section style={section}>
-        <h2 style={sectionTitle}>Swipes récents ({matches.length})</h2>
-        {matches.length === 0 ? <p style={empty}>Aucun swipe.</p> : (
-          <ul style={list}>
-            {matches.slice(0, 10).map((m) => (
-              <li key={m.id} style={listRow}>
-                <span>{m.school_id}</span>
-                <span style={{ color: m.student_swipe === 'right' ? '#15803d' : '#B0001A', fontWeight: 600, fontSize: 12 }}>
-                  {m.student_swipe === 'right' ? '→ Intéressé' : '← Passé'}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section style={section}>
-        <h2 style={sectionTitle}>Éléments sauvegardés ({saved.length})</h2>
-        {saved.length === 0 ? <p style={empty}>Rien de sauvegardé.</p> : (
-          <ul style={list}>
-            {saved.slice(0, 10).map((it) => (
-              <li key={it.id} style={listRow}>
-                <span>[{it.kind}] {it.label}</span>
-                <span style={{ color: '#6B6B6B', fontSize: 12 }}>
-                  {new Date(it.created_at).toLocaleDateString('fr-FR')}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-    </div>
+    </main>
   )
 }
 
-function KPI({ label, value }: { label: string; value: number | string }) {
+// ─── Sous-composants ─────────────────────────────────────────────────────
+function MetricBlock({ label, value }: { label: string; value: string | number }) {
   return (
-    <div style={{ background: '#fff', border: '1px solid #E8E8E8', borderRadius: 8, padding: '16px 14px' }}>
-      <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: '#6B6B6B', margin: '0 0 6px' }}>
+    <div>
+      <p className="text-[10px] tracking-[0.2em] uppercase text-neutral-500 mb-2">
         {label}
       </p>
-      <p style={{ fontSize: 22, fontWeight: 800, margin: 0, color: '#1A1A1A' }}>{value}</p>
+      <p className="font-mono text-2xl font-light tabular-nums">{value}</p>
     </div>
   )
 }
 
-const section: React.CSSProperties = { marginBottom: 24 }
-const sectionTitle: React.CSSProperties = { fontSize: 15, fontWeight: 700, margin: '0 0 10px', color: '#1A1A1A' }
-const empty: React.CSSProperties = { fontSize: 13, color: '#6B6B6B' }
-const list: React.CSSProperties = { listStyle: 'none', padding: 0, margin: 0, background: '#fff', border: '1px solid #E8E8E8', borderRadius: 8 }
-const listRow: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderTop: '1px solid #F4F4F4', fontSize: 13 }
+function TimelineItem({ event, index }: { event: JourneyEvent; index: number }) {
+  const time = new Date(event.occurred_at).toLocaleTimeString('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  const date = new Date(event.occurred_at).toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+  })
+
+  return (
+    <li className="flex items-start gap-6 pb-8 last:pb-0 relative">
+      {/* Marqueur */}
+      <div
+        className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center text-sm font-mono ${EVENT_COLORS[event.event_type]}`}
+      >
+        {EVENT_ICONS[event.event_type]}
+      </div>
+
+      {/* Contenu */}
+      <div className="flex-1 pt-1.5">
+        <div className="flex items-baseline gap-3 mb-1">
+          <p className="font-mono text-sm text-neutral-900">{time}</p>
+          <p className="text-xs text-neutral-400">{date}</p>
+        </div>
+
+        <p className="font-serif text-xl leading-tight">
+          <span className="text-neutral-500">{event.event_label}</span>
+          {event.ref_name && (
+            <>
+              {' '}
+              <span className="text-neutral-900">· {event.ref_name}</span>
+            </>
+          )}
+        </p>
+
+        {event.metadata?.status && (
+          <p className="text-xs text-neutral-500 mt-1">
+            Statut : {event.metadata.status}
+          </p>
+        )}
+
+        {event.metadata?.school_domains && (
+          <p className="text-xs text-neutral-500 mt-1">
+            Domaines : {event.metadata.school_domains.join(', ')}
+          </p>
+        )}
+      </div>
+    </li>
+  )
+}
+
+function StandFlow({ journey }: { journey: JourneyEvent[] }) {
+  const stands = journey
+    .filter((j) => j.event_type === 'stand')
+    .filter((j, idx, arr) => arr.findIndex((x) => x.ref_id === j.ref_id) === idx)
+
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      {stands.map((stand, idx) => (
+        <div key={idx} className="flex items-center gap-3">
+          <div className="flex items-center gap-3 px-4 py-3 bg-white border border-neutral-300">
+            <span className="font-mono text-xs text-neutral-400 tabular-nums">
+              {String(idx + 1).padStart(2, '0')}
+            </span>
+            <span className="text-sm">{stand.ref_name}</span>
+          </div>
+          {idx < stands.length - 1 && (
+            <span className="text-neutral-300 font-mono">→</span>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
