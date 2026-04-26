@@ -632,6 +632,272 @@ export async function getSavedFormationsWithDates(userId: string) {
   return result;
 }
 
+// ─── Application Dossiers ─────────────────────────────────────────────────────
+
+export type DossierStatus = 'draft' | 'in_progress' | 'submitted' | 'interview' | 'completed';
+export type DocumentType = 'cv' | 'motivation_letter' | 'transcript' | 'recommendation' | 'other';
+
+export type ApplicationOutcome = 'accepted' | 'rejected' | 'waitlisted' | 'withdrawn';
+
+export interface DossierRow {
+  id: string;
+  user_id: string;
+  school_id: string | null;
+  custom_school_name: string | null;
+  custom_school_location: string | null;
+  status: DossierStatus;
+  interest_alignment_score: number | null;
+  student_fields_at_creation: string[];
+  application_outcome: ApplicationOutcome | null;
+  outcome_received_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DossierStageEvent {
+  id: string;
+  dossier_id: string;
+  user_id: string;
+  from_status: DossierStatus | null;
+  to_status: DossierStatus;
+  occurred_at: string;
+}
+
+/**
+ * Jaccard similarity between two sets of field strings.
+ * Normalises to lowercase before comparing.
+ * Returns a value between 0.0 (no overlap) and 1.0 (identical sets).
+ */
+export function computeAlignmentScore(studentFields: string[], schoolFields: string[]): number {
+  if (!studentFields.length || !schoolFields.length) return 0;
+  const a = new Set(studentFields.map((f) => f.toLowerCase().trim()));
+  const b = new Set(schoolFields.map((f) => f.toLowerCase().trim()));
+  let intersection = 0;
+  a.forEach((v) => { if (b.has(v)) intersection++; });
+  const union = new Set([...a, ...b]).size;
+  return union === 0 ? 0 : Math.round((intersection / union) * 100) / 100;
+}
+
+export interface DossierWithSchool extends DossierRow {
+  school?: { name: string; city: string; type: string; target_fields: string[] } | null;
+  documents: ApplicationDocumentRow[];
+}
+
+export interface ApplicationDocumentRow {
+  id: string;
+  dossier_id: string;
+  type: DocumentType;
+  file_name: string;
+  file_path: string;
+  file_size: number;
+  uploaded_at: string;
+}
+
+export async function getDossiersForUser(userId: string): Promise<DossierWithSchool[]> {
+  const supabase = getSupabase();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: dossiers, error } = await (supabase as any)
+    .from('application_dossiers')
+    .select('*, schools ( name, city, type, target_fields )')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error || !dossiers) {
+    console.error('getDossiersForUser error:', error?.message ?? error);
+    return [];
+  }
+
+  if (dossiers.length === 0) return [];
+
+  // Fetch documents for all dossiers
+  const dossierIds = dossiers.map((d: { id: string }) => d.id);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: docs } = await (supabase as any)
+    .from('application_documents')
+    .select('*')
+    .in('dossier_id', dossierIds);
+
+  const docsByDossier = new Map<string, ApplicationDocumentRow[]>();
+  (docs ?? []).forEach((doc: ApplicationDocumentRow) => {
+    const list = docsByDossier.get(doc.dossier_id) ?? [];
+    list.push(doc);
+    docsByDossier.set(doc.dossier_id, list);
+  });
+
+  return dossiers.map((d: DossierRow & { schools?: unknown }) => ({
+    ...d,
+    school: d.schools as { name: string; city: string; type: string; target_fields: string[] } | null,
+    documents: docsByDossier.get(d.id) ?? [],
+  }));
+}
+
+export async function createDossier(input: {
+  userId: string;
+  schoolId?: string | null;
+  customSchoolName?: string | null;
+  customSchoolLocation?: string | null;
+}): Promise<DossierRow | null> {
+  const supabase = getSupabase();
+
+  // Fetch student's declared fields and school's target_fields in parallel
+  // to compute the interest-specialty alignment score at creation time.
+  const [userRes, schoolRes] = await Promise.all([
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any).from('users').select('education_branches').eq('id', input.userId).single(),
+    input.schoolId
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ? (supabase as any).from('schools').select('target_fields').eq('id', input.schoolId).single()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  const studentFields: string[] = userRes.data?.education_branches ?? [];
+  const schoolFields: string[] = schoolRes.data?.target_fields ?? [];
+  const alignmentScore = input.schoolId ? computeAlignmentScore(studentFields, schoolFields) : null;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .from('application_dossiers')
+    .insert({
+      user_id: input.userId,
+      school_id: input.schoolId ?? null,
+      custom_school_name: input.customSchoolName ?? null,
+      custom_school_location: input.customSchoolLocation ?? null,
+      status: 'draft',
+      interest_alignment_score: alignmentScore,
+      student_fields_at_creation: studentFields,
+    })
+    .select('*')
+    .single();
+
+  if (error) {
+    console.error('createDossier error:', error);
+    return null;
+  }
+
+  // Log the initial creation as a stage event (from_status = null → draft)
+  await logDossierStageEvent(data.id, input.userId, null, 'draft');
+
+  return data;
+}
+
+export async function deleteDossier(dossierId: string): Promise<boolean> {
+  const supabase = getSupabase();
+  const { error } = await supabase.from('application_dossiers').delete().eq('id', dossierId);
+  return !error;
+}
+
+export async function updateDossierStatus(
+  dossierId: string,
+  status: DossierStatus,
+  userId?: string,
+): Promise<boolean> {
+  const supabase = getSupabase();
+
+  // Read current status before updating so we can log the transition
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: current } = await (supabase as any)
+    .from('application_dossiers')
+    .select('status, user_id')
+    .eq('id', dossierId)
+    .single();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
+    .from('application_dossiers')
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq('id', dossierId);
+
+  if (!error && current) {
+    const resolvedUserId = userId ?? current.user_id;
+    await logDossierStageEvent(dossierId, resolvedUserId, current.status ?? null, status);
+  }
+
+  return !error;
+}
+
+export async function updateDossierOutcome(
+  dossierId: string,
+  outcome: ApplicationOutcome,
+): Promise<boolean> {
+  const supabase = getSupabase();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
+    .from('application_dossiers')
+    .update({ application_outcome: outcome, outcome_received_at: new Date().toISOString() })
+    .eq('id', dossierId);
+  return !error;
+}
+
+async function logDossierStageEvent(
+  dossierId: string,
+  userId: string,
+  fromStatus: DossierStatus | null,
+  toStatus: DossierStatus,
+): Promise<void> {
+  const supabase = getSupabase();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase as any).from('dossier_stage_events').insert({
+    dossier_id: dossierId,
+    user_id: userId,
+    from_status: fromStatus,
+    to_status: toStatus,
+  });
+}
+
+export async function uploadDocument(input: {
+  dossierId: string;
+  userId: string;
+  type: DocumentType;
+  file: File;
+}): Promise<ApplicationDocumentRow | null> {
+  const supabase = getSupabase();
+  const ext = input.file.name.split('.').pop() || 'pdf';
+  const path = `${input.userId}/${input.dossierId}/${input.type}-${Date.now()}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('application-docs')
+    .upload(path, input.file, { upsert: false });
+
+  if (uploadError) {
+    console.error('uploadDocument storage error:', uploadError);
+    return null;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .from('application_documents')
+    .insert({
+      dossier_id: input.dossierId,
+      type: input.type,
+      file_name: input.file.name,
+      file_path: path,
+      file_size: input.file.size,
+    })
+    .select('*')
+    .single();
+
+  if (error) {
+    console.error('uploadDocument db error:', error);
+    return null;
+  }
+  return data;
+}
+
+export async function deleteDocument(documentId: string, filePath: string): Promise<boolean> {
+  const supabase = getSupabase();
+  await supabase.storage.from('application-docs').remove([filePath]);
+  const { error } = await supabase.from('application_documents').delete().eq('id', documentId);
+  return !error;
+}
+
+export async function getDocumentDownloadUrl(filePath: string): Promise<string | null> {
+  const supabase = getSupabase();
+  const { data } = await supabase.storage
+    .from('application-docs')
+    .createSignedUrl(filePath, 60 * 60);
+  return data?.signedUrl ?? null;
+}
+
 // ─── Auth helpers ─────────────────────────────────────────────────────────────
 
 export async function getAdminStats(eventId: string) {

@@ -7,7 +7,7 @@ import Link from 'next/link';
 import Tag from '@/components/ui/Tag';
 import Button from '@/components/ui/Button';
 import SectionLabel from '@/components/ui/SectionLabel';
-import { getAppointmentsForStudent, getSavedFormationsWithDates, getSavedReels, deleteReelFromWishlist } from '@/lib/supabase/database';
+import { getAppointmentsForStudent, getSavedFormationsWithDates, getSavedReels, deleteReelFromWishlist, getDossiersForUser, createDossier, deleteDossier, updateDossierStatus, updateDossierOutcome, uploadDocument, deleteDocument, getDocumentDownloadUrl, getSchools, type DossierWithSchool, type DocumentType, type DossierStatus, type ApplicationOutcome, type ApplicationDocumentRow } from '@/lib/supabase/database';
 import { useAuth } from '@/hooks/useAuth';
 import { getSupabase } from '@/lib/supabase/client';
 import type { AppointmentRow, FormationRow, SchoolReelRow } from '@/lib/supabase/types';
@@ -483,7 +483,7 @@ function DownloadCard({ dl }: { dl: Download }) {
 
 // ─── Tab types ────────────────────────────────────────────────────────────────
 
-type TabId = 'documents' | 'liens' | 'rendez-vous' | 'telechargements';
+type TabId = 'dossiers' | 'liens' | 'rendez-vous' | 'telechargements';
 
 // ─── Formation Card Component ─────────────────────────────────────────────────
 
@@ -580,6 +580,652 @@ function FormationCard({ formation, schoolName, schoolCity, schoolType, schoolIm
   );
 }
 
+// ─── Dossier Components ───────────────────────────────────────────────────────
+
+const DOC_TYPES: { type: DocumentType; label: string; icon: string }[] = [
+  { type: 'cv', label: 'CV', icon: '📄' },
+  { type: 'motivation_letter', label: 'Lettre de motivation', icon: '✉️' },
+  { type: 'transcript', label: 'Bulletin de notes', icon: '📊' },
+  { type: 'recommendation', label: 'Lettre de recommandation', icon: '👤' },
+  { type: 'other', label: 'Autre document', icon: '📎' },
+];
+
+const STATUS_LABELS: Record<DossierStatus, { label: string; color: string; bg: string }> = {
+  draft: { label: 'Brouillon', color: '#6B6B6B', bg: '#F4F4F4' },
+  in_progress: { label: 'En cours', color: '#7A6200', bg: '#FEF3C7' },
+  submitted: { label: 'Envoyé', color: '#1E40AF', bg: '#DBEAFE' },
+  interview: { label: 'Entretien', color: '#6B21A8', bg: '#F3E8FF' },
+  completed: { label: 'Complété', color: '#15803D', bg: '#DCFCE7' },
+};
+
+// Ordered stages of the application workflow. Used to drive the stage progress
+// bar inside each DossierCard.
+const STAGE_ORDER: DossierStatus[] = ['draft', 'in_progress', 'submitted', 'interview', 'completed'];
+const STAGE_SHORT: Record<DossierStatus, string> = {
+  draft: 'Brouillon',
+  in_progress: 'En cours',
+  submitted: 'Envoyé',
+  interview: 'Entretien',
+  completed: 'Décision',
+};
+
+function DossierCard({
+  dossier,
+  onUpdate,
+  onDelete,
+  onUploadDoc,
+  onDeleteDoc,
+  onChangeStatus,
+  onChangeOutcome,
+}: {
+  dossier: DossierWithSchool;
+  onUpdate: () => void;
+  onDelete: (id: string) => void;
+  onUploadDoc: (dossierId: string, type: DocumentType, file: File) => void;
+  onDeleteDoc: (docId: string, filePath: string) => void;
+  onChangeStatus: (id: string, status: DossierStatus) => void;
+  onChangeOutcome: (id: string, outcome: ApplicationOutcome) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const schoolName = dossier.school?.name ?? dossier.custom_school_name ?? 'École';
+  const schoolCity = dossier.school?.city ?? dossier.custom_school_location ?? '';
+  const schoolType = dossier.school?.type ?? 'Personnalisée';
+  const initials = getInitials(schoolName);
+  const statusInfo = STATUS_LABELS[dossier.status];
+
+  const totalRequired = 4; // CV, motivation, transcript, recommendation
+  const uploadedTypes = new Set(dossier.documents.map((d) => d.type));
+  const requiredCount = ['cv', 'motivation_letter', 'transcript', 'recommendation'].filter((t) =>
+    uploadedTypes.has(t as DocumentType),
+  ).length;
+  const progress = Math.round((requiredCount / totalRequired) * 100);
+
+  const handleFileChange = (type: DocumentType, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      onUploadDoc(dossier.id, type, file);
+      e.target.value = '';
+    }
+  };
+
+  const handleDownload = async (filePath: string) => {
+    const url = await getDocumentDownloadUrl(filePath);
+    if (url) window.open(url, '_blank');
+  };
+
+  return (
+    <div
+      className="le-card"
+      style={{
+        padding: '16px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
+        borderLeft: `4px solid ${dossier.school_id ? '#003C8F' : '#EC1F27'}`,
+      }}
+    >
+      {/* Header row */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+        <div
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 8,
+            background: '#003C8F',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff',
+            fontWeight: 700,
+            fontSize: 14,
+            flexShrink: 0,
+          }}
+        >
+          {initials}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontWeight: 700, fontSize: 14, margin: '0 0 2px', color: 'var(--le-gray-900)' }}>
+            {schoolName}
+          </p>
+          <p className="le-caption" style={{ margin: 0 }}>
+            {schoolCity} {schoolType && `· ${schoolType}`}
+          </p>
+        </div>
+        <span
+          style={{
+            background: statusInfo.bg,
+            color: statusInfo.color,
+            fontSize: 11,
+            fontWeight: 700,
+            padding: '4px 10px',
+            borderRadius: 20,
+            flexShrink: 0,
+          }}
+        >
+          {statusInfo.label}
+        </span>
+      </div>
+
+      {/* Documents progress bar */}
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+          <span style={{ fontSize: 12, color: 'var(--le-gray-600)', fontWeight: 600 }}>
+            {requiredCount}/{totalRequired} documents requis
+          </span>
+          <span style={{ fontSize: 12, color: 'var(--le-gray-600)', fontWeight: 700 }}>{progress}%</span>
+        </div>
+        <div style={{ height: 6, background: 'var(--le-gray-200)', borderRadius: 3, overflow: 'hidden' }}>
+          <div
+            style={{
+              width: `${progress}%`,
+              height: '100%',
+              background: progress === 100 ? '#15803D' : '#EC1F27',
+              transition: 'width 0.3s ease',
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Application stage progress (Brouillon → En cours → Envoyé → Entretien → Décision) */}
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+          <span style={{ fontSize: 12, color: 'var(--le-gray-600)', fontWeight: 600 }}>
+            Étape · {STAGE_SHORT[dossier.status]}
+          </span>
+          <span style={{ fontSize: 12, color: 'var(--le-gray-600)', fontWeight: 700 }}>
+            {STAGE_ORDER.indexOf(dossier.status) + 1}/{STAGE_ORDER.length}
+          </span>
+        </div>
+        <div style={{ display: 'flex', gap: 4 }}>
+          {STAGE_ORDER.map((stage, idx) => {
+            const currentIdx = STAGE_ORDER.indexOf(dossier.status);
+            const reached = idx <= currentIdx;
+            const isCurrent = idx === currentIdx;
+            return (
+              <div
+                key={stage}
+                title={STATUS_LABELS[stage].label}
+                style={{
+                  flex: 1,
+                  height: 6,
+                  borderRadius: 3,
+                  background: reached
+                    ? dossier.status === 'completed'
+                      ? '#15803D'
+                      : isCurrent
+                        ? STATUS_LABELS[stage].color
+                        : '#003C8F'
+                    : 'var(--le-gray-200)',
+                  transition: 'background 0.3s ease',
+                }}
+              />
+            );
+          })}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+          {STAGE_ORDER.map((stage, idx) => {
+            const currentIdx = STAGE_ORDER.indexOf(dossier.status);
+            const reached = idx <= currentIdx;
+            return (
+              <span
+                key={stage}
+                style={{
+                  fontSize: 9,
+                  fontWeight: idx === currentIdx ? 700 : 500,
+                  color: reached ? 'var(--le-gray-800)' : 'var(--le-gray-400)',
+                  flex: 1,
+                  textAlign: 'center',
+                }}
+              >
+                {STAGE_SHORT[stage]}
+              </span>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Alignment score + outcome row */}
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        {dossier.interest_alignment_score !== null && dossier.interest_alignment_score !== undefined && (
+          (() => {
+            const score = dossier.interest_alignment_score;
+            const pct = Math.round(score * 100);
+            const color = pct >= 70 ? '#15803D' : pct >= 40 ? '#7A6200' : '#B91C1C';
+            const bg = pct >= 70 ? '#DCFCE7' : pct >= 40 ? '#FEF3C7' : '#FEE2E2';
+            const label = pct >= 70 ? 'Très aligné' : pct >= 40 ? 'Partiellement aligné' : 'Peu aligné';
+            return (
+              <span
+                title={`Correspondance entre tes centres d'intérêt et les domaines de cette école`}
+                style={{ background: bg, color, fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 20, cursor: 'default' }}
+              >
+                🎯 {label} ({pct}%)
+              </span>
+            );
+          })()
+        )}
+        {(dossier.status === 'completed' || dossier.status === 'interview') && (
+          <select
+            value={dossier.application_outcome ?? ''}
+            onChange={(e) => e.target.value && onChangeOutcome(dossier.id, e.target.value as ApplicationOutcome)}
+            style={{ padding: '3px 8px', border: '1px solid var(--le-gray-300)', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer', background: '#fff' }}
+          >
+            <option value="">Résultat ?</option>
+            <option value="accepted">✅ Accepté</option>
+            <option value="waitlisted">⏳ Liste d&apos;attente</option>
+            <option value="rejected">❌ Refusé</option>
+            <option value="withdrawn">🚫 Candidature retirée</option>
+          </select>
+        )}
+        {dossier.application_outcome && (
+          <span style={{
+            fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 20,
+            background: dossier.application_outcome === 'accepted' ? '#DCFCE7' : dossier.application_outcome === 'rejected' ? '#FEE2E2' : '#FEF3C7',
+            color: dossier.application_outcome === 'accepted' ? '#15803D' : dossier.application_outcome === 'rejected' ? '#B91C1C' : '#7A6200',
+          }}>
+            {dossier.application_outcome === 'accepted' ? '✅ Accepté' : dossier.application_outcome === 'rejected' ? '❌ Refusé' : dossier.application_outcome === 'waitlisted' ? '⏳ Liste d\'attente' : '🚫 Retiré'}
+          </span>
+        )}
+      </div>
+
+      {/* Toggle + actions */}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          style={{
+            flex: 1,
+            padding: '8px 12px',
+            background: expanded ? 'var(--le-gray-200)' : 'var(--le-gray-100)',
+            border: 'none',
+            borderRadius: 6,
+            cursor: 'pointer',
+            fontSize: 13,
+            fontWeight: 600,
+            color: 'var(--le-gray-700)',
+          }}
+        >
+          {expanded ? '▲ Masquer les documents' : '▼ Voir les documents'}
+        </button>
+        <select
+          value={dossier.status}
+          onChange={(e) => onChangeStatus(dossier.id, e.target.value as DossierStatus)}
+          style={{
+            padding: '8px 10px',
+            border: '1px solid var(--le-gray-300)',
+            borderRadius: 6,
+            fontSize: 12,
+            cursor: 'pointer',
+            background: '#fff',
+          }}
+        >
+          <option value="draft">Brouillon</option>
+          <option value="in_progress">En cours</option>
+          <option value="submitted">Envoyé</option>
+          <option value="interview">Entretien</option>
+          <option value="completed">Complété</option>
+        </select>
+        <button
+          onClick={() => {
+            if (confirm(`Supprimer le dossier "${schoolName}" ?`)) onDelete(dossier.id);
+          }}
+          style={{
+            padding: '8px 10px',
+            background: '#fff',
+            border: '1px solid var(--le-gray-300)',
+            borderRadius: 6,
+            cursor: 'pointer',
+            fontSize: 14,
+            color: '#EC1F27',
+          }}
+          title="Supprimer le dossier"
+        >
+          🗑️
+        </button>
+      </div>
+
+      {/* Document upload section */}
+      {expanded && (
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+            paddingTop: 12,
+            borderTop: '1px solid var(--le-gray-200)',
+          }}
+        >
+          {DOC_TYPES.map((docType) => {
+            const existing = dossier.documents.find((d) => d.type === docType.type);
+            return (
+              <div
+                key={docType.type}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '10px 12px',
+                  background: existing ? '#DCFCE7' : 'var(--le-gray-100)',
+                  borderRadius: 6,
+                  border: `1px solid ${existing ? '#86EFAC' : 'var(--le-gray-200)'}`,
+                }}
+              >
+                <span style={{ fontSize: 18 }}>{docType.icon}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, margin: 0, color: 'var(--le-gray-900)' }}>
+                    {docType.label}
+                  </p>
+                  {existing && (
+                    <p
+                      style={{
+                        fontSize: 11,
+                        color: '#15803D',
+                        margin: 0,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      ✓ {existing.file_name} ({Math.round(existing.file_size / 1024)} Ko)
+                    </p>
+                  )}
+                </div>
+                {existing ? (
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <button
+                      onClick={() => handleDownload(existing.file_path)}
+                      style={{
+                        padding: '6px 8px',
+                        background: '#fff',
+                        border: '1px solid var(--le-gray-300)',
+                        borderRadius: 4,
+                        cursor: 'pointer',
+                        fontSize: 12,
+                      }}
+                      title="Télécharger"
+                    >
+                      ⬇
+                    </button>
+                    <button
+                      onClick={() => onDeleteDoc(existing.id, existing.file_path)}
+                      style={{
+                        padding: '6px 8px',
+                        background: '#fff',
+                        border: '1px solid var(--le-gray-300)',
+                        borderRadius: 4,
+                        cursor: 'pointer',
+                        fontSize: 12,
+                        color: '#EC1F27',
+                      }}
+                      title="Supprimer"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <label
+                    style={{
+                      padding: '6px 12px',
+                      background: '#EC1F27',
+                      color: '#fff',
+                      borderRadius: 4,
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      fontWeight: 600,
+                    }}
+                  >
+                    + Upload
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      onChange={(e) => handleFileChange(docType.type, e)}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AddDossierModal({
+  open,
+  onClose,
+  onCreate,
+  existingSchoolIds,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onCreate: (input: { schoolId?: string; customName?: string; customLocation?: string }) => void;
+  existingSchoolIds: Set<string>;
+}) {
+  const [mode, setMode] = useState<'school' | 'custom'>('school');
+  const [schools, setSchools] = useState<{ id: string; name: string; city: string; type: string }[]>([]);
+  const [search, setSearch] = useState('');
+  const [selectedId, setSelectedId] = useState<string>('');
+  const [customName, setCustomName] = useState('');
+  const [customLocation, setCustomLocation] = useState('');
+
+  useEffect(() => {
+    if (open && schools.length === 0) {
+      getSchools().then((data) => setSchools(data as { id: string; name: string; city: string; type: string }[]));
+    }
+  }, [open, schools.length]);
+
+  if (!open) return null;
+
+  const filteredSchools = schools
+    .filter((s) => !existingSchoolIds.has(s.id))
+    .filter((s) => !search || s.name.toLowerCase().includes(search.toLowerCase()) || s.city.toLowerCase().includes(search.toLowerCase()));
+
+  const handleSubmit = () => {
+    if (mode === 'school' && selectedId) {
+      onCreate({ schoolId: selectedId });
+      setSelectedId('');
+      setSearch('');
+    } else if (mode === 'custom' && customName.trim()) {
+      onCreate({ customName: customName.trim(), customLocation: customLocation.trim() || undefined });
+      setCustomName('');
+      setCustomLocation('');
+    }
+  };
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.5)',
+        zIndex: 100,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 16,
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: '#fff',
+          borderRadius: 12,
+          padding: 20,
+          maxWidth: 480,
+          width: '100%',
+          maxHeight: '90vh',
+          overflow: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 16,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h2 className="le-h2" style={{ margin: 0 }}>
+            Nouveau dossier
+          </h2>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 22,
+              color: 'var(--le-gray-500)',
+              padding: 0,
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Mode tabs */}
+        <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--le-gray-200)' }}>
+          {(['school', 'custom'] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              style={{
+                flex: 1,
+                padding: '10px 0',
+                background: 'none',
+                border: 'none',
+                borderBottom: mode === m ? '2px solid #EC1F27' : '2px solid transparent',
+                color: mode === m ? '#EC1F27' : 'var(--le-gray-600)',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontSize: 13,
+              }}
+            >
+              {m === 'school' ? '🏫 Écoles du salon' : '+ Ajouter une école'}
+            </button>
+          ))}
+        </div>
+
+        {mode === 'school' ? (
+          <>
+            <input
+              type="text"
+              placeholder="🔍 Rechercher une école..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{
+                padding: '10px 12px',
+                border: '1px solid var(--le-gray-300)',
+                borderRadius: 6,
+                fontSize: 14,
+              }}
+            />
+            <div style={{ maxHeight: 320, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {filteredSchools.length === 0 ? (
+                <p style={{ color: 'var(--le-gray-500)', fontSize: 13, textAlign: 'center', padding: 20 }}>
+                  {schools.length === 0 ? 'Chargement...' : 'Aucune école trouvée'}
+                </p>
+              ) : (
+                filteredSchools.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setSelectedId(s.id)}
+                    style={{
+                      padding: '10px 12px',
+                      background: selectedId === s.id ? '#FEE2E2' : 'var(--le-gray-100)',
+                      border: selectedId === s.id ? '2px solid #EC1F27' : '1px solid var(--le-gray-200)',
+                      borderRadius: 6,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 2,
+                    }}
+                  >
+                    <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--le-gray-900)' }}>{s.name}</span>
+                    <span style={{ fontSize: 11, color: 'var(--le-gray-600)' }}>
+                      {s.city} · {s.type}
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--le-gray-700)' }}>
+                Nom de l&apos;école *
+              </label>
+              <input
+                type="text"
+                placeholder="Ex: Université Sorbonne"
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                style={{
+                  padding: '10px 12px',
+                  border: '1px solid var(--le-gray-300)',
+                  borderRadius: 6,
+                  fontSize: 14,
+                }}
+              />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--le-gray-700)' }}>
+                Localisation (optionnelle)
+              </label>
+              <input
+                type="text"
+                placeholder="Ex: Paris, France"
+                value={customLocation}
+                onChange={(e) => setCustomLocation(e.target.value)}
+                style={{
+                  padding: '10px 12px',
+                  border: '1px solid var(--le-gray-300)',
+                  borderRadius: 6,
+                  fontSize: 14,
+                }}
+              />
+            </div>
+          </>
+        )}
+
+        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+          <button
+            onClick={onClose}
+            style={{
+              flex: 1,
+              padding: '12px',
+              background: 'var(--le-gray-100)',
+              border: 'none',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: 14,
+            }}
+          >
+            Annuler
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={mode === 'school' ? !selectedId : !customName.trim()}
+            style={{
+              flex: 1,
+              padding: '12px',
+              background: (mode === 'school' ? selectedId : customName.trim()) ? '#EC1F27' : 'var(--le-gray-300)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 8,
+              cursor: (mode === 'school' ? selectedId : customName.trim()) ? 'pointer' : 'not-allowed',
+              fontWeight: 700,
+              fontSize: 14,
+            }}
+          >
+            Créer le dossier
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 type SavedSubTab = 'swipe' | 'reels' | 'salon';
@@ -588,7 +1234,7 @@ export default function SavedPage() {
   const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialTab = (searchParams.get('tab') as TabId) || 'documents';
+  const initialTab = (searchParams.get('tab') as TabId) || 'dossiers';
   const initialSubTab = (searchParams.get('subtab') as SavedSubTab) || 'swipe';
 
   const [activeTab, setActiveTab] = useState<TabId>(initialTab);
@@ -599,6 +1245,8 @@ export default function SavedPage() {
   const [savedDocs, setSavedDocs] = useState<SavedDoc[]>([]);
   const [savedLinks, setSavedLinks] = useState<SavedLink[]>([]);
   const [downloads, setDownloads] = useState<Download[]>([]);
+  const [dossiers, setDossiers] = useState<DossierWithSchool[]>([]);
+  const [showAddDossierModal, setShowAddDossierModal] = useState(false);
   const [savedFormations, setSavedFormations] = useState<Array<FormationRow & { schoolId: string; schoolName: string; schoolCity: string; schoolType: string }>>([]);
   const [savedReels, setSavedReels] = useState<(SchoolReelRow & { saved_at: string })[]>([]);
   const [reelsLoading, setReelsLoading] = useState(true);
@@ -674,9 +1322,17 @@ export default function SavedPage() {
       .maybeSingle() as { data: { id: string } | null };
     const eventId = (evt as { id: string } | null)?.id ?? null;
     setActiveEventId(eventId);
-    if (eventId) {
-      getAppointmentsForStudent(userId, eventId).then(setAppointments);
-    }
+
+    // Load all of the student's appointments (across events), so the
+    // rendez-vous tab still shows past/future RDV when no event is active.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: appts } = await (supabase as any)
+      .from('appointments')
+      .select('*, schools(name, city, type)')
+      .eq('student_id', userId)
+      .neq('status', 'cancelled')
+      .order('slot_time', { ascending: true });
+    setAppointments(appts ?? []);
 
     // Load saved items for the current user, joined with school name.
     const { data: items } = await supabase
@@ -745,12 +1401,82 @@ export default function SavedPage() {
     }
   };
 
+  // Load dossiers
+  const loadDossiers = async (userId: string) => {
+    const data = await getDossiersForUser(userId);
+    setDossiers(data);
+  };
+
+  // Dossier handlers
+  const handleCreateDossier = async (input: { schoolId?: string; customName?: string; customLocation?: string }) => {
+    if (!user?.id) return;
+    const result = await createDossier({
+      userId: user.id,
+      schoolId: input.schoolId,
+      customSchoolName: input.customName,
+      customSchoolLocation: input.customLocation,
+    });
+    if (result) {
+      showToast('✓ Dossier créé');
+      setShowAddDossierModal(false);
+      loadDossiers(user.id);
+    } else {
+      showToast('❌ Erreur lors de la création');
+    }
+  };
+
+  const handleDeleteDossier = async (dossierId: string) => {
+    if (!user?.id) return;
+    const ok = await deleteDossier(dossierId);
+    if (ok) {
+      showToast('✓ Dossier supprimé');
+      loadDossiers(user.id);
+    }
+  };
+
+  const handleUploadDoc = async (dossierId: string, type: DocumentType, file: File) => {
+    if (!user?.id) return;
+    showToast('⏳ Upload en cours...');
+    const result = await uploadDocument({ dossierId, userId: user.id, type, file });
+    if (result) {
+      showToast('✓ Document uploadé');
+      loadDossiers(user.id);
+    } else {
+      showToast('❌ Erreur d\'upload');
+    }
+  };
+
+  const handleDeleteDoc = async (docId: string, filePath: string) => {
+    if (!user?.id) return;
+    const ok = await deleteDocument(docId, filePath);
+    if (ok) {
+      showToast('✓ Document supprimé');
+      loadDossiers(user.id);
+    }
+  };
+
+  const handleChangeStatus = async (dossierId: string, status: DossierStatus) => {
+    if (!user?.id) return;
+    const ok = await updateDossierStatus(dossierId, status, user.id);
+    if (ok) loadDossiers(user.id);
+  };
+
+  const handleChangeOutcome = async (dossierId: string, outcome: ApplicationOutcome) => {
+    if (!user?.id) return;
+    const ok = await updateDossierOutcome(dossierId, outcome);
+    if (ok) {
+      showToast('✓ Résultat enregistré');
+      loadDossiers(user.id);
+    }
+  };
+
   // Load data on initial mount and when search params change (tab selection)
   useEffect(() => {
     if (!user?.id) return;
     const tabParam = searchParams.get('tab');
     console.log('SavedPage: Loading data for user:', user.id, 'tab:', tabParam);
     loadAllSavedData(user.id);
+    loadDossiers(user.id);
   }, [user?.id, searchParams]);
 
   // Refresh data when page becomes visible (browser tab switching)
@@ -910,7 +1636,7 @@ export default function SavedPage() {
   };
 
   const tabs: { id: TabId; label: string; count: number }[] = [
-    { id: 'documents', label: 'Documents', count: savedDocs.length },
+    { id: 'dossiers', label: 'Mes Candidatures', count: dossiers.length },
     { id: 'liens', label: 'Liens sauvegardés', count: liensCount },
     { id: 'rendez-vous', label: 'Rendez-vous', count: appointments.length },
     { id: 'telechargements', label: 'Téléchargements', count: downloads.length },
@@ -986,21 +1712,85 @@ export default function SavedPage() {
 
       {/* Tab content */}
       <div style={{ padding: '16px 16px 0' }}>
-        {/* ── Documents ── */}
-        {activeTab === 'documents' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <SectionLabel>Documents collectés au salon</SectionLabel>
-            {savedDocs.length === 0 ? (
-              <p style={{ color: 'var(--le-gray-500)', fontSize: 14, textAlign: 'center', padding: '32px 16px' }}>
-                Aucun document enregistré pour l&apos;instant. Scannez un stand au salon pour récupérer les brochures des établissements.
-              </p>
+        {/* ── Dossiers (My Applications) ── */}
+        {activeTab === 'dossiers' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <SectionLabel>Mes Candidatures</SectionLabel>
+              <button
+                onClick={() => setShowAddDossierModal(true)}
+                style={{
+                  padding: '8px 14px',
+                  background: '#EC1F27',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  fontSize: 13,
+                }}
+              >
+                + Nouveau dossier
+              </button>
+            </div>
+
+            {dossiers.length === 0 ? (
+              <div
+                style={{
+                  background: '#fff',
+                  border: '2px dashed var(--le-gray-300)',
+                  borderRadius: 12,
+                  padding: '32px 20px',
+                  textAlign: 'center',
+                }}
+              >
+                <p style={{ fontSize: 36, margin: '0 0 8px' }}>📋</p>
+                <p style={{ fontWeight: 700, fontSize: 15, margin: '0 0 6px', color: 'var(--le-gray-900)' }}>
+                  Aucun dossier de candidature
+                </p>
+                <p style={{ color: 'var(--le-gray-500)', fontSize: 13, margin: '0 0 16px', lineHeight: 1.5 }}>
+                  Créez un dossier par école pour organiser vos documents :<br />
+                  CV, lettre de motivation, bulletins et lettres de recommandation.
+                </p>
+                <button
+                  onClick={() => setShowAddDossierModal(true)}
+                  style={{
+                    padding: '10px 20px',
+                    background: '#EC1F27',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 8,
+                    cursor: 'pointer',
+                    fontWeight: 700,
+                    fontSize: 14,
+                  }}
+                >
+                  + Créer mon premier dossier
+                </button>
+              </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10, marginTop: 10 }}>
-                {savedDocs.map((doc) => (
-                  <DocCard key={doc.id} doc={doc} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {dossiers.map((d) => (
+                  <DossierCard
+                    key={d.id}
+                    dossier={d}
+                    onUpdate={() => user?.id && loadDossiers(user.id)}
+                    onDelete={handleDeleteDossier}
+                    onUploadDoc={handleUploadDoc}
+                    onDeleteDoc={handleDeleteDoc}
+                    onChangeStatus={handleChangeStatus}
+                    onChangeOutcome={handleChangeOutcome}
+                  />
                 ))}
               </div>
             )}
+
+            <AddDossierModal
+              open={showAddDossierModal}
+              onClose={() => setShowAddDossierModal(false)}
+              onCreate={handleCreateDossier}
+              existingSchoolIds={new Set(dossiers.map((d) => d.school_id).filter(Boolean) as string[])}
+            />
           </div>
         )}
 
@@ -1580,6 +2370,28 @@ export default function SavedPage() {
           </div>
         )}
       </div>
+
+      {/* Toast notification */}
+      {toast && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 90,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'rgba(0,0,0,0.9)',
+            color: '#fff',
+            padding: '10px 18px',
+            borderRadius: 24,
+            fontSize: 13,
+            fontWeight: 600,
+            zIndex: 50,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+          }}
+        >
+          {toast}
+        </div>
+      )}
     </div>
   );
 }
