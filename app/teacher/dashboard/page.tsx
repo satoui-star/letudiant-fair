@@ -89,14 +89,16 @@ export default function TeacherDashboard() {
   }, [user])
 
   // ── Generate QR ──────────────────────────────────────────────────────────────
+  // Depends on loading + activeTab so the effect re-runs once the canvas is
+  // actually in the DOM (canvas is conditional on !loading && group && tab=prefair).
   useEffect(() => {
-    if (!group || !qrCanvasRef.current) return
+    if (loading || !group || !qrCanvasRef.current) return
     const inviteUrl = `${window.location.origin}/group-invite/${group.invite_link}`
     QRCode.toCanvas(qrCanvasRef.current, inviteUrl, {
       width: 180, margin: 2,
       color: { dark: '#1A1A1A', light: '#FFFFFF' },
     }).catch(console.error)
-  }, [group])
+  }, [group, loading, activeTab])
 
   // ── Create group ─────────────────────────────────────────────────────────────
   async function createGroup() {

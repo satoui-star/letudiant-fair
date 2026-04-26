@@ -55,12 +55,12 @@ export default function TeacherGroup() {
       // Find teacher's group
       const { data: groupData } = await supabase
         .from('groups')
-        .select('name, member_uids')
+        .select('school_name, member_uids')
         .eq('teacher_id', user!.id)
         .maybeSingle()
 
       if (!groupData) { setLoading(false); return }
-      setGroupName(groupData.name ?? 'Mon Groupe')
+      setGroupName((groupData as any).school_name ?? 'Mon Groupe')
 
       if (groupData.member_uids?.length) {
         // Only logistics fields — no behavioral data
