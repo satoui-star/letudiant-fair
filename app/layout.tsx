@@ -20,6 +20,16 @@ export const metadata: Metadata = {
   title: "L'Étudiant Salons",
   description: "La plateforme de gestion des salons de l'orientation L'Étudiant",
   manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    shortcut: '/icons/icon-192.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
