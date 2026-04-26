@@ -30,6 +30,14 @@ interface FairEntry {
   date: string
 }
 
+interface GroupInfo {
+  schoolName: string
+  teacherName: string
+  eventName: string
+  eventCity: string
+  eventDate: string
+}
+
 interface ConsentState {
   letudiant: boolean
   partners: boolean
@@ -50,6 +58,7 @@ export default function ProfilePage() {
   const [interests, setInterests] = useState<Set<string>>(new Set())
   const [consents, setConsents] = useState<ConsentState>({ letudiant: false, partners: false, wax: false })
   const [fairHistory, setFairHistory] = useState<FairEntry[]>([])
+  const [groupInfo, setGroupInfo] = useState<GroupInfo | null>(null)
   const [saving, setSaving] = useState(false)
   const [savingConsent, setSavingConsent] = useState<string | null>(null)
 
@@ -77,10 +86,11 @@ export default function ProfilePage() {
 
       if (!data) return
 
+      type ScanRow = { event_id: string; events: { name: string; city: string; event_date: string } | null }
       // Group by eventId
       const map = new Map<string, { name: string; city: string; date: string; count: number }>()
-      for (const row of data) {
-        const ev = (row as any).events
+      for (const row of data as ScanRow[]) {
+        const ev = row.events
         if (!ev) continue
         const existing = map.get(row.event_id)
         if (existing) {
@@ -108,6 +118,36 @@ export default function ProfilePage() {
     loadHistory()
   }, [user])
 
+  // Load group info if student belongs to a teacher's group
+  useEffect(() => {
+    if (!profile?.group_id) return
+    async function loadGroup() {
+      const supabase = getSupabase()
+
+      const { data: group } = await supabase
+        .from('groups')
+        .select('school_name, teacher_id, fair_id')
+        .eq('id', profile!.group_id!)
+        .maybeSingle() as { data: { school_name: string; teacher_id: string; fair_id: string } | null }
+
+      if (!group) return
+
+      const { data: teacherRaw } = await supabase.from('users').select('name').eq('id', group.teacher_id).maybeSingle()
+      const { data: eventRaw }   = await supabase.from('events').select('name, city, event_date').eq('id', group.fair_id).maybeSingle()
+      const teacher = teacherRaw as { name: string } | null
+      const event   = eventRaw   as { name: string; city: string; event_date: string } | null
+
+      setGroupInfo({
+        schoolName:  group.school_name,
+        teacherName: teacher?.name ?? 'Enseignant',
+        eventName:   event?.name   ?? 'Salon',
+        eventCity:   event?.city   ?? '',
+        eventDate:   event?.event_date ?? '',
+      })
+    }
+    loadGroup()
+  }, [profile?.group_id])
+
   const toggleInterest = (id: string) => {
     setInterests((prev) => {
       const next = new Set(prev)
@@ -121,7 +161,8 @@ export default function ProfilePage() {
     setSaving(true)
     try {
       const supabase = getSupabase()
-      await supabase.from('users').update({ education_branches: Array.from(interests) }).eq('id', user.id)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from('users') as any).update({ education_branches: Array.from(interests) }).eq('id', user.id)
       toast('✓ Intérêts sauvegardés', 'success')
     } catch {
       toast('Erreur lors de la sauvegarde', 'error')
@@ -138,7 +179,8 @@ export default function ProfilePage() {
     try {
       const supabase = getSupabase()
       const field = key === 'letudiant' ? 'optin_letudiant' : key === 'partners' ? 'optin_commercial' : 'optin_wax'
-      await supabase.from('users').update({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from('users') as any).update({
         [field]: newVal,
         consent_date: new Date().toISOString(),
       }).eq('id', user.id)
@@ -181,9 +223,9 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="page-with-nav" style={{ background: '#F4F4F4', minHeight: '100vh', padding: '24px 20px' }}>
-        <Skeleton height={80} borderRadius={16} style={{ marginBottom: 16 }} />
-        <Skeleton height={40} borderRadius={10} style={{ marginBottom: 12 }} />
-        <Skeleton height={120} borderRadius={12} />
+        <Skeleton style={{ height: 80, borderRadius: 16, marginBottom: 16 }} />
+        <Skeleton style={{ height: 40, borderRadius: 10, marginBottom: 12 }} />
+        <Skeleton style={{ height: 120, borderRadius: 12 }} />
       </div>
     )
   }
@@ -264,6 +306,69 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Group section — shown only if student belongs to a teacher's group */}
+      {groupInfo && (
+        <div style={{ padding: '20px 20px 0' }}>
+          <SectionLabel>Mon groupe scolaire</SectionLabel>
+          <div
+            style={{
+              marginTop: 12, background: '#fff', borderRadius: 14,
+              padding: '16px 18px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+              border: '1px solid #E8E8E8',
+            }}
+          >
+            {/* School + teacher row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              <div
+                style={{
+                  width: 40, height: 40, borderRadius: 10,
+                  background: 'linear-gradient(135deg, #FFF7CC, #FFE566)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 20, flexShrink: 0,
+                }}
+              >
+                👨‍🏫
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontWeight: 700, fontSize: 14, color: '#1A1A1A', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {groupInfo.schoolName}
+                </p>
+                <p style={{ fontSize: 12, color: '#6B6B6B', margin: 0 }}>
+                  Accompagné(e) par {groupInfo.teacherName}
+                </p>
+              </div>
+              <span
+                style={{
+                  fontSize: 11, fontWeight: 700, color: '#15803d',
+                  background: '#DCFCE7', padding: '3px 9px',
+                  borderRadius: 20, flexShrink: 0,
+                }}
+              >
+                Inscrit(e)
+              </span>
+            </div>
+
+            {/* Separator */}
+            <div style={{ height: 1, background: '#F0F0F0', margin: '0 0 12px' }} />
+
+            {/* Fair info */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 18 }}>🏙️</span>
+              <div>
+                <p style={{ fontWeight: 600, fontSize: 13, color: '#1A1A1A', margin: '0 0 1px' }}>
+                  {groupInfo.eventName}{groupInfo.eventCity ? ` — ${groupInfo.eventCity}` : ''}
+                </p>
+                {groupInfo.eventDate && (
+                  <p style={{ fontSize: 12, color: '#6B6B6B', margin: 0 }}>
+                    {new Date(groupInfo.eventDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Interests section */}
       <div style={{ padding: '20px 20px 0' }}>
