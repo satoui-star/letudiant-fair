@@ -76,7 +76,7 @@ const NAV_ITEMS: NavItem[] = [
     label: "Tableau de bord",
     icon: <IconDashboard />,
   },
-  { href: "/exhibitor/leads", label: "Leads", icon: <IconLeads /> },
+  { href: "/exhibitor/leads", label: "Statistiques", icon: <IconLeads /> },
   { href: "/exhibitor/profile", label: "Profil", icon: <IconProfile /> },
 ];
 

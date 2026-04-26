@@ -207,7 +207,7 @@ export default function ExhibitorDashboard() {
       <div style={{ background: '#FFF9E6', border: '1px solid #FCD716', borderRadius: 12, padding: '12px 16px', marginBottom: 24, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
         <span style={{ fontSize: 18, flexShrink: 0 }}>🔒</span>
         <p style={{ margin: 0, fontSize: 13, color: '#92400e', lineHeight: 1.5 }}>
-          <strong>Données 100 % agrégées.</strong> Conformément au RGPD, les profils individuels des visiteurs appartiennent à L&apos;Étudiant et ne sont pas accessibles ici. Vous recevez le rapport nominatif complet J+1 après le salon.
+          <strong>Données 100 % agrégées.</strong> Conformément au RGPD, les profils individuels des visiteurs appartiennent à L&apos;Étudiant et ne sont pas accessibles ici.
         </p>
       </div>
 
@@ -315,23 +315,6 @@ export default function ExhibitorDashboard() {
                     {scanCount} scan{scanCount !== 1 ? 's' : ''} enregistré{scanCount !== 1 ? 's' : ''}
                   </span>
                 </div>
-              </div>
-
-              {/* J+1 data product teaser */}
-              <div style={{ background: 'linear-gradient(135deg,#0066CC,#0056CC)', borderRadius: 14, padding: '20px 18px', color: '#fff' }}>
-                <p style={{ margin: '0 0 6px', fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', opacity: 0.8 }}>Rapport post-salon</p>
-                <p style={{ margin: '0 0 10px', fontSize: '1rem', fontWeight: 800, lineHeight: 1.3 }}>
-                  Recevez le rapport nominatif J+1
-                </p>
-                <p style={{ margin: '0 0 14px', fontSize: '0.8125rem', opacity: 0.85, lineHeight: 1.5 }}>
-                  Profils complets, scores d&apos;intention, parcours de visite — livré par L&apos;Étudiant le lendemain du salon.
-                </p>
-                <a
-                  href="mailto:data@letudiant.fr?subject=Rapport%20post-salon"
-                  style={{ display: 'inline-block', background: '#fff', color: '#0066CC', fontWeight: 700, fontSize: '0.8125rem', padding: '8px 14px', borderRadius: 8, textDecoration: 'none' }}
-                >
-                  Demander mon rapport →
-                </a>
               </div>
             </div>
           </div>

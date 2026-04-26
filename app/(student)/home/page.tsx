@@ -9,6 +9,7 @@ import { Skeleton, SkeletonCard } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import StudentBottomNav from '@/components/layouts/StudentBottomNav'
 import ServicesBar from '@/components/features/ServicesBar'
+import BoothVisit from '@/components/features/BoothVisit'
 import type { EventRow, SchoolRow } from '@/lib/supabase/types'
 
 const C = {
@@ -149,7 +150,7 @@ export default function StudentHomePage() {
         </div>
       </header>
 
-      <div style={{ padding: '0 20px', marginTop: -24 }}>
+      <div style={{ padding: '0 20px', marginTop: -12 }}>
         {/* Next fair */}
         {loading ? (
           <Skeleton variant="card" style={{ marginBottom: 16, height: 110 }} />
@@ -235,6 +236,9 @@ export default function StudentHomePage() {
           </div>
         )}
 
+        {/* Booth visit widget */}
+        {nextEvent && <BoothVisit eventId={nextEvent.id} />}
+
         {/* Quick actions */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 28 }}>
           {[
@@ -262,7 +266,7 @@ export default function StudentHomePage() {
         </div>
 
         {/* Services */}
-        <ServicesBar />
+        <ServicesBar eventId={nextEvent?.id} />
 
         {/* Upcoming events */}
         <SectionHeader eyebrow="Agenda" title="Prochains salons" color={C.tomate} />

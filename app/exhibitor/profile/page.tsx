@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useRef, useState } from "react";
 import SectionLabel from "@/components/ui/SectionLabel";
 import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
 import Button from "@/components/ui/Button";
 import Tag from "@/components/ui/Tag";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,6 +14,7 @@ import QRCode from 'qrcode';
 const ALL_LEVELS = ["Terminale", "Post-bac BTS", "Post-bac Licence", "Post-bac BUT", "Post-bac Bachelor", "Bac+3/4", "Bac+5"];
 const ALL_FIELDS = ["Business", "Finance", "Management", "Marketing", "Ingénierie", "Data / IA", "Design", "Santé", "Droit"];
 const FORMATION_LEVELS = ["Terminale", "Bac+1", "Bac+2", "Bac+3", "Bac+4", "Bac+5", "Bac+6/7", "Autre"];
+const SCHOOL_TYPES = ["Université", "Grande École", "École d'Ingénieurs", "École Spécialisée", "IUT"];
 
 interface FormationDraft {
   id?: string;
@@ -355,7 +357,13 @@ export default function ExhibitorProfilePage() {
             <Input id="schoolName" label="Nom de l'établissement *" value={schoolName} onChange={e => setSchoolName(e.target.value)} required />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
               <Input id="city" label="Ville" value={city} onChange={e => setCity(e.target.value)} />
-              <Input id="schoolType" label="Type d'établissement" value={schoolType} onChange={e => setSchoolType(e.target.value)} />
+              <Select
+                id="schoolType"
+                label="Type d'établissement"
+                value={schoolType}
+                onChange={e => setSchoolType(e.target.value)}
+                options={SCHOOL_TYPES.map(type => ({ value: type, label: type }))}
+              />
             </div>
             <Input id="website" label="Site web (URL)" value={website} onChange={e => setWebsite(e.target.value)} placeholder="https://www.monecole.fr" />
             <div>

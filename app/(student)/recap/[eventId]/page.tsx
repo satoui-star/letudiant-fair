@@ -2,6 +2,7 @@
 export const dynamic = 'force-dynamic';
 import { useState, useEffect } from 'react'
 import { use } from 'react'
+import { useRouter } from 'next/navigation'
 import { getSupabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import Tag from '@/components/ui/Tag'
@@ -96,6 +97,7 @@ function formatTime(iso: string) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function RecapPage({ params }: { params: Promise<{ eventId: string }> }) {
+  const router = useRouter()
   const { eventId } = use(params)
   const { user } = useAuth()
 
@@ -288,12 +290,12 @@ export default function RecapPage({ params }: { params: Promise<{ eventId: strin
           }}
         />
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <a
-            href="/home"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'rgba(255,255,255,0.75)', textDecoration: 'none', fontSize: 13, fontWeight: 500, marginBottom: 16 }}
+          <button
+            onClick={() => router.back()}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'rgba(255,255,255,0.75)', background: 'none', border: 'none', fontSize: 13, fontWeight: 500, marginBottom: 16, cursor: 'pointer', padding: 0 }}
           >
             ← Accueil
-          </a>
+          </button>
           <Tag variant="gray" style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', marginBottom: 10 }}>
             Kit After-the-Fair
           </Tag>

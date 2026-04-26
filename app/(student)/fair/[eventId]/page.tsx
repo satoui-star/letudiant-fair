@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
 import { use } from 'react';
+import { useRouter } from 'next/navigation';
 import Tag from '@/components/ui/Tag';
 import Button from '@/components/ui/Button';
 import SectionLabel from '@/components/ui/SectionLabel';
@@ -31,6 +32,7 @@ export default function FairPage({
 }: {
   params: Promise<{ eventId: string }>;
 }) {
+  const router = useRouter();
   const { eventId } = use(params);
   const [activeTab, setActiveTab] = useState<'plan' | 'programme'>('plan');
   const [selectedStand, setSelectedStand] = useState<Stand | null>(null);
@@ -40,9 +42,9 @@ export default function FairPage({
       {/* Header */}
       <div style={{ background: '#fff', padding: '20px 20px 0', borderBottom: '1px solid #E8E8E8' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-          <a href="/home" style={{ color: '#6B6B6B', textDecoration: 'none', fontSize: 22, lineHeight: 1 }}>
+          <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: '#6B6B6B', fontSize: 22, lineHeight: 1, cursor: 'pointer', padding: 0 }}>
             ←
-          </a>
+          </button>
           <div style={{ flex: 1 }}>
             <Tag variant="red" style={{ marginBottom: 6 }}>Salon</Tag>
             <h1 className="le-h2" style={{ margin: '4px 0 2px', lineHeight: 1.2 }}>

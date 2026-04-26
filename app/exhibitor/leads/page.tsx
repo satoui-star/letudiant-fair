@@ -4,10 +4,10 @@ export const dynamic = 'force-dynamic';
  * Exhibitor Leads Page — AGGREGATE ONLY
  *
  * GDPR / L'Étudiant data policy:
- *  - Exhibitors (schools) have ZERO access to individual student data.
+ *  - Exhibitors (schools) have ZERO access to individual student data or lead lists.
  *  - Students scan the school's QR code to learn more about the school in THEIR app.
- *  - The scan is a signal that belongs to L'Étudiant's data product.
- *  - L'Étudiant delivers anonymised, enriched lead segments to schools J+1 via export.
+ *  - Exhibitors receive only real-time aggregated statistics: visitor intent distribution,
+ *    education levels, regions, and visit paths (no individual profiles or lead data).
  *
  * This page shows ONLY aggregated, non-identifying statistics.
  */
@@ -203,7 +203,7 @@ export default function ExhibitorLeadsPage() {
             <p style={{ margin: 0, color: '#78350F', fontSize: '0.8125rem', lineHeight: 1.6 }}>
               Les données individuelles des étudiants sont la propriété exclusive de L'Étudiant.
               Les exposants reçoivent uniquement des <strong>statistiques agrégées et anonymisées</strong> en temps réel.
-              Les leads enrichis (segments, filières, niveau) sont disponibles via le <strong>produit data L'Étudiant en J+1</strong> après chaque salon.
+              Les données visibles ici sont des <strong>statistiques agrégées</strong> de vos visiteurs (niveaux, domaines, parcours).
               <br />Les étudiants scannent <em>votre</em> QR code ci-dessous pour découvrir votre établissement dans leur application.
             </p>
           </div>
@@ -248,9 +248,9 @@ export default function ExhibitorLeadsPage() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   {[
-                    { label: '🟢 Décideurs',      pct: stats.decidingPct,  count: stats.deciding,  color: '#16A34A', desc: 'Score > 65 — prêt(e) à postuler' },
-                    { label: '🟡 Comparateurs',   pct: stats.comparingPct, count: stats.comparing, color: '#B45309', desc: 'Score 31-65 — compare activement' },
-                    { label: '🔵 Explorateurs',   pct: stats.exploringPct, count: stats.exploring, color: '#1D4ED8', desc: 'Score 0-30 — en découverte' },
+                    { label: '🟢 Décideurs',      pct: stats.decidingPct,  count: stats.deciding,  color: '#16A34A', desc: 'Prêt(e) à postuler' },
+                    { label: '🟡 Comparateurs',   pct: stats.comparingPct, count: stats.comparing, color: '#B45309', desc: 'Compare activement' },
+                    { label: '🔵 Explorateurs',   pct: stats.exploringPct, count: stats.exploring, color: '#1D4ED8', desc: 'En découverte' },
                   ].map(item => (
                     <div key={item.label}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -302,9 +302,6 @@ export default function ExhibitorLeadsPage() {
                     </div>
                   ))}
                 </div>
-                <p style={{ fontSize: '0.75rem', color: '#92400e', margin: '12px 0 0', fontStyle: 'italic' }}>
-                  💡 Tip: Non-app users who engaged at your booth will be included in the J+1 data export with their booth-captured orientation signals.
-                </p>
               </div>
             )}
 
@@ -349,20 +346,6 @@ export default function ExhibitorLeadsPage() {
               </div>
             )}
 
-            {/* J+1 data product CTA */}
-            <div style={{ background: '#E6F0FF', borderRadius: 14, padding: '16px 20px', display: 'flex', gap: 14, alignItems: 'center' }}>
-              <span style={{ fontSize: 28, flexShrink: 0 }}>📦</span>
-              <div>
-                <p style={{ margin: '0 0 3px', fontWeight: 700, color: '#0066CC', fontSize: '0.9rem' }}>
-                  Produit Data L'Étudiant — disponible J+1
-                </p>
-                <p style={{ margin: 0, fontSize: '0.8125rem', color: '#1D4ED8', lineHeight: 1.5 }}>
-                  Le lendemain du salon, vous recevrez le rapport enrichi de L'Étudiant :
-                  segments d'intention, filières, niveaux, codes postaux — 100% anonymisé et conforme RGPD.
-                  Contactez votre chargé de compte pour accéder à l'export.
-                </p>
-              </div>
-            </div>
           </div>
 
           {/* RIGHT — stand QR code */}

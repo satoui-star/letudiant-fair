@@ -42,10 +42,10 @@ const TIERS = [
     features: [
       "Tout Pro inclus",
       "Visibilité maximale — mise en avant",
-      "Leads qualifiés avec scoring",
+      "Analytics complets et export des données",
       "Analytics complets + export",
       "Account manager dédié",
-      "Rapport post-salon personnalisé",
+      "Analyse personnalisée des profils",
     ],
     cta: "Contactez-nous",
     highlight: false,
