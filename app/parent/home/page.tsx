@@ -170,7 +170,7 @@ export default function ParentHomePage() {
   const STAGE_COLOR: Record<string, string> = { exploring: C.piscine, comparing: C.spirit, deciding: C.tomate }
 
   return (
-    <div style={{ minHeight: '100vh', background: C.blanc, fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: '#FBFAF7', fontFamily: "'Inter', system-ui, sans-serif" }}>
       <MultiStripe />
 
       {/* Header */}
@@ -179,8 +179,9 @@ export default function ParentHomePage() {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        borderBottom: `1.5px solid ${C.gray200}`,
+        borderBottom: '1px solid rgba(16,24,40,0.08)',
         background: '#fff',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
       }}>
         <Logo variant="default" size="sm" />
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -215,12 +216,15 @@ export default function ParentHomePage() {
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '48px' }}>
         {/* Hero */}
         <section style={{
-          background: C.nuit,
+          background: 'linear-gradient(135deg, #1F1B36 0%, #15121F 100%)',
           color: '#fff',
           padding: '48px',
           position: 'relative',
           overflow: 'hidden',
           marginBottom: 32,
+          borderRadius: 'var(--radius-2xl)',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+          border: '1px solid rgba(255,255,255,0.08)',
         }}>
           <div style={{
             fontSize: 11,
@@ -268,10 +272,11 @@ export default function ParentHomePage() {
         {error ? (
           <div style={{
             padding: '20px 24px',
-            background: C.tomateLight,
-            border: `1.5px solid ${C.tomate}`,
-            borderLeft: `6px solid ${C.tomate}`,
-            color: C.tomate,
+            background: 'rgba(236,31,39,0.08)',
+            border: '1px solid rgba(236,31,39,0.24)',
+            borderRadius: 'var(--radius-lg)',
+            boxShadow: 'var(--shadow-xs)',
+            color: '#C41520',
             fontSize: 14,
             fontWeight: 600,
           }}>
@@ -282,12 +287,16 @@ export default function ParentHomePage() {
             {/* Identity + Intent Column */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
               {/* Identity card */}
-              <div style={{
-                background: '#fff',
-                border: `1.5px solid ${C.gray200}`,
-                borderTop: `6px solid ${C.tomate}`,
+              <div className="le-dash-card" style={{
                 padding: 32,
+                position: 'relative',
+                borderTop: 'none',
               }}>
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, width: 3, height: '100%',
+                  background: `linear-gradient(180deg, ${C.tomate} 0%, ${C.tomate}99 100%)`,
+                  borderRadius: 'var(--radius-2xl) 0 0 var(--radius-2xl)',
+                }} />
                 <Eyebrow color={C.tomate}>Votre enfant</Eyebrow>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 28 }}>
                   <div style={{
@@ -326,9 +335,16 @@ export default function ParentHomePage() {
                 {/* Intent tier */}
                 <div style={{
                   padding: 20,
-                  background: C.gray100,
-                  borderLeft: `4px solid ${intentColor}`,
+                  background: 'linear-gradient(135deg, rgba(16,24,40,0.04) 0%, rgba(16,24,40,0.02) 100%)',
+                  border: `1px solid rgba(16,24,40,0.08)`,
+                  borderRadius: 'var(--radius-lg)',
+                  position: 'relative',
                 }}>
+                  <div style={{
+                    position: 'absolute', left: 0, top: 0, bottom: 0, width: 3,
+                    background: `linear-gradient(180deg, ${intentColor} 0%, ${intentColor}99 100%)`,
+                    borderRadius: 'var(--radius-lg) 0 0 var(--radius-lg)',
+                  }} />
                   <div style={{
                     fontSize: 10,
                     fontWeight: 800,
@@ -354,19 +370,20 @@ export default function ParentHomePage() {
                     <span>Score d&apos;intention</span>
                     <span style={{ color: C.nuit }}>{profile.intent_score} / 100</span>
                   </div>
-                  <div style={{ height: 6, background: '#fff', overflow: 'hidden' }}>
+                  <div style={{ height: 6, background: 'rgba(16,24,40,0.08)', overflow: 'hidden', borderRadius: 999 }}>
                     <div style={{
                       height: '100%',
                       width: `${profile.intent_score}%`,
                       background: intentColor,
-                      transition: 'width 0.4s',
+                      transition: 'width 0.6s var(--ease-out)',
+                      borderRadius: 999,
                     }} />
                   </div>
                 </div>
 
                 {/* Orientation stage */}
                 {profile.orientation_stage && (
-                  <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#fff', border: `1px solid ${C.gray200}` }}>
+                  <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#fff', border: '1px solid rgba(16,24,40,0.08)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-xs)' }}>
                     <div>
                       <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: C.gray500, marginBottom: 4 }}>Stade d&apos;orientation</div>
                       <div style={{ fontSize: 16, fontWeight: 900, fontStyle: 'italic', color: STAGE_COLOR[profile.orientation_stage] ?? C.gray500, textTransform: 'uppercase', letterSpacing: '-0.01em' }}>
@@ -382,12 +399,16 @@ export default function ParentHomePage() {
 
               {/* Dwell time */}
               {profile.last_dwell_minutes != null && (
-                <div style={{
-                  background: '#fff',
-                  border: `1.5px solid ${C.gray200}`,
-                  borderLeft: `6px solid ${C.menthe}`,
+                <div className="le-dash-card" style={{
                   padding: 32,
+                  position: 'relative',
+                  borderLeft: 'none',
                 }}>
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0, width: 3, height: '100%',
+                    background: `linear-gradient(180deg, ${C.menthe} 0%, ${C.menthe}99 100%)`,
+                    borderRadius: 'var(--radius-2xl) 0 0 var(--radius-2xl)',
+                  }} />
                   <Eyebrow color={C.menthe}>Dernier salon</Eyebrow>
                   <div style={{
                     fontSize: 64,
@@ -409,12 +430,16 @@ export default function ParentHomePage() {
             {/* Interests + Wishlist Column */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
               {profile.education_branches.length > 0 && (
-                <div style={{
-                  background: '#fff',
-                  border: `1.5px solid ${C.gray200}`,
-                  borderLeft: `6px solid ${C.piscine}`,
+                <div className="le-dash-card" style={{
                   padding: 32,
+                  position: 'relative',
+                  borderLeft: 'none',
                 }}>
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0, width: 3, height: '100%',
+                    background: `linear-gradient(180deg, ${C.piscine} 0%, ${C.piscine}99 100%)`,
+                    borderRadius: 'var(--radius-2xl) 0 0 var(--radius-2xl)',
+                  }} />
                   <Eyebrow color={C.piscine}>Domaines déclarés</Eyebrow>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {profile.education_branches.map((b, i) => {
@@ -439,12 +464,16 @@ export default function ParentHomePage() {
               )}
 
               {wishlistNames.length > 0 && (
-                <div style={{
-                  background: '#fff',
-                  border: `1.5px solid ${C.gray200}`,
-                  borderLeft: `6px solid ${C.citron}`,
+                <div className="le-dash-card" style={{
                   padding: 32,
+                  position: 'relative',
+                  borderLeft: 'none',
                 }}>
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0, width: 3, height: '100%',
+                    background: `linear-gradient(180deg, ${C.citron} 0%, ${C.citron}99 100%)`,
+                    borderRadius: 'var(--radius-2xl) 0 0 var(--radius-2xl)',
+                  }} />
                   <Eyebrow color={C.tomate}>Établissements sauvegardés</Eyebrow>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                     {wishlistNames.map((school, i) => (
@@ -453,7 +482,8 @@ export default function ParentHomePage() {
                         alignItems: 'center',
                         gap: 14,
                         padding: '14px 0',
-                        borderBottom: i === wishlistNames.length - 1 ? 'none' : `1px solid ${C.gray200}`,
+                        borderBottom: i === wishlistNames.length - 1 ? 'none' : '1px solid rgba(16,24,40,0.08)',
+                        transition: 'all var(--trans-fast)',
                       }}>
                         <div style={{
                           width: 32,
@@ -478,10 +508,13 @@ export default function ParentHomePage() {
 
               {/* Privacy notice */}
               <div style={{
-                background: C.nuit,
+                background: 'linear-gradient(135deg, #1F1B36 0%, #15121F 100%)',
                 color: '#fff',
                 padding: 24,
                 position: 'relative',
+                borderRadius: 'var(--radius-xl)',
+                boxShadow: 'var(--shadow-md)',
+                border: '1px solid rgba(255,255,255,0.08)',
               }}>
                 <div style={{
                   fontSize: 10,

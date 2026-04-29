@@ -189,12 +189,12 @@ export default function TeacherDashboard() {
           /* ── No group yet ─────────────────────────────────────────────── */
           <div>
             {/* Why this matters */}
-            <div style={{ background: 'linear-gradient(135deg,#0066CC,#0056CC)', borderRadius: 16, padding: '24px 28px', color: '#fff', marginBottom: 20 }}>
-              <p style={{ margin: '0 0 8px', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', opacity: 0.8 }}>Pourquoi collecter ces données ?</p>
+            <div style={{ background: 'linear-gradient(135deg, rgba(0,102,204,0.95) 0%, rgba(0,86,204,0.93) 100%)', borderRadius: 'var(--radius-xl)', padding: '24px 28px', color: '#fff', marginBottom: 20, boxShadow: '0 4px 16px rgba(0,102,204,0.15)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)' }}>
+              <p style={{ margin: '0 0 8px', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', opacity: 0.9 }}>Pourquoi collecter ces données ?</p>
               <p style={{ margin: '0 0 12px', fontSize: '1.0625rem', fontWeight: 800, lineHeight: 1.3 }}>
                 Sur 700 000 visiteurs / an, les groupes scolaires arrivent en anonymes
               </p>
-              <ul style={{ margin: '0 0 4px', padding: '0 0 0 18px', fontSize: '0.875rem', opacity: 0.9, lineHeight: 1.8 }}>
+              <ul style={{ margin: '0 0 4px', padding: '0 0 0 18px', fontSize: '0.875rem', opacity: 0.95, lineHeight: 1.8 }}>
                 <li>Avant votre groupe : l&apos;enseignant inscrit son nom et le nombre d&apos;élèves</li>
                 <li>Résultat : des données inutilisables pour L&apos;Étudiant et ses partenaires</li>
                 <li>Avec ce dispositif : chaque élève crée son profil → QR individuel → données riches</li>
@@ -243,18 +243,19 @@ export default function TeacherDashboard() {
             </div>
 
             {/* ── Tabs: pre-fair actions vs member list ────────────────────── */}
-            <div style={{ display: 'flex', background: '#E8E8E8', borderRadius: 8, padding: 4, marginBottom: 20, width: 'fit-content', gap: 4 }}>
+            <div style={{ display: 'inline-flex', background: 'rgba(16,24,40,0.04)', borderRadius: 'var(--radius-lg)', padding: 6, marginBottom: 20, gap: 6, border: '1px solid rgba(16,24,40,0.08)' }}>
               {([['prefair', '📤 Partager le lien'], ['members', `👥 Élèves (${totalJoined})`]] as const).map(([tab, label]) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
+                  className="le-tab-pill"
                   style={{
-                    padding: '8px 18px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                    padding: '10px 20px', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer',
                     fontSize: 13, fontWeight: 600,
                     background: activeTab === tab ? '#fff' : 'transparent',
                     color: activeTab === tab ? '#1A1A1A' : '#6B6B6B',
-                    boxShadow: activeTab === tab ? '0 1px 4px rgba(0,0,0,0.12)' : 'none',
-                    transition: 'all 0.15s ease',
+                    boxShadow: activeTab === tab ? 'var(--shadow-sm)' : 'none',
+                    transition: 'all var(--trans-fast)',
                   }}
                 >
                   {label}
@@ -319,7 +320,7 @@ export default function TeacherDashboard() {
 
             {activeTab === 'members' && (
               /* ── Members list ───────────────────────────────────────── */
-              <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 6px rgba(0,0,0,0.05)' }}>
+              <div className="le-dash-card" style={{ overflow: 'hidden', padding: 0 }}>
 
                 {members.length === 0 ? (
                   <div style={{ padding: '40px 24px' }}>
@@ -332,7 +333,7 @@ export default function TeacherDashboard() {
                 ) : (
                   <>
                     {/* Table header */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 110px 110px', gap: 12, padding: '10px 20px', background: '#F4F4F4', borderBottom: '1px solid #E8E8E8' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 110px 110px', gap: 12, padding: '10px 20px', background: 'linear-gradient(180deg, #FAFAF8 0%, #F4F3EE 100%)', borderBottom: '1px solid rgba(16,24,40,0.08)' }}>
                       {['Élève', 'Inscrit le', 'Avant salon', 'Profil'].map(h => (
                         <span key={h} style={{ fontSize: 11, fontWeight: 700, color: '#6B6B6B', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{h}</span>
                       ))}
@@ -343,8 +344,9 @@ export default function TeacherDashboard() {
                         style={{
                           display: 'grid', gridTemplateColumns: '1fr 140px 110px 110px', gap: 12,
                           padding: '12px 20px', alignItems: 'center',
-                          borderBottom: idx < members.length - 1 ? '1px solid #F4F4F4' : 'none',
-                          background: !m.has_profile ? 'rgba(227,0,27,0.02)' : undefined,
+                          borderBottom: idx < members.length - 1 ? '1px solid rgba(16,24,40,0.06)' : 'none',
+                          background: !m.has_profile ? 'rgba(236,31,39,0.03)' : undefined,
+                          transition: 'background var(--trans-fast)',
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
