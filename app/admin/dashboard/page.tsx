@@ -93,16 +93,19 @@ function StatCard({ label, value, sub, accent }: {
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 style={{
-      fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' as const,
-      color: C.gray500, margin: '0 0 16px', paddingLeft: 4,
-    }}>{children}</h2>
+    <div style={{ marginBottom: 24 }}>
+      <h2 style={{
+        fontSize: 'clamp(1.25rem, 3vw, 1.75rem)', fontWeight: 900, letterSpacing: '-0.02em',
+        color: C.nuit, margin: '0 0 4px',
+      }}>{children}</h2>
+      <div style={{ width: 40, height: 3, background: `linear-gradient(135deg, ${C.tomate} 0%, ${C.spirit} 100%)`, borderRadius: 999 }} />
+    </div>
   )
 }
 
-function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+function Card({ children, style, elevated = false }: { children: React.ReactNode; style?: React.CSSProperties; elevated?: boolean }) {
   return (
-    <div className="le-dash-card" style={{
+    <div className={elevated ? 'le-surface-elevated' : 'le-dash-card'} style={{
       padding: '24px 28px', ...style,
     }}>{children}</div>
   )
@@ -308,36 +311,35 @@ export default function AdminDashboard() {
 
       <div style={{ padding: '32px 40px', maxWidth: 1400, margin: '0 auto' }} className="le-fade-in">
         {/* HEADER */}
-        <div style={{ marginBottom: 32 }}>
-          <div style={{ display: 'inline-block', position: 'relative', paddingBottom: 8, marginBottom: 16 }}>
-            <span style={{
-              fontSize: 11, fontWeight: 800, letterSpacing: '0.2em',
-              textTransform: 'uppercase' as const, color: C.gray500,
-            }}>Administration — Pilotage</span>
-            <div style={{ position: 'absolute', left: 0, bottom: 0, width: 28, height: 3, background: C.tomate }} />
+        <div style={{ marginBottom: 40 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 999, background: 'rgba(236,31,39,0.08)', color: C.tomate, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 24 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.tomate, animation: 'lePulseDot 1.8s var(--ease-smooth) infinite' }} />
+            Administration · Pilotage 2026
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap' as const, gap: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap' as const, gap: 20, marginBottom: 28 }}>
             <div>
               <h1 style={{
-                margin: 0, fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 900,
-                color: C.nuit, textTransform: 'uppercase' as const, lineHeight: 0.95, letterSpacing: '-0.03em',
-              }}>Tableau de bord</h1>
-              <p style={{ margin: '12px 0 0', fontSize: 16, color: C.gray500, maxWidth: 560, lineHeight: 1.5 }}>
-                Pilotage en temps réel des salons L&apos;Étudiant
+                margin: 0, fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 900,
+                color: C.nuit, lineHeight: 0.95, letterSpacing: '-0.03em',
+              }}>
+                Tableau de <span className="le-text-gradient">bord</span>
+              </h1>
+              <p style={{ margin: '16px 0 0', fontSize: 16, color: C.gray700, maxWidth: 600, lineHeight: 1.6 }}>
+                Pilotage en temps réel des <strong style={{ color: C.nuit }}>salons L&apos;Étudiant</strong> — 130 événements à travers la France
               </p>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <span style={{
                 fontSize: 12, color: C.gray500, fontWeight: 500,
                 display: 'inline-flex', alignItems: 'center', gap: 8,
-                padding: '6px 12px', background: '#fff',
+                padding: '8px 12px', background: '#fff',
                 border: `1px solid rgba(16,24,40,0.06)`,
                 borderRadius: 999, boxShadow: 'var(--shadow-xs)',
               }}>
                 <span className="le-live-dot" />
-                {refreshing ? 'Synchronisation… ' : `Mis à jour il y a ${timeSince}`}
+                {refreshing ? 'Synchronisation…' : `Mis à jour il y a ${timeSince}`}
               </span>
               {events.length > 0 && (
                 <select value={selectedEvent?.id ?? ''} onChange={e => {
@@ -359,22 +361,50 @@ export default function AdminDashboard() {
               )}
             </div>
           </div>
+
+          {/* Feature Pills */}
+          <div className="le-feature-grid" style={{ margin: '24px 0 0' }}>
+            {[
+              { icon: '📊', label: 'Analytics temps réel' },
+              { icon: '👥', label: 'Gestion des visiteurs' },
+              { icon: '🎯', label: 'Clusters intelligence' },
+              { icon: '📅', label: 'Salons multiples' },
+            ].map(f => (
+              <div key={f.label} className="le-feature-pill">
+                <span>{f.icon}</span>
+                {f.label}
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* ERROR */}
         {error && (
           <div style={{
-            padding: '14px 20px', background: C.tomateLight, color: C.tomate,
-            border: `1.5px solid ${C.tomate}`, borderLeft: `6px solid ${C.tomate}`,
-            borderRadius: 2, marginBottom: 24, fontSize: 14, fontWeight: 600,
+            padding: '14px 16px', background: 'rgba(236,31,39,0.08)', color: '#C41520',
+            border: '1px solid rgba(236,31,39,0.24)', borderLeft: `3px solid ${C.tomate}`,
+            borderRadius: 'var(--radius-sm)', marginBottom: 24, fontSize: 14, fontWeight: 600,
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            boxShadow: 'var(--shadow-xs)',
           }}>
-            <span>{error}</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>⚠️</span>
+              {error}
+            </span>
             <button onClick={() => selectedEvent && loadData(selectedEvent.id, tab)} style={{
-              background: C.tomate, color: '#fff', border: 'none', borderRadius: 2,
+              background: C.tomate, color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)',
               padding: '6px 14px', fontWeight: 700, fontSize: 12, cursor: 'pointer',
               textTransform: 'uppercase' as const, letterSpacing: '0.1em',
-            }}>Réessayer</button>
+              transition: 'all 0.2s var(--ease-out)',
+            }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = 'translateY(-1px)'
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(236,31,39,0.3)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = 'none'
+              }}>Réessayer</button>
           </div>
         )}
 

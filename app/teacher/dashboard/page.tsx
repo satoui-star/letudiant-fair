@@ -164,20 +164,36 @@ export default function TeacherDashboard() {
 
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
-    <main className="le-fade-in" style={{ flex: 1, padding: '32px 28px', maxWidth: 900, fontFamily: 'system-ui, sans-serif' }}>
+    <main className="le-fade-in" style={{ flex: 1, padding: '32px 40px', maxWidth: 1000, fontFamily: 'system-ui, sans-serif' }}>
 
         {/* ── Header ──────────────────────────────────────────────────────── */}
-        <div style={{ marginBottom: 28 }}>
-          <p style={{ margin: '0 0 4px', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#9B9B9B' }}>
-            Collecte de données · Groupe scolaire
-          </p>
-          <h1 style={{ margin: '0 0 4px', fontSize: '1.5rem', fontWeight: 800, color: '#1A1A1A' }}>
-            {profile?.name ?? 'Enseignant(e)'} — {group ? group.school_name : 'Mon établissement'}
+        <div style={{ marginBottom: 40 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 999, background: 'rgba(236,31,39,0.08)', color: '#EC1F27', fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 24 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#EC1F27', animation: 'lePulseDot 1.8s var(--ease-smooth) infinite' }} />
+            Collecte de données · 2026
+          </div>
+
+          <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 900, letterSpacing: '-0.03em', color: '#1A1A1A' }}>
+            Groupe scolaire
           </h1>
-          <p style={{ margin: 0, color: '#6B6B6B', fontSize: '0.9rem', lineHeight: 1.5 }}>
-            Les groupes scolaires représentent <strong style={{ color: '#EC1F27' }}>~15 % des visiteurs du salon</strong>.<br />
-            L&apos;objectif : collecter les profils individuels de chaque élève — idéalement avant le salon.
+          <p style={{ margin: '16px 0 0', fontSize: '16px', color: '#6B6B6B', lineHeight: 1.6, maxWidth: 600 }}>
+            Collectez les profils de <strong style={{ color: '#1A1A1A' }}>chaque élève</strong> — idéalement avant le salon. Les groupes scolaires représentent ~15 % des 700 000 visiteurs annuels.
           </p>
+
+          {/* Feature pills */}
+          <div className="le-feature-grid">
+            {[
+              { icon: '📱', label: 'QR code groupe' },
+              { icon: '👥', label: 'Profils élèves' },
+              { icon: '📊', label: 'Statistiques' },
+              { icon: '📤', label: 'Partage facile' },
+            ].map(f => (
+              <div key={f.label} className="le-feature-pill">
+                <span>{f.icon}</span>
+                {f.label}
+              </div>
+            ))}
+          </div>
         </div>
 
         {loading ? (
