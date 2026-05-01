@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Logo from '@/components/ui/Logo'
+import Icon, { type IconName } from '@/components/ui/Icon'
 
 const C = {
   tomate: '#EC1F27',
@@ -127,9 +128,9 @@ function LoginInner() {
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
               {[
-                { icon: '🎯', label: 'Recos personnalisées' },
-                { icon: '📅', label: 'RDV en 1 clic' },
-                { icon: '🏛️', label: '130 salons' },
+                { icon: 'target' as IconName, label: 'Recos personnalisées' },
+                { icon: 'calendar' as IconName, label: 'RDV en 1 clic' },
+                { icon: 'building' as IconName, label: '130 salons' },
               ].map(f => (
                 <div key={f.label} style={{
                   display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -137,7 +138,7 @@ function LoginInner() {
                   border: '1px solid rgba(16,24,40,0.06)', fontSize: 13, fontWeight: 600,
                   color: C.gray700, boxShadow: 'var(--shadow-xs)',
                 }}>
-                  <span>{f.icon}</span>
+                  <Icon name={f.icon} size={16} style={{ color: C.tomate }} />
                   {f.label}
                 </div>
               ))}
@@ -194,7 +195,7 @@ function LoginInner() {
                   borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 500,
                   display: 'flex', alignItems: 'center', gap: 10,
                 }}>
-                  <span style={{ fontSize: 14 }}>⚠️</span>
+                  <Icon name="alert" size={14} />
                   {error}
                 </div>
               )}

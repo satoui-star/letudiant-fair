@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import type { EventRow } from '@/lib/supabase/types'
 
 const C = {
@@ -30,10 +31,14 @@ const SALON_COLORS = [
 ]
 
 export default function SalonsPage() {
+  const router = useRouter()
   const [events, setEvents] = useState<EventRow[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<'all' | 'upcoming' | 'live' | 'archived'>('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [formData, setFormData] = useState({ name: '', city: '', event_date: '' })
+  const [createLoading, setCreateLoading] = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchEvents()
@@ -50,6 +55,38 @@ export default function SalonsPage() {
       console.error('Failed to fetch events:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleCreateSalon() {
+    setCreateError(null)
+    if (!formData.name.trim() || !formData.city.trim() || !formData.event_date) {
+      setCreateError('Tous les champs sont obligatoires')
+      return
+    }
+
+    setCreateLoading(true)
+    try {
+      const res = await fetch('/api/admin/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          city: formData.city,
+          event_date: new Date(formData.event_date).toISOString(),
+          is_virtual: false,
+          is_active: false,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Erreur de création')
+      setEvents(prev => [data.data, ...prev])
+      setShowCreateModal(false)
+      setFormData({ name: '', city: '', event_date: '' })
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : 'Erreur')
+    } finally {
+      setCreateLoading(false)
     }
   }
 
@@ -426,6 +463,7 @@ export default function SalonsPage() {
                     {/* Actions */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                       <button
+                        onClick={() => router.push(`/admin/salons/${event.id}`)}
                         style={{
                           padding: '10px 12px',
                           background: C.noir,
@@ -445,6 +483,7 @@ export default function SalonsPage() {
                         Détails
                       </button>
                       <button
+                        onClick={() => router.push(`/admin/salons/${event.id}`)}
                         style={{
                           padding: '10px 12px',
                           background: 'transparent',
@@ -539,6 +578,22 @@ export default function SalonsPage() {
               >
                 Créer un salon
               </h2>
+
+              {createError && (
+                <div style={{
+                  padding: '12px 14px',
+                  background: 'rgba(236,31,39,0.08)',
+                  border: `1px solid ${C.tomate}`,
+                  borderRadius: 4,
+                  color: C.tomate,
+                  fontSize: 13,
+                  marginBottom: 16,
+                  fontWeight: 500,
+                }}>
+                  {createError}
+                </div>
+              )}
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24 }}>
                 <div>
                   <label
@@ -557,6 +612,8 @@ export default function SalonsPage() {
                   <input
                     type="text"
                     placeholder="Salon de l'Étudiant Paris"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                     style={{
                       width: '100%',
                       padding: '12px 14px',
@@ -587,6 +644,8 @@ export default function SalonsPage() {
                   </label>
                   <input
                     type="date"
+                    value={formData.event_date}
+                    onChange={(e) => setFormData(prev => ({ ...prev, event_date: e.target.value }))}
                     style={{
                       width: '100%',
                       padding: '12px 14px',
@@ -595,7 +654,10 @@ export default function SalonsPage() {
                       fontSize: 14,
                       boxSizing: 'border-box',
                       outline: 'none',
+                      transition: 'border-color 0.15s',
                     }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = C.tomate)}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = C.gray200)}
                   />
                 </div>
                 <div>
@@ -615,6 +677,8 @@ export default function SalonsPage() {
                   <input
                     type="text"
                     placeholder="Paris"
+                    value={formData.city}
+                    onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
                     style={{
                       width: '100%',
                       padding: '12px 14px',
@@ -623,13 +687,20 @@ export default function SalonsPage() {
                       fontSize: 14,
                       boxSizing: 'border-box',
                       outline: 'none',
+                      transition: 'border-color 0.15s',
                     }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = C.tomate)}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = C.gray200)}
                   />
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <button
-                  onClick={() => setShowCreateModal(false)}
+                  onClick={() => {
+                    setShowCreateModal(false)
+                    setFormData({ name: '', city: '', event_date: '' })
+                    setCreateError(null)
+                  }}
                   style={{
                     padding: '12px 20px',
                     background: 'transparent',
@@ -646,6 +717,8 @@ export default function SalonsPage() {
                   Annuler
                 </button>
                 <button
+                  onClick={handleCreateSalon}
+                  disabled={createLoading}
                   style={{
                     padding: '12px 20px',
                     background: C.tomate,
@@ -656,10 +729,11 @@ export default function SalonsPage() {
                     fontSize: 13,
                     textTransform: 'uppercase',
                     letterSpacing: '0.06em',
-                    cursor: 'pointer',
+                    cursor: createLoading ? 'not-allowed' : 'pointer',
+                    opacity: createLoading ? 0.6 : 1,
                   }}
                 >
-                  Créer
+                  {createLoading ? 'Création...' : 'Créer'}
                 </button>
               </div>
             </div>

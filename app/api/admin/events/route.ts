@@ -73,3 +73,58 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: err instanceof Error ? err.message : 'Server error' }, { status: 500 })
   }
 }
+
+export async function PATCH(request: Request) {
+  const guard = await requireAdmin()
+  if (guard.error) return guard.error
+
+  try {
+    const { id, ...body } = await request.json()
+    if (!id) return NextResponse.json({ error: 'Event ID required' }, { status: 400 })
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } }
+    )
+
+    const { data, error } = await supabase
+      .from('events')
+      .update({ ...body, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return NextResponse.json({ success: true, data })
+  } catch (err: unknown) {
+    console.error('[PATCH /api/admin/events]', err)
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Server error' }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: Request) {
+  const guard = await requireAdmin()
+  if (guard.error) return guard.error
+
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+    if (!id) return NextResponse.json({ error: 'Event ID required' }, { status: 400 })
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } }
+    )
+
+    const { error } = await supabase.from('events').delete().eq('id', id)
+    if (error) throw error
+
+    return NextResponse.json({ success: true })
+  } catch (err: unknown) {
+    console.error('[DELETE /api/admin/events]', err)
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Server error' }, { status: 500 })
+  }
+}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, startTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import type { UserRow } from '@/lib/supabase/types'
@@ -36,13 +36,19 @@ export default function RoleGate({
 
   useEffect(() => {
     if (loading) return
-    if (!user) {
-      router.replace(`/login?redirect=${encodeURIComponent(window.location.pathname)}`)
-      return
-    }
-    if (role !== allow) {
-      router.replace(role ? ROLE_HOME[role] : '/login')
-    }
+    const target = !user
+      ? `/login?redirect=${encodeURIComponent(window.location.pathname)}`
+      : role !== allow
+        ? (role ? ROLE_HOME[role] : '/login')
+        : null
+    if (!target) return
+    // Defer router.replace to the next tick so the App Router is fully
+    // initialized — avoids Next.js 16 "Router action dispatched before
+    // initialization" error under Turbopack.
+    const id = setTimeout(() => {
+      startTransition(() => router.replace(target))
+    }, 0)
+    return () => clearTimeout(id)
   }, [loading, user, role, allow, router])
 
   if (loading || !user || role !== allow) {

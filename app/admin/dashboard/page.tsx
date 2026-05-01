@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { getSupabase } from '@/lib/supabase/client'
 import type { EventRow } from '@/lib/supabase/types'
+import Icon, { type IconName } from '@/components/ui/Icon'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area,
   CartesianGrid, Legend, ReferenceLine, Cell,
@@ -365,13 +366,13 @@ export default function AdminDashboard() {
           {/* Feature Pills */}
           <div className="le-feature-grid" style={{ margin: '24px 0 0' }}>
             {[
-              { icon: '📊', label: 'Analytics temps réel' },
-              { icon: '👥', label: 'Gestion des visiteurs' },
-              { icon: '🎯', label: 'Clusters intelligence' },
-              { icon: '📅', label: 'Salons multiples' },
+              { icon: 'chart' as IconName, label: 'Analytics temps réel' },
+              { icon: 'users' as IconName, label: 'Gestion des visiteurs' },
+              { icon: 'target' as IconName, label: 'Clusters intelligence' },
+              { icon: 'calendar' as IconName, label: 'Salons multiples' },
             ].map(f => (
               <div key={f.label} className="le-feature-pill">
-                <span>{f.icon}</span>
+                <Icon name={f.icon} size={16} style={{ color: C.tomate }} />
                 {f.label}
               </div>
             ))}
@@ -388,7 +389,7 @@ export default function AdminDashboard() {
             boxShadow: 'var(--shadow-xs)',
           }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span>⚠️</span>
+              <Icon name="alert" size={16} />
               {error}
             </span>
             <button onClick={() => selectedEvent && loadData(selectedEvent.id, tab)} style={{

@@ -491,17 +491,13 @@ export default function DiscoverPage() {
   useEffect(() => {
     const loadFormations = async () => {
       try {
-        console.log('🟢 loadFormations() START - user.id:', user?.id);
-
         if (!user?.id) {
-          console.warn('No authenticated user');
           setFormations([]);
           setLoadingFormations(false);
           return;
         }
 
         // STEP 1: Fetch user's wishlist from Supabase
-        console.log('📖 Fetching user wishlist...');
         const supabase = getSupabase();
         const { data: userData, error: userError } = await supabase
           .from('users')
@@ -517,19 +513,9 @@ export default function DiscoverPage() {
         }
 
         const userWishlist = userData?.wishlist ?? [];
-        console.log('💾 User wishlist:', userWishlist, 'Count:', userWishlist.length);
-        console.log('📊 User profile:', {
-          education_branches: userData?.education_branches,
-          orientation_stage: userData?.orientation_stage,
-          name: userData?.name
-        });
-
         // STEP 2: Load all schools and formations
         const allSchools = await getSchools();
-        console.log('🏫 Loaded schools:', allSchools.length);
-
         if (!allSchools || allSchools.length === 0) {
-          console.warn('No schools found');
           setFormations([]);
           setLoadingFormations(false);
           return;
@@ -541,8 +527,6 @@ export default function DiscoverPage() {
         for (const school of allSchools) {
           try {
             const schoolFormations = await getSchoolFormations(school.id);
-            console.log(`📚 Loaded ${schoolFormations?.length || 0} formations for ${school.name}`);
-
             if (schoolFormations && schoolFormations.length > 0) {
               allFormations.push(
                 ...schoolFormations.map((formation) => ({
@@ -559,11 +543,7 @@ export default function DiscoverPage() {
             console.error(`Error loading formations for ${school.name}:`, err);
           }
         }
-
-        console.log('📊 Total formations loaded (before filter):', allFormations.length);
-
         if (allFormations.length === 0) {
-          console.warn('No formations found across all schools');
           setFormations([]);
           setLoadingFormations(false);
           return;
@@ -573,10 +553,7 @@ export default function DiscoverPage() {
         const newFormations = allFormations.filter(
           (formation) => !userWishlist.includes(formation.id)
         );
-        console.log(`🔥 Filtered formations (removed ${userWishlist.length} already saved):`, newFormations.length);
-
         if (newFormations.length === 0) {
-          console.warn('⚠️ No new formations available (all are already saved)');
           setFormations([]);
           setLoadingFormations(false);
           return;
@@ -585,20 +562,14 @@ export default function DiscoverPage() {
         // STEP 4: Rank formations by relevance if user has profile data
         let finalFormations = newFormations;
         if (userData?.education_branches && userData.education_branches.length > 0) {
-          console.log('🎯 Ranking formations for user with branches:', userData.education_branches);
           finalFormations = await rankFormationsForStudent(user.id, userData, newFormations);
-          console.log('🏆 Ranked formations:', finalFormations.length);
         } else {
-          console.log('⚠️ No education branches, showing formations in default order');
         }
 
         // Reverse so first formation shows on top of TinderCard stack
         setFormations([...finalFormations].reverse());
         setRightCount(userWishlist.length); // Set counter to total saved (sync with /saved page)
         setGone(new Set()); // Reset swiped cards
-        console.log('✅ Final formations ready for display:', finalFormations.length);
-        console.log('📊 Counter synced to wishlist total:', userWishlist.length);
-
       } catch (err) {
         console.error('❌ Error loading formations:', err);
         setFormations([]);
@@ -621,7 +592,6 @@ export default function DiscoverPage() {
 
       const wishlist = (userData?.wishlist as string[]) ?? [];
       setRightCount(wishlist.length);
-      console.log('Loaded wishlist count:', wishlist.length);
     } catch (err) {
       console.error('Error loading wishlist count:', err);
     }
@@ -641,14 +611,12 @@ export default function DiscoverPage() {
 
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible') {
-        console.log('DiscoverPage: Page became visible, refreshing counter...');
         await loadWishlistCount(user.id);
       }
     };
 
     // Also refresh immediately if page is already visible
     if (document.visibilityState === 'visible') {
-      console.log('DiscoverPage: Page is visible, refreshing counter...');
       loadWishlistCount(user.id);
     }
 
@@ -661,7 +629,6 @@ export default function DiscoverPage() {
     if (!user?.id) return;
 
     const handlePopState = () => {
-      console.log('DiscoverPage: Browser back/forward detected, refreshing counter...');
       loadWishlistCount(user.id);
     };
 
@@ -673,12 +640,9 @@ export default function DiscoverPage() {
   useEffect(() => {
     const loadReels = async () => {
       try {
-        console.log('🎬 Loading reels...');
         setLoadingReels(true);
 
         const reelData = await getAllReels();
-        console.log('✅ Loaded', reelData.length, 'reels');
-
         // Transform SchoolReelRow to Reel format for display
         const transformedReels: Reel[] = reelData.map((reel: any) => ({
           id: reel.id,
@@ -722,16 +686,12 @@ export default function DiscoverPage() {
   };
 
   const handleSwipe = async (direction: string, formation: FormationWithSchool) => {
-    console.log('handleSwipe called - direction:', direction, 'formation:', formation.name);
-
     try {
       setGone((prev) => new Set(prev).add(formation.id));
 
       if (direction === 'right') {
-        console.log('RIGHT swipe detected - incrementing counter from:', rightCount);
         setRightCount((n) => {
           const newCount = n + 1;
-          console.log('Counter updated:', n, '→', newCount);
           return newCount;
         });
         showToast(`💾 ${formation.name} enregistrée !`);
@@ -741,7 +701,6 @@ export default function DiscoverPage() {
           setPendingSaves((n) => n + 1);
           try {
             await saveFormationToWishlist(user.id, formation.id);
-            console.log('Saved formation to wishlist');
           } catch (err) {
             console.error('saveFormationToWishlist failed:', err);
           } finally {
@@ -749,7 +708,6 @@ export default function DiscoverPage() {
           }
         }
       } else if (direction === 'left') {
-        console.log('Card dismissed');
       }
     } catch (err) {
       console.error('Error in handleSwipe:', err);
@@ -777,20 +735,15 @@ export default function DiscoverPage() {
   const currentCard = formations.find((c) => !gone.has(c.id));
 
   const handleAction = (direction: 'left' | 'center' | 'right') => {
-    console.log('Button clicked:', direction, 'currentCard:', currentCard?.name);
-
     if (!currentCard) {
-      console.warn('No current card to act on');
       return;
     }
 
     if (direction === 'center') {
       // 💡 Flip button: toggle card flip animation
-      console.log('Toggling flip for', currentCard.name);
       toggleFlip(currentCard.id);
     } else {
       // X (left) or ✓ (right): swipe and remove card
-      console.log('Triggering swipe:', direction);
       handleSwipe(direction, currentCard);
     }
   };
@@ -833,10 +786,8 @@ export default function DiscoverPage() {
           </div>
           {activeTab === 'swipe' && rightCount > 0 && (
             <>
-              {console.log('Render counter button - rightCount:', rightCount, 'pendingSaves:', pendingSaves)}
               <button
                 onClick={() => {
-                  console.log('Counter button clicked - navigating to saved page');
                   router.push('/saved?tab=liens');
                 }}
                 disabled={pendingSaves > 0}
@@ -1016,7 +967,6 @@ export default function DiscoverPage() {
               <TinderCard
                 key={currentCard.id}
                 onSwipe={(dir) => {
-                  console.log('TinderCard onSwipe called with direction:', dir, 'formation:', currentCard.name);
                   handleSwipe(dir, currentCard);
                 }}
                 preventSwipe={['up', 'down']}

@@ -6,6 +6,7 @@ import { trackPageView } from '@/lib/analytics/track'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import StudentBottomNav from '@/components/layouts/StudentBottomNav'
+import Icon from '@/components/ui/Icon'
 import type { SchoolRow } from '@/lib/supabase/types'
 
 const MAX_COMPARE = 3
@@ -66,11 +67,29 @@ export default function ComparePage() {
               <button onClick={() => removeSchool(s.id)} style={{ background: 'none', border: 'none', color: '#EC1F27', cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: 0 }}>×</button>
             </div>
           ))}
-          {selected.length < MAX_COMPARE && (
-            <button onClick={() => setShowPicker(true)} style={{ background: '#fff', border: '2px dashed #EC1F27', borderRadius: 12, padding: '8px 16px', color: '#EC1F27', fontWeight: 600, fontSize: '0.8125rem', cursor: 'pointer' }}>
-              + Ajouter
-            </button>
-          )}
+          {(() => {
+            const atMax = selected.length >= MAX_COMPARE
+            return (
+              <button
+                onClick={() => !atMax && setShowPicker(true)}
+                disabled={atMax}
+                title={atMax ? `Maximum ${MAX_COMPARE} établissements` : 'Ajouter un établissement'}
+                style={{
+                  background: '#fff',
+                  border: `2px dashed ${atMax ? '#D4D4D4' : '#EC1F27'}`,
+                  borderRadius: 12,
+                  padding: '8px 16px',
+                  color: atMax ? '#9B9B9B' : '#EC1F27',
+                  fontWeight: 600,
+                  fontSize: '0.8125rem',
+                  cursor: atMax ? 'not-allowed' : 'pointer',
+                  opacity: atMax ? 0.5 : 1,
+                }}
+              >
+                {atMax ? `✓ Maximum ${MAX_COMPARE} atteint` : '+ Ajouter'}
+              </button>
+            )
+          })()}
         </div>
 
         {/* Picker */}
@@ -94,7 +113,7 @@ export default function ComparePage() {
         )}
 
         {selected.length === 0 ? (
-          <EmptyState icon="⚖️" title="Aucun établissement sélectionné" description="Ajoutez jusqu'à 3 établissements pour les comparer côte à côte." action={{ label: 'Ajouter un établissement', onClick: () => setShowPicker(true) }} />
+          <EmptyState icon={<Icon name="scale" size={48} strokeWidth={1.5} />} title="Aucun établissement sélectionné" description="Ajoutez jusqu'à 3 établissements pour les comparer côte à côte." action={{ label: 'Ajouter un établissement', onClick: () => setShowPicker(true) }} />
         ) : (
           <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 6px rgba(0,0,0,0.06)' }}>
             {/* Header row */}

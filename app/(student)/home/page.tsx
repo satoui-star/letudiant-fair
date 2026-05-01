@@ -7,6 +7,7 @@ import { trackPageView } from '@/lib/analytics/track'
 import { getIntentNudge } from '@/lib/scoring/intentScore'
 import { Skeleton, SkeletonCard } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
+import Icon from '@/components/ui/Icon'
 import StudentBottomNav from '@/components/layouts/StudentBottomNav'
 import ServicesBar from '@/components/features/ServicesBar'
 import BoothVisit from '@/components/features/BoothVisit'
@@ -289,7 +290,7 @@ export default function StudentHomePage() {
             {[1, 2].map(i => <Skeleton key={i} variant="card" style={{ height: 80 }} />)}
           </div>
         ) : events.length === 0 ? (
-          <EmptyState icon="📅" title="Aucun salon à venir" description="Les prochains salons seront affichés ici dès leur publication." />
+          <EmptyState icon={<Icon name="calendar" size={48} strokeWidth={1.5} />} title="Aucun salon à venir" description="Les prochains salons seront affichés ici dès leur publication." />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {events.map((ev, i) => {
@@ -336,7 +337,7 @@ export default function StudentHomePage() {
             {[1, 2, 3, 4].map(i => <SkeletonCard key={i} />)}
           </div>
         ) : schools.length === 0 ? (
-          <EmptyState icon="🏫" title="Aucun établissement" description="Explorez les établissements dans l'onglet Découvrir." action={{ label: 'Découvrir', href: '/discover' }} />
+          <EmptyState icon={<Icon name="school" size={48} strokeWidth={1.5} />} title="Aucun établissement" description="Explorez les établissements dans l'onglet Découvrir." action={{ label: 'Découvrir', href: '/discover' }} />
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, paddingBottom: 20 }}>
             {schools.map((school, i) => {

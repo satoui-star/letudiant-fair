@@ -10,6 +10,7 @@ import SectionLabel from '@/components/ui/SectionLabel'
 import Tag from '@/components/ui/Tag'
 import Button from '@/components/ui/Button'
 import { Skeleton } from '@/components/ui/Skeleton'
+import Icon, { type IconName } from '@/components/ui/Icon'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -216,9 +217,15 @@ export default function ExhibitorDashboard() {
 
         {/* Feature pills */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12 }}>
-          {['📊 Scan analytics', '👥 Profils visiteurs', '📅 Rendez-vous', '📈 Tendances'].map(pill => (
-            <div key={pill} className="le-feature-pill" style={{ padding: '10px 14px' }}>
-              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1A1A1A' }}>{pill}</span>
+          {[
+            { icon: 'chart' as IconName, label: 'Scan analytics' },
+            { icon: 'users' as IconName, label: 'Profils visiteurs' },
+            { icon: 'calendar' as IconName, label: 'Rendez-vous' },
+            { icon: 'trend' as IconName, label: 'Tendances' },
+          ].map(pill => (
+            <div key={pill.label} className="le-feature-pill" style={{ padding: '10px 14px' }}>
+              <Icon name={pill.icon} size={16} style={{ color: '#EC1F27' }} />
+              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1A1A1A' }}>{pill.label}</span>
             </div>
           ))}
         </div>
@@ -233,7 +240,7 @@ export default function ExhibitorDashboard() {
         display: 'flex', gap: 10, alignItems: 'flex-start',
         boxShadow: 'var(--shadow-xs)',
       }}>
-        <span style={{ fontSize: 18, flexShrink: 0 }}>🔒</span>
+        <Icon name="lock" size={18} style={{ flexShrink: 0, color: '#92400e' }} />
         <p style={{ margin: 0, fontSize: 13, color: '#92400e', lineHeight: 1.5 }}>
           <strong>Données 100 % agrégées.</strong> Conformément au RGPD, les profils individuels des visiteurs appartiennent à L&apos;Étudiant et ne sont pas accessibles ici.
         </p>
@@ -245,6 +252,49 @@ export default function ExhibitorDashboard() {
             {[1,2,3,4].map(i => <Skeleton key={i} variant="kpi" />)}
           </div>
           <Skeleton height={240} borderRadius={14} />
+        </div>
+      ) : !stats || stats.totalScans === 0 ? (
+        <div className="le-card le-card-padded" style={{
+          textAlign: 'center',
+          padding: '48px 24px',
+          background: 'linear-gradient(135deg, #FFF8F8 0%, #FFFFFF 100%)',
+          border: '1px solid rgba(236,31,39,0.18)',
+        }}>
+          <div style={{
+            width: 64, height: 64, margin: '0 auto 20px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #EC1F27 0%, #C41520 100%)',
+            color: '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 8px 24px rgba(236,31,39,0.24)',
+          }}><Icon name="scan" size={32} strokeWidth={1.75} /></div>
+          <h2 style={{ margin: '0 0 8px', fontSize: '1.25rem', fontWeight: 800, color: '#1A1A1A' }}>
+            Aucun scan pour le moment
+          </h2>
+          <p style={{ margin: '0 auto 24px', fontSize: 14, color: '#6B6B6B', maxWidth: 420, lineHeight: 1.5 }}>
+            Affichez votre QR code à votre stand pour commencer à collecter des visiteurs.
+            Les statistiques apparaîtront ici dès le premier scan.
+          </p>
+          {schoolId && (
+            <>
+              <div style={{
+                display: 'inline-block', padding: 14, marginBottom: 16,
+                background: '#fff', borderRadius: 'var(--radius-md)',
+                border: '1px solid rgba(16,24,40,0.08)',
+                boxShadow: 'var(--shadow-sm)',
+              }}>
+                <canvas
+                  ref={standQrRef}
+                  style={{ display: 'block', opacity: qrReady ? 1 : 0.2, transition: 'opacity 0.3s', borderRadius: 6 }}
+                />
+              </div>
+              <div>
+                <Button variant="primary" size="sm" onClick={downloadQR}>
+                  <Icon name="download" size={14} style={{ marginRight: 6 }} /> Télécharger le QR à imprimer
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       ) : (
         <>
@@ -289,9 +339,9 @@ export default function ExhibitorDashboard() {
               {/* Niveau d'intention (aggregate %) */}
               <div className="le-card le-card-padded" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <SectionLabel>Niveau d&apos;intention des visiteurs</SectionLabel>
-                <BarRow label="🔴 Décideur"    pct={stats?.decidingPct  ?? 0} color="#EC1F27" />
-                <BarRow label="🟡 Comparateur" pct={stats?.comparingPct ?? 0} color="#FCD716" />
-                <BarRow label="🔵 Explorateur" pct={stats?.exploringPct ?? 0} color="#0066CC" />
+                <BarRow label="● Décideur"    pct={stats?.decidingPct  ?? 0} color="#EC1F27" />
+                <BarRow label="● Comparateur" pct={stats?.comparingPct ?? 0} color="#FCD716" />
+                <BarRow label="● Explorateur" pct={stats?.exploringPct ?? 0} color="#0066CC" />
                 <p style={{ margin: 0, fontSize: 12, color: '#9B9B9B', lineHeight: 1.4 }}>
                   Calculé sur les signaux comportementaux agrégés — aucune donnée individuelle.
                 </p>
@@ -335,7 +385,7 @@ export default function ExhibitorDashboard() {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <Button variant="primary" size="sm" onClick={downloadQR} style={{ width: '100%' }}>
-                    ⬇ Télécharger pour impression
+                    <Icon name="download" size={14} style={{ marginRight: 6 }} /> Télécharger pour impression
                   </Button>
                   <Link href="/exhibitor/leads" style={{ display: 'block', textAlign: 'center', fontSize: '0.8125rem', color: '#EC1F27', fontWeight: 600, textDecoration: 'none', padding: '8px 0' }}>
                     Voir les statistiques détaillées →
@@ -343,7 +393,7 @@ export default function ExhibitorDashboard() {
                 </div>
 
                 <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8, background: '#F4F4F4', borderRadius: 8, padding: '8px 12px', justifyContent: 'center' }}>
-                  <span style={{ fontSize: '1rem' }}>📲</span>
+                  <Icon name="scan" size={16} style={{ color: '#3D3D3D' }} />
                   <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#3D3D3D' }}>
                     {scanCount} scan{scanCount !== 1 ? 's' : ''} enregistré{scanCount !== 1 ? 's' : ''}
                   </span>

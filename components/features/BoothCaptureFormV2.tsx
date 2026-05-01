@@ -219,11 +219,6 @@ export default function BoothCaptureFormV2({
         if (onSuccess) {
           onSuccess(captureData.capture_id)
         }
-
-        // Auto-reset after 5 seconds
-        setTimeout(() => {
-          resetForm()
-        }, 5000)
       } else {
         throw new Error(recData.message)
       }
@@ -828,7 +823,7 @@ export default function BoothCaptureFormV2({
               💾 Données enregistrées pour suivi post-salon
             </p>
             <p style={{ margin: 0 }}>
-              Redémarrage automatique dans quelques secondes...
+              Cliquez sur « Nouveau Scan » lorsque vous êtes prêt·e.
             </p>
           </div>
 

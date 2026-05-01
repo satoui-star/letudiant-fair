@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/Toaster'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
+import Icon, { type IconName } from '@/components/ui/Icon'
 import type { GroupRow } from '@/lib/supabase/types'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -183,13 +184,13 @@ export default function TeacherDashboard() {
           {/* Feature pills */}
           <div className="le-feature-grid">
             {[
-              { icon: '📱', label: 'QR code groupe' },
-              { icon: '👥', label: 'Profils élèves' },
-              { icon: '📊', label: 'Statistiques' },
-              { icon: '📤', label: 'Partage facile' },
+              { icon: 'qr' as IconName, label: 'QR code groupe' },
+              { icon: 'users' as IconName, label: 'Profils élèves' },
+              { icon: 'chart' as IconName, label: 'Statistiques' },
+              { icon: 'share' as IconName, label: 'Partage facile' },
             ].map(f => (
               <div key={f.label} className="le-feature-pill">
-                <span>{f.icon}</span>
+                <Icon name={f.icon} size={16} style={{ color: '#EC1F27' }} />
                 {f.label}
               </div>
             ))}
@@ -219,7 +220,7 @@ export default function TeacherDashboard() {
 
             <div style={{ background: '#fff', borderRadius: 20, padding: 40, textAlign: 'center', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
               <EmptyState
-                icon="📲"
+                icon={<Icon name="scan" size={48} strokeWidth={1.5} />}
                 title="Créez votre groupe pour commencer la collecte"
                 description="Un lien + un QR code que vous partagez à vos élèves. En 2 minutes chacun a son profil et son QR d'entrée."
                 action={{ label: 'Créer mon groupe →', onClick: createGroup }}
@@ -254,13 +255,13 @@ export default function TeacherDashboard() {
               <p style={{ margin: '8px 0 0', fontSize: '0.75rem', color: '#6B6B6B' }}>
                 {preFairRate >= 70
                   ? '✓ Excellent taux — la plupart de vos élèves ont un profil complet !'
-                  : `💡 Relancez les élèves manquants via le lien ci-dessous.`}
+                  : <><Icon name="lightbulb" size={14} style={{ color: '#FCD716', marginRight: 4 }} /> Relancez les élèves manquants via le lien ci-dessous.</>}
               </p>
             </div>
 
             {/* ── Tabs: pre-fair actions vs member list ────────────────────── */}
             <div style={{ display: 'inline-flex', background: 'rgba(16,24,40,0.04)', borderRadius: 'var(--radius-lg)', padding: 6, marginBottom: 20, gap: 6, border: '1px solid rgba(16,24,40,0.08)' }}>
-              {([['prefair', '📤 Partager le lien'], ['members', `👥 Élèves (${totalJoined})`]] as const).map(([tab, label]) => (
+              {([['prefair', 'share' as IconName, 'Partager le lien'], ['members', 'users' as IconName, `Élèves (${totalJoined})`]] as const).map(([tab, iconName, label]) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -272,8 +273,10 @@ export default function TeacherDashboard() {
                     color: activeTab === tab ? '#1A1A1A' : '#6B6B6B',
                     boxShadow: activeTab === tab ? 'var(--shadow-sm)' : 'none',
                     transition: 'all var(--trans-fast)',
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
                   }}
                 >
+                  <Icon name={iconName} size={14} />
                   {label}
                 </button>
               ))}
@@ -320,13 +323,13 @@ export default function TeacherDashboard() {
                       onClick={shareWhatsApp}
                       style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#25D366', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 18px', fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer' }}
                     >
-                      <span style={{ fontSize: '1.125rem' }}>💬</span> WhatsApp
+                      <Icon name="message" size={18} /> WhatsApp
                     </button>
                     <button
                       onClick={shareEmail}
                       style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#0066CC', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 18px', fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer' }}
                     >
-                      <span style={{ fontSize: '1.125rem' }}>✉️</span> Email
+                      <Icon name="mail" size={18} /> Email
                     </button>
                   </div>
 
@@ -341,7 +344,7 @@ export default function TeacherDashboard() {
                 {members.length === 0 ? (
                   <div style={{ padding: '40px 24px' }}>
                     <EmptyState
-                      icon="🧑‍🎓"
+                      icon={<Icon name="graduation" size={48} strokeWidth={1.5} />}
                       title="Aucun élève inscrit pour l'instant"
                       description="Partagez le lien ou le QR pour que vos élèves créent leur profil."
                     />

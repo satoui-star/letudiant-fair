@@ -1,5 +1,6 @@
 import Logo from "@/components/ui/Logo";
 import Button from "@/components/ui/Button";
+import Icon from "@/components/ui/Icon";
 
 export default function NotFound() {
   return (
@@ -47,11 +48,11 @@ export default function NotFound() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: "3rem",
+            color: "#EC1F27",
           }}
           aria-hidden="true"
         >
-          🧭
+          <Icon name="compass" size={64} strokeWidth={1.5} />
         </div>
       </div>
 

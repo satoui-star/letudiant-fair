@@ -1,12 +1,14 @@
 'use client';
 export const dynamic = 'force-dynamic';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { use } from 'react';
 import { useRouter } from 'next/navigation';
+import { getSupabase } from '@/lib/supabase/client';
 import Tag from '@/components/ui/Tag';
 import Button from '@/components/ui/Button';
 import SectionLabel from '@/components/ui/SectionLabel';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 interface Stand {
   id: string;
@@ -27,6 +29,13 @@ interface Stand {
 const STANDS: Stand[] = [];
 const SESSIONS: { time: string; title: string; room: string; tag: 'red' | 'blue' | 'yellow' | 'gray' }[] = [];
 
+interface EventData {
+  name: string;
+  event_date: string;
+  city: string | null;
+  venue: string | null;
+}
+
 export default function FairPage({
   params,
 }: {
@@ -36,6 +45,27 @@ export default function FairPage({
   const { eventId } = use(params);
   const [activeTab, setActiveTab] = useState<'plan' | 'programme'>('plan');
   const [selectedStand, setSelectedStand] = useState<Stand | null>(null);
+  const [event, setEvent] = useState<EventData | null>(null);
+  const [eventLoading, setEventLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadEvent() {
+      const supabase = getSupabase();
+      const { data } = await supabase
+        .from('events')
+        .select('name, event_date, city, venue')
+        .eq('id', eventId)
+        .maybeSingle();
+      if (data) setEvent(data as EventData);
+      setEventLoading(false);
+    }
+    loadEvent();
+  }, [eventId]);
+
+  const formattedDate = event?.event_date
+    ? new Date(event.event_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    : '';
+  const venueLine = [event?.venue, event?.city].filter(Boolean).join(', ');
 
   return (
     <div className="page-with-nav" style={{ background: '#F4F4F4', minHeight: '100vh' }}>
@@ -47,12 +77,22 @@ export default function FairPage({
           </button>
           <div style={{ flex: 1 }}>
             <Tag variant="red" style={{ marginBottom: 6 }}>Salon</Tag>
-            <h1 className="le-h2" style={{ margin: '4px 0 2px', lineHeight: 1.2 }}>
-              Salon de l&apos;Orientation — Paris
-            </h1>
-            <p className="le-caption" style={{ margin: 0 }}>
-              📅 15 avril 2026 &nbsp;|&nbsp; 📍 Palais des Congrès, Paris
-            </p>
+            {eventLoading ? (
+              <>
+                <Skeleton height={22} width="70%" style={{ marginBottom: 6 }} />
+                <Skeleton height={14} width="55%" />
+              </>
+            ) : (
+              <>
+                <h1 className="le-h2" style={{ margin: '4px 0 2px', lineHeight: 1.2 }}>
+                  {event?.name ?? 'Salon'}
+                </h1>
+                <p className="le-caption" style={{ margin: 0 }}>
+                  {formattedDate && <>📅 {formattedDate}</>}
+                  {venueLine && <> &nbsp;|&nbsp; 📍 {venueLine}</>}
+                </p>
+              </>
+            )}
           </div>
         </div>
 
