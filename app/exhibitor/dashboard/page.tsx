@@ -202,15 +202,26 @@ export default function ExhibitorDashboard() {
     <div className="le-fade-in" style={{ maxWidth: 1100, margin: '0 auto' }}>
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32, flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <SectionLabel>Tableau de bord</SectionLabel>
-          <h1 className="le-h1" style={{ marginTop: 10 }}>
-            {loading ? '…' : schoolName}
-          </h1>
-          <p className="le-body" style={{ color: '#6B6B6B' }}>{eventName}</p>
+      <div style={{ marginBottom: 32 }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 999, background: 'rgba(236,31,39,0.08)', color: '#EC1F27', marginBottom: 16, fontSize: '0.875rem', fontWeight: 600 }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#EC1F27', animation: 'lePulseDot 1.8s var(--ease-smooth) infinite' }} />
+          Gestion des salons · 2026
         </div>
-        <Tag variant="blue">En cours</Tag>
+        <h1 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 800, margin: '0 0 8px', color: '#1A1A1A', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
+          {loading ? '…' : schoolName}
+        </h1>
+        <p style={{ margin: '0 0 20px', fontSize: '1rem', color: '#6B6B6B', lineHeight: 1.5 }}>
+          Analysez l'engagement des visiteurs au salon
+        </p>
+
+        {/* Feature pills */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12 }}>
+          {['📊 Scan analytics', '👥 Profils visiteurs', '📅 Rendez-vous', '📈 Tendances'].map(pill => (
+            <div key={pill} className="le-feature-pill" style={{ padding: '10px 14px' }}>
+              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1A1A1A' }}>{pill}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* ── GDPR policy notice ─────────────────────────────────────────────── */}
