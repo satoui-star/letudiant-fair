@@ -38,6 +38,11 @@ interface Article {
   readingTime: string;
   published_at: string;
   tag: 'red' | 'blue' | 'yellow' | 'gray';
+  description: string;
+  url: string;
+  icon: string; // SVG path or icon name
+  size: 'normal' | 'large' | 'tall' | 'wide'; // Masonry size
+  gradientClass: string; // e.g., 'gradient-1', 'gradient-2', etc.
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -449,6 +454,146 @@ function ArticleCard({ article }: { article: Article; key?: string }) {
   );
 }
 
+// ─── Actualite Card Component (Masonry) ──────────────────────────────────────
+
+const GRADIENT_MAP: { [key: string]: string } = {
+  'gradient-1': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  'gradient-2': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+  'gradient-3': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+  'gradient-4': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+  'gradient-5': 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+  'gradient-6': 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+  'gradient-7': 'linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%)',
+  'gradient-8': 'linear-gradient(135deg, #2e2e78 0%, #662d8c 100%)',
+  'gradient-9': 'linear-gradient(135deg, #eb3349 0%, #f45c43 100%)',
+  'gradient-10': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+};
+
+interface ActualiteCardProps {
+  article: Article;
+  onClick: (article: Article) => void;
+}
+
+function ActualiteCard({ article, onClick }: ActualiteCardProps) {
+  const gradientBg = GRADIENT_MAP[article.gradientClass] || GRADIENT_MAP['gradient-1'];
+
+  const getSizeStyles = () => {
+    switch (article.size) {
+      case 'large':
+        return { gridColumn: 'span 2', gridRow: 'span 2' };
+      case 'tall':
+        return { gridRow: 'span 2' };
+      case 'wide':
+        return { gridColumn: 'span 2' };
+      default:
+        return {};
+    }
+  };
+
+  const imageHeight = article.size === 'large' || article.size === 'tall' ? 280 : 200;
+
+  return (
+    <div
+      onClick={() => onClick(article)}
+      style={{
+        ...getSizeStyles(),
+        background: 'white',
+        borderRadius: 12,
+        overflow: 'hidden',
+        cursor: 'pointer',
+        transition: 'all 0.3s ease',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
+        e.currentTarget.style.transform = 'translateY(-4px)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
+    >
+      {/* Image with icon */}
+      <div
+        style={{
+          width: '100%',
+          height: imageHeight,
+          background: gradientBg,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white',
+          fontSize: 48,
+        }}
+      >
+        {article.icon}
+      </div>
+
+      {/* Content */}
+      <div style={{ padding: 16, display: 'flex', flexDirection: 'column', flex: 1 }}>
+        <span
+          style={{
+            display: 'inline-block',
+            background: 'var(--le-red)',
+            color: 'white',
+            fontSize: 11,
+            fontWeight: 700,
+            padding: '4px 8px',
+            borderRadius: 4,
+            marginBottom: 8,
+            width: 'fit-content',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+          }}
+        >
+          {article.rubrique}
+        </span>
+
+        <h3
+          style={{
+            fontSize: article.size === 'large' ? 18 : 14,
+            fontWeight: 700,
+            color: '#1a1a1a',
+            marginBottom: 8,
+            lineHeight: 1.4,
+            flex: 1,
+          }}
+        >
+          {article.title}
+        </h3>
+
+        {(article.size === 'large') && (
+          <p
+            style={{
+              fontSize: 12,
+              color: '#666',
+              lineHeight: 1.4,
+              marginBottom: 12,
+            }}
+          >
+            {article.description}
+          </p>
+        )}
+
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: 12,
+            color: '#999',
+          }}
+        >
+          <span>⏱️ {article.readingTime}</span>
+          <span style={{ color: 'var(--le-red)', fontWeight: 700 }}>Lire plus →</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 type FormationWithSchool = FormationRow & {
@@ -477,7 +622,140 @@ export default function DiscoverPage() {
   const [reels, setReels] = useState<Reel[]>([]); // Load from getAllReels()
   const [playingReelId, setPlayingReelId] = useState<string | null>(null); // Track which reel is playing
   const [savedReelIds, setSavedReelIds] = useState<Set<string>>(new Set()); // Track saved reels by ID
-  const articles: Article[] = []; // TODO: Implement articles once table is wired
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null); // For article preview modal
+  // Sample articles - Top 10 personalized for student profile
+  const articles: Article[] = [
+    {
+      id: '1',
+      title: 'Parcoursup 2026 : les dates clés à retenir pour votre candidature',
+      rubrique: 'Admission',
+      readingTime: '4 min',
+      published_at: '2026-05-02',
+      tag: 'red',
+      description: 'Découvrez toutes les étapes importantes de Parcoursup 2026, des inscriptions aux réponses. Ne ratez aucune deadline importante pour garantir votre place en formation.',
+      url: 'https://www.letudiant.fr/etudes/parcoursup.html',
+      icon: '✓',
+      size: 'large',
+      gradientClass: 'gradient-1',
+    },
+    {
+      id: '2',
+      title: 'Management, IA, data : l\'ESCE lance un nouveau parcours grande école en partenariat avec l\'ECE',
+      rubrique: 'Formation',
+      readingTime: '5 min',
+      published_at: '2026-05-01',
+      tag: 'yellow',
+      description: 'L\'ESCE renforce sa formation en Management International avec un nouveau parcours spécialisé en Intelligence Artificielle et Data.',
+      url: 'https://www.letudiant.fr/etudes/actu-des-formations/article/l-esce-renforce-la-formation-en-management-international-ia-et-data.html',
+      icon: '⚙️',
+      size: 'normal',
+      gradientClass: 'gradient-2',
+    },
+    {
+      id: '3',
+      title: 'Les secteurs qui recrutent le plus en 2026',
+      rubrique: 'Emploi',
+      readingTime: '6 min',
+      published_at: '2026-04-30',
+      tag: 'blue',
+      description: 'L\'intelligence artificielle, la cybersécurité et les métiers verts dominent le marché de l\'emploi.',
+      url: 'https://www.letudiant.fr/etudes/metiers.html',
+      icon: '💼',
+      size: 'tall',
+      gradientClass: 'gradient-3',
+    },
+    {
+      id: '4',
+      title: 'Top 10 des villes étudiantes en France 2026',
+      rubrique: 'Campus',
+      readingTime: '3 min',
+      published_at: '2026-04-29',
+      tag: 'gray',
+      description: '',
+      url: 'https://www.letudiant.fr/etudes/vie-etudiante.html',
+      icon: '🏛️',
+      size: 'normal',
+      gradientClass: 'gradient-4',
+    },
+    {
+      id: '5',
+      title: 'Faire un Erasmus en 2026 : les meilleures destinations',
+      rubrique: 'À l\'étranger',
+      readingTime: '7 min',
+      published_at: '2026-04-28',
+      tag: 'blue',
+      description: '',
+      url: 'https://www.letudiant.fr/etudes/etudier-a-l-etranger.html',
+      icon: '🌍',
+      size: 'normal',
+      gradientClass: 'gradient-5',
+    },
+    {
+      id: '6',
+      title: 'Comment réussir ses examens : 10 stratégies éprouvées',
+      rubrique: 'Conseils',
+      readingTime: '8 min',
+      published_at: '2026-04-27',
+      tag: 'red',
+      description: '',
+      url: 'https://www.letudiant.fr/etudes/conseils.html',
+      icon: '💡',
+      size: 'wide',
+      gradientClass: 'gradient-6',
+    },
+    {
+      id: '7',
+      title: 'Choisir entre L3 et Master : le guide complet',
+      rubrique: 'Orientation',
+      readingTime: '5 min',
+      published_at: '2026-04-26',
+      tag: 'yellow',
+      description: '',
+      url: 'https://www.letudiant.fr/etudes/licence-master.html',
+      icon: '🧭',
+      size: 'normal',
+      gradientClass: 'gradient-7',
+    },
+    {
+      id: '8',
+      title: 'L\'IA révolutionne la formation : ce que vous devez savoir',
+      rubrique: 'Tech',
+      readingTime: '6 min',
+      published_at: '2026-04-25',
+      tag: 'blue',
+      description: '',
+      url: 'https://www.letudiant.fr/etudes/tech-education.html',
+      icon: '🚀',
+      size: 'normal',
+      gradientClass: 'gradient-8',
+    },
+    {
+      id: '9',
+      title: 'Les meilleures bourses d\'études 2026 : comment les obtenir',
+      rubrique: 'Financement',
+      readingTime: '5 min',
+      published_at: '2026-04-24',
+      tag: 'red',
+      description: '',
+      url: 'https://www.letudiant.fr/etudes/bourses.html',
+      icon: '💰',
+      size: 'normal',
+      gradientClass: 'gradient-9',
+    },
+    {
+      id: '10',
+      title: 'Santé mentale étudiante : gérer le stress et l\'anxiété',
+      rubrique: 'Bien-être',
+      readingTime: '7 min',
+      published_at: '2026-04-23',
+      tag: 'gray',
+      description: 'Le bien-être des étudiants est crucial. Découvrez les ressources disponibles et les techniques efficaces pour gérer le stress.',
+      url: 'https://www.letudiant.fr/etudes/bien-etre-etudiant.html',
+      icon: '🎯',
+      size: 'tall',
+      gradientClass: 'gradient-10',
+    },
+  ];
 
   // ── Sync activeTab with URL searchParams ───────────────────────────────────────
   useEffect(() => {
@@ -1284,40 +1562,181 @@ export default function DiscoverPage() {
 
       {/* ── Actualités tab ── */}
       {activeTab === 'actualites' && (
-        <div style={{ padding: '16px 16px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {articles.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--le-gray-500)' }}>
-              <span style={{ fontSize: 44, display: 'block', marginBottom: 12 }}>📰</span>
-              <p style={{ fontSize: 15, fontWeight: 600, margin: '0 0 6px', color: 'var(--le-gray-700)' }}>
-                Aucune actualité pour l&apos;instant
-              </p>
-              <p className="le-caption" style={{ margin: 0 }}>
-                Les articles publiés par la rédaction de L&apos;Étudiant apparaîtront ici.
-              </p>
+        <div style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ marginBottom: 40 }}>
+            <h2 style={{ fontSize: 28, fontWeight: 700, color: '#1a1a1a', margin: '0 0 8px' }}>
+              Actualités
+            </h2>
+            <p style={{ color: '#666', fontSize: 14, margin: 0 }}>
+              Les 10 meilleures actualités pour votre profil, mises à jour chaque semaine
+            </p>
+          </div>
+
+          {/* Info box */}
+          <div
+            style={{
+              background: '#E6F0FF',
+              borderLeft: '4px solid #0066CC',
+              padding: 16,
+              borderRadius: 8,
+              marginBottom: 24,
+              fontSize: 13,
+              color: '#003C8F',
+            }}
+          >
+            <strong style={{ display: 'block', marginBottom: 4 }}>✨ Personnalisé pour vous</strong>
+            Basé sur vos formations d'intérêt, votre localisation et vos domaines d'étude. Les articles proviennent directement de L'Étudiant.
+          </div>
+
+          {/* Masonry Grid */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: 24,
+            }}
+          >
+            {articles.map((article) => (
+              <ActualiteCard
+                key={article.id}
+                article={article}
+                onClick={(article) => setSelectedArticle(article)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Article Preview Modal */}
+      {selectedArticle && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 20,
+            zIndex: 1000,
+          }}
+          onClick={() => setSelectedArticle(null)}
+        >
+          <div
+            style={{
+              background: 'white',
+              borderRadius: 16,
+              maxWidth: 600,
+              width: '100%',
+              maxHeight: '80vh',
+              overflowY: 'auto',
+              animation: 'slideUp 0.3s ease',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                position: 'relative',
+                height: 250,
+                background: GRADIENT_MAP[selectedArticle.gradientClass] || GRADIENT_MAP['gradient-1'],
+                display: 'flex',
+                alignItems: 'flex-end',
+                padding: 24,
+              }}
+            >
+              <button
+                onClick={() => setSelectedArticle(null)}
+                style={{
+                  position: 'absolute',
+                  top: 16,
+                  right: 16,
+                  width: 40,
+                  height: 40,
+                  background: 'rgba(255,255,255,0.2)',
+                  border: 'none',
+                  borderRadius: '50%',
+                  color: 'white',
+                  fontSize: 24,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
+                }}
+              >
+                ✕
+              </button>
+              <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, lineHeight: 1.3, margin: 0 }}>
+                {selectedArticle.title}
+              </h2>
             </div>
-          ) : (
-            <>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                <p style={{ fontSize: 12, color: 'var(--le-gray-500)', margin: 0 }}>
-                  {articles.length} articles récents
-                </p>
-                <a
-                  href="#"
-                  style={{ fontSize: 12, fontWeight: 700, color: 'var(--le-red)', textDecoration: 'none' }}
-                >
-                  Voir tout →
-                </a>
-              </div>
-              {articles.map((article) => (
-                <ArticleCard key={article.id} article={article} />
-              ))}
-              <div style={{ paddingBottom: 16 }}>
-                <Button variant="secondary" style={{ width: '100%', justifyContent: 'center' }}>
-                  Charger plus d&apos;articles
-                </Button>
-              </div>
-            </>
-          )}
+
+            {/* Modal Body */}
+            <div style={{ padding: 24 }}>
+              <span
+                style={{
+                  display: 'inline-block',
+                  background: 'var(--le-red)',
+                  color: 'white',
+                  fontSize: 10,
+                  fontWeight: 700,
+                  padding: '4px 8px',
+                  borderRadius: 4,
+                  marginBottom: 12,
+                  textTransform: 'uppercase',
+                }}
+              >
+                {selectedArticle.rubrique}
+              </span>
+              <p
+                style={{
+                  fontSize: 14,
+                  color: '#333',
+                  lineHeight: 1.6,
+                  marginBottom: 16,
+                }}
+              >
+                {selectedArticle.description || 'Découvrez cet article intéressant sur L\'Étudiant. Cliquez sur le bouton ci-dessous pour accéder au contenu détaillé.'}
+              </p>
+              <a
+                href={selectedArticle.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-block',
+                  background: 'var(--le-red)',
+                  color: 'white',
+                  padding: '12px 24px',
+                  borderRadius: 6,
+                  textDecoration: 'none',
+                  fontWeight: 700,
+                  fontSize: 13,
+                  transition: 'all 0.2s',
+                  marginTop: 8,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#C41520';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'var(--le-red)';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
+                Lire l'article complet sur L'Étudiant →
+              </a>
+            </div>
+          </div>
         </div>
       )}
 

@@ -1,5 +1,5 @@
 import { getSupabase } from './client'
-import type { UserRow, EventRow, SchoolRow, ScanRow, LeadRow, MatchRow, GroupRow, AppointmentRow, SchoolReelRow, SavedReelRow } from './types'
+import type { UserRow, EventRow, SchoolRow, ScanRow, LeadRow, MatchRow, GroupRow, AppointmentRow, SchoolReelRow, SavedReelRow, ArticleAnalyticsRow } from './types'
 
 // ─── Users ────────────────────────────────────────────────────────────────────
 
@@ -917,4 +917,91 @@ export async function getAdminStats(eventId: string) {
     exitScans: scansRes.data?.filter(s => s.channel === 'exit').length ?? 0,
     decidingLeads: leadsRes.data?.filter(l => l.score_tier === 'deciding').length ?? 0,
   }
+}
+
+// ─── Article Analytics (Actualités tracking) ────────────────────────────────
+
+/**
+ * Track article view or interaction
+ * Call this when a student views an article card or spends time reading
+ */
+export async function trackArticleInteraction(
+  studentId: string,
+  articleId: string,
+  action: 'viewed' | 'clicked' | 'shared' | 'time_spent',
+  metadata?: {
+    timeSpentSeconds?: number
+    clickedExternalLink?: boolean
+    sharedTo?: string
+  }
+): Promise<void> {
+  const { error } = await getSupabase().from('article_analytics').insert([
+    {
+      student_id: studentId,
+      article_id: articleId,
+      action,
+      time_spent_seconds: metadata?.timeSpentSeconds || null,
+      clicked_external_link: metadata?.clickedExternalLink || false,
+      shared_to: metadata?.sharedTo || null,
+    },
+  ])
+
+  if (error) {
+    console.error('Failed to track article interaction:', error.message)
+    // Don't throw - tracking failure shouldn't break the app
+  }
+}
+
+/**
+ * Get most popular articles based on engagement
+ */
+export async function getPopularArticles(limit: number = 10) {
+  const { data, error } = await getSupabase()
+    .from('article_engagement_stats')
+    .select('*')
+    .order('total_interactions', { ascending: false })
+    .limit(limit)
+
+  if (error) {
+    console.error('Failed to fetch popular articles:', error.message)
+    return []
+  }
+
+  return data ?? []
+}
+
+/**
+ * Get student's article engagement history (for personalization)
+ */
+export async function getStudentArticlePreferences(studentId: string) {
+  const { data, error } = await getSupabase()
+    .from('student_article_preferences')
+    .select('*')
+    .eq('student_id', studentId)
+    .order('last_interaction_at', { ascending: false })
+
+  if (error) {
+    console.error('Failed to fetch student article preferences:', error.message)
+    return []
+  }
+
+  return data ?? []
+}
+
+/**
+ * Get engagement stats for a specific article
+ */
+export async function getArticleEngagementStats(articleId: string) {
+  const { data, error } = await getSupabase()
+    .from('article_engagement_stats')
+    .select('*')
+    .eq('article_id', articleId)
+    .single()
+
+  if (error) {
+    console.error('Failed to fetch article engagement stats:', error.message)
+    return null
+  }
+
+  return data
 }
