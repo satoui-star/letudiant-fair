@@ -974,18 +974,27 @@ export default function DiscoverPage() {
                 key={formations.findIndex((c) => c.id === currentCard.id)}
                 onSwipe={(dir) => {
                   console.log('📱 TinderCard onSwipe fired with direction:', dir, 'Card:', currentCard.name);
-                  handleSwipe(dir, currentCard);
+                  // Don't call handleSwipe here - let onCardLeftScreen handle the state update
                 }}
                 onCardLeftScreen={(dir) => {
                   console.log('🚀 Card left screen in direction:', dir, 'Card:', currentCard.name);
+                  handleSwipe(dir, currentCard);
                 }}
                 preventSwipe={['up', 'down']}
                 className="swipe-card"
               >
                   <div
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleAction('center');
+                    onMouseDown={(e) => {
+                      // Only handle click if it's not a drag (short duration)
+                      const startTime = Date.now();
+                      const handleMouseUp = () => {
+                        if (Date.now() - startTime < 200) {
+                          // Short click, not a drag
+                          handleAction('center');
+                        }
+                        document.removeEventListener('mouseup', handleMouseUp);
+                      };
+                      document.addEventListener('mouseup', handleMouseUp, { once: true });
                     }}
                     style={{
                       height: 420,
@@ -994,7 +1003,9 @@ export default function DiscoverPage() {
                       position: 'relative',
                       overflow: 'hidden',
                       boxShadow: '0 8px 40px rgba(26,26,26,0.15)',
-                      cursor: 'pointer',
+                      cursor: 'grab',
+                      touchAction: 'none',
+                      userSelect: 'none',
                     }}
                   >
                     {/* Flip container with 3D animation */}
