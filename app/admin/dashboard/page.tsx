@@ -117,7 +117,6 @@ function PBar({ label, value, max, color, tip }: { label: string; value: number;
   )
 }
 
-<<<<<<< HEAD
 const ttS = { contentStyle: { background: '#fff', border: `1px solid ${C.g2}`, borderRadius: 6, fontSize: 13 }, labelStyle: { fontWeight: 700, color: C.nuit } }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -421,7 +420,6 @@ export default function AdminDashboard() {
       <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
       <div style={{ padding: '32px 44px', maxWidth: 1360, margin: '0 auto' }}>
 
-<<<<<<< HEAD
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20, flexWrap: 'wrap' as const, gap: 16 }}>
           <div>
@@ -442,7 +440,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-<<<<<<< HEAD
         {error && <div style={{ padding: '14px 20px', background: C.tomateLight, color: C.tomate, border: `1px solid ${C.tomate}`, borderRadius: 6, marginBottom: 16, fontSize: 14, fontWeight: 600 }}>{error}</div>}
 
         {showFlow && !loading && <FlowDiagram scansCount={scans.length} studentsCount={students.length} avgScore={avgScore} />}

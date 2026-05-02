@@ -10,10 +10,6 @@ function svc() {
   )
 }
 
-async function seedDemoData() {
-  const db = svc()
-  let stats = { salons: 0, schools: 0, programs: 0, exhibitors: 0 }
-
 const SALON_DATA = [
   {
     name: 'Salon Étudiant Paris 2026',

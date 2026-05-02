@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { getSupabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/Toaster'
-import OrientationBadge from '@/components/ui/OrientationBadge'
 import SectionLabel from '@/components/ui/SectionLabel'
 import Button from '@/components/ui/Button'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -44,11 +43,6 @@ interface ConsentState {
   wax: boolean
 }
 
-const INTENT_LABELS: Record<string, { label: string; color: string; bg: string; pct: number }> = {
-  low:    { label: 'Explorateur',  color: '#1d4ed8', bg: '#EFF6FF', pct: 20 },
-  medium: { label: 'Comparateur', color: '#92400e', bg: '#FEF9C3', pct: 55 },
-  high:   { label: 'Décideur',    color: '#15803d', bg: '#DCFCE7', pct: 90 },
-}
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -218,8 +212,6 @@ export default function ProfilePage() {
   const name = profile?.name ?? user?.email ?? '—'
   const initials = name.split(' ').map((w: string) => w[0] ?? '').join('').slice(0, 2).toUpperCase()
 
-  const intentInfo = INTENT_LABELS[profile?.intent_level ?? 'low']
-
   if (loading) {
     return (
       <div className="page-with-nav" style={{ background: '#F4F4F4', minHeight: '100vh', padding: '24px 20px' }}>
@@ -253,41 +245,8 @@ export default function ProfilePage() {
               {profile?.education_level ?? 'Niveau non renseigné'}
               {profile?.postal_code ? ` · ${profile.postal_code}` : ''}
             </p>
-            <OrientationBadge score={profile?.orientation_score ?? 0} />
           </div>
         </div>
-
-        {/* Intent level bar */}
-        {profile && (
-          <div
-            style={{
-              marginTop: 14, background: intentInfo.bg, borderRadius: 10,
-              padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 12,
-            }}
-          >
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: intentInfo.color }}>
-                  Niveau d&apos;intérêt · {intentInfo.label}
-                </span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: intentInfo.color }}>
-                  {profile.intent_score ?? 0}/100
-                </span>
-              </div>
-              <div style={{ height: 6, background: 'rgba(0,0,0,0.08)', borderRadius: 3, overflow: 'hidden' }}>
-                <div
-                  style={{
-                    height: '100%',
-                    width: `${profile.intent_score ?? 0}%`,
-                    background: intentInfo.color,
-                    borderRadius: 3,
-                    transition: 'width 0.6s ease',
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Profile completion */}
         <div style={{ marginTop: 14 }}>

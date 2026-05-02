@@ -36,16 +36,6 @@ const C = {
   gray100: '#F4F4F4',
 }
 
-const STAGE_COLOR: Record<string, string> = {
-  exploring: C.piscine,
-  comparing: C.citron,
-  deciding: C.menthe,
-}
-const STAGE_LABEL: Record<string, string> = {
-  exploring: 'Exploration',
-  comparing: 'Comparaison',
-  deciding: 'Décision',
-}
 
 export default function StudentHomePage() {
   const { profile, loading: authLoading } = useAuth()
@@ -69,7 +59,6 @@ export default function StudentHomePage() {
   }, [])
 
   const firstName = profile?.name?.split(' ')[0] ?? 'Étudiant·e'
-  const stage = profile?.orientation_stage ?? 'exploring'
   const nextEvent = events[0]
   const daysUntil = nextEvent
     ? Math.max(0, Math.ceil((new Date(nextEvent.event_date).getTime() - Date.now()) / 86400000))
@@ -123,12 +112,6 @@ export default function StudentHomePage() {
               <span style={{ fontStyle: 'italic', color: C.citron }}>{firstName}</span>.
             </h1>
 
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 20, padding: '8px 14px', background: 'rgba(255,255,255,0.1)', border: `1px solid ${STAGE_COLOR[stage]}` }}>
-              <span style={{ width: 8, height: 8, borderRadius: '50%', background: STAGE_COLOR[stage] }} />
-              <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#fff' }}>
-                Phase — {STAGE_LABEL[stage]}
-              </span>
-            </div>
           </>
         )}
 
@@ -151,10 +134,10 @@ export default function StudentHomePage() {
         </div>
       </header>
 
-      <div style={{ padding: '0 20px', marginTop: -12 }}>
+      <div style={{ padding: '0 20px', marginTop: 20 }}>
         {/* Next fair */}
         {loading ? (
-          <Skeleton variant="card" style={{ marginBottom: 16, height: 110 }} />
+          <Skeleton variant="card" style={{ marginBottom: 28, height: 110 }} />
         ) : nextEvent ? (
           <a
             href={`/fair/${nextEvent.id}`}
@@ -164,7 +147,7 @@ export default function StudentHomePage() {
               background: '#fff',
               borderTop: `4px solid ${C.tomate}`,
               padding: '20px',
-              marginBottom: 16,
+              marginBottom: 28,
               textDecoration: 'none',
               border: `1px solid ${C.gray200}`,
               borderRadius: 'var(--radius-md)',
