@@ -970,7 +970,7 @@ export default function DiscoverPage() {
               </div>
             ) : currentCard ? (
               <TinderCard
-                key={formations.findIndex((c) => c.id === currentCard.id)}
+                key={currentCard.id}
                 onSwipe={(dir) => {
                   console.log('📱 TinderCard onSwipe fired with direction:', dir, 'Card:', currentCard.name);
                   // Don't call handleSwipe here - let onCardLeftScreen handle the state update
@@ -983,18 +983,6 @@ export default function DiscoverPage() {
                 className="swipe-card"
               >
                   <div
-                    onMouseDown={(e) => {
-                      // Only handle click if it's not a drag (short duration)
-                      const startTime = Date.now();
-                      const handleMouseUp = () => {
-                        if (Date.now() - startTime < 200) {
-                          // Short click, not a drag
-                          handleAction('center');
-                        }
-                        document.removeEventListener('mouseup', handleMouseUp);
-                      };
-                      document.addEventListener('mouseup', handleMouseUp, { once: true });
-                    }}
                     style={{
                       height: 420,
                       borderRadius: 16,
