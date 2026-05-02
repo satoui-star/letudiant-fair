@@ -708,6 +708,8 @@ export default function DiscoverPage() {
           }
         }
       } else if (direction === 'left') {
+        // Left swipe: same as X button (skip without saving)
+        showToast(`⏭️ Formation passée`);
       }
     } catch (err) {
       console.error('Error in handleSwipe:', err);
@@ -973,6 +975,7 @@ export default function DiscoverPage() {
                 className="swipe-card"
               >
                   <div
+                    onClick={() => handleAction('center')}
                     style={{
                       height: 420,
                       borderRadius: 16,
@@ -980,7 +983,7 @@ export default function DiscoverPage() {
                       position: 'relative',
                       overflow: 'hidden',
                       boxShadow: '0 8px 40px rgba(26,26,26,0.15)',
-                      cursor: 'grab',
+                      cursor: 'pointer',
                     }}
                   >
                     {/* Flip container with 3D animation */}
@@ -1167,7 +1170,7 @@ export default function DiscoverPage() {
           </div>
 
           <p className="le-caption" style={{ textAlign: 'center', marginTop: 14 }}>
-            Swipez ou cliquez sur les boutons pour explorer
+            👈 Glissez à gauche pour passer • 💡 Cliquez pour plus d'infos • 👉 Glissez à droite pour enregistrer
           </p>
         </div>
       )}
