@@ -8,7 +8,7 @@ import TinderCard from 'react-tinder-card';
 import Tag from '@/components/ui/Tag';
 import Button from '@/components/ui/Button';
 import StripeRule from '@/components/ui/StripeRule';
-import { getSchools, upsertMatch, saveSchoolToWishlist, getSchoolFormations, saveFormationToWishlist, getAllReels, saveReelToWishlist, getSavedReels, deleteReelFromWishlist } from '@/lib/supabase/database';
+import { getSchools, upsertMatch, saveSchoolToWishlist, getSchoolFormations, saveFormationToWishlist, getAllReels, saveReelToWishlist, getSavedReels, deleteReelFromWishlist, trackArticleInteraction } from '@/lib/supabase/database';
 import { getSupabase } from '@/lib/supabase/client';
 import { rankSchoolsForStudent } from '@/lib/supabase/schoolRanking';
 import { rankFormationsForStudent } from '@/lib/supabase/programRanking';
@@ -472,9 +472,15 @@ const GRADIENT_MAP: { [key: string]: string } = {
 interface ActualiteCardProps {
   article: Article;
   onClick: (article: Article) => void;
+  onInteraction?: (action: 'viewed' | 'clicked') => void;
 }
 
-function ActualiteCard({ article, onClick }: ActualiteCardProps) {
+function ActualiteCard({ article, onClick, onInteraction }: ActualiteCardProps) {
+  const handleCardClick = () => {
+    // Track card view
+    onInteraction?.('viewed');
+    onClick(article);
+  };
   const gradientBg = GRADIENT_MAP[article.gradientClass] || GRADIENT_MAP['gradient-1'];
 
   const getSizeStyles = () => {
@@ -494,7 +500,7 @@ function ActualiteCard({ article, onClick }: ActualiteCardProps) {
 
   return (
     <div
-      onClick={() => onClick(article)}
+      onClick={handleCardClick}
       style={{
         ...getSizeStyles(),
         background: 'white',
@@ -623,6 +629,33 @@ export default function DiscoverPage() {
   const [playingReelId, setPlayingReelId] = useState<string | null>(null); // Track which reel is playing
   const [savedReelIds, setSavedReelIds] = useState<Set<string>>(new Set()); // Track saved reels by ID
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null); // For article preview modal
+  const [articleViewStartTime, setArticleViewStartTime] = useState<number | null>(null); // Track time spent reading
+
+  // Handle article interaction tracking
+  const handleArticleInteraction = async (action: 'viewed' | 'clicked' | 'shared', articleId: string) => {
+    if (!user?.id) return;
+
+    try {
+      let metadata: any = {};
+
+      if (action === 'clicked') {
+        // Track time spent before clicking external link
+        if (articleViewStartTime) {
+          const timeSpent = Math.floor((Date.now() - articleViewStartTime) / 1000);
+          metadata.timeSpentSeconds = Math.min(timeSpent, 600); // Cap at 10 minutes
+          metadata.clickedExternalLink = true;
+        }
+      } else if (action === 'viewed') {
+        // Start tracking time when opening modal
+        setArticleViewStartTime(Date.now());
+      }
+
+      await trackArticleInteraction(user.id, articleId, action, metadata);
+    } catch (err) {
+      console.error('Failed to track article interaction:', err);
+      // Don't show error to user - analytics shouldn't break the app
+    }
+  };
   // Sample articles - Top 10 personalized for student profile
   const articles: Article[] = [
     {
@@ -1601,6 +1634,7 @@ export default function DiscoverPage() {
                 key={article.id}
                 article={article}
                 onClick={(article) => setSelectedArticle(article)}
+                onInteraction={(action) => handleArticleInteraction(action, article.id)}
               />
             ))}
           </div>
@@ -1623,7 +1657,10 @@ export default function DiscoverPage() {
             padding: 20,
             zIndex: 1000,
           }}
-          onClick={() => setSelectedArticle(null)}
+          onClick={() => {
+            setSelectedArticle(null);
+            setArticleViewStartTime(null);
+          }}
         >
           <div
             style={{
@@ -1712,6 +1749,7 @@ export default function DiscoverPage() {
                 href={selectedArticle.url}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => handleArticleInteraction('clicked', selectedArticle.id)}
                 style={{
                   display: 'inline-block',
                   background: 'var(--le-red)',
