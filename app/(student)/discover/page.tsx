@@ -983,7 +983,6 @@ export default function DiscoverPage() {
                 className="swipe-card"
               >
                   <div
-                    onClick={() => handleAction('center')}
                     style={{
                       height: 420,
                       borderRadius: 16,
