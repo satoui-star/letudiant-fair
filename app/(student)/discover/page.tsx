@@ -983,18 +983,6 @@ export default function DiscoverPage() {
                 className="swipe-card"
               >
                   <div
-                    onMouseDown={(e) => {
-                      // Only handle click if it's not a drag (short duration)
-                      const startTime = Date.now();
-                      const handleMouseUp = () => {
-                        if (Date.now() - startTime < 200) {
-                          // Short click, not a drag
-                          handleAction('center');
-                        }
-                        document.removeEventListener('mouseup', handleMouseUp);
-                      };
-                      document.addEventListener('mouseup', handleMouseUp, { once: true });
-                    }}
                     style={{
                       height: 420,
                       borderRadius: 16,
