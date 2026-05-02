@@ -687,9 +687,13 @@ export default function DiscoverPage() {
 
   const handleSwipe = async (direction: string, formation: FormationWithSchool) => {
     try {
+      // Normalize direction to lowercase (TinderCard sends 'RIGHT', 'LEFT', 'UP', 'DOWN')
+      const dir = direction?.toLowerCase() || '';
+      console.log('🔄 Swipe detected:', direction, '→ normalized:', dir);
+
       setGone((prev) => new Set(prev).add(formation.id));
 
-      if (direction === 'right') {
+      if (dir === 'right') {
         setRightCount((n) => {
           const newCount = n + 1;
           return newCount;
@@ -707,7 +711,9 @@ export default function DiscoverPage() {
             setPendingSaves((n) => Math.max(0, n - 1));
           }
         }
-      } else if (direction === 'left') {
+      } else if (dir === 'left') {
+        // Left swipe: same as X button (skip without saving)
+        showToast(`⏭️ Formation passée`);
       }
     } catch (err) {
       console.error('Error in handleSwipe:', err);
@@ -733,6 +739,55 @@ export default function DiscoverPage() {
   };
 
   const currentCard = formations.find((c) => !gone.has(c.id));
+
+  // State for manual swipe detection
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleManualSwipe = (direction: 'left' | 'right') => {
+    if (!currentCard) return;
+    handleSwipe(direction, currentCard);
+  };
+
+  const onCardMouseDown = (e: React.MouseEvent) => {
+    setTouchStart({ x: e.clientX, y: e.clientY });
+    setIsDragging(true);
+  };
+
+  const onCardMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !touchStart) return;
+  };
+
+  const onCardMouseUp = (e: React.MouseEvent) => {
+    if (!isDragging || !touchStart || !currentCard) {
+      setIsDragging(false);
+      return;
+    }
+
+    const deltaX = e.clientX - touchStart.x;
+    const deltaY = e.clientY - touchStart.y;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+    // Check if it's a swipe (movement > 50px)
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+      if (deltaX < 0) {
+        // Swiped LEFT
+        console.log('👈 Manual swipe detected: LEFT');
+        handleManualSwipe('left');
+      } else {
+        // Swiped RIGHT
+        console.log('👉 Manual swipe detected: RIGHT');
+        handleManualSwipe('right');
+      }
+    } else if (distance < 10) {
+      // Very small movement = simple click → flip card
+      console.log('🔄 Click detected: Flipping card');
+      toggleFlip(currentCard.id);
+    }
+
+    setTouchStart(null);
+    setIsDragging(false);
+  };
 
   const handleAction = (direction: 'left' | 'center' | 'right') => {
     if (!currentCard) {
@@ -910,7 +965,6 @@ export default function DiscoverPage() {
             gap: 8,
           }}
         >
-          <span style={{ fontSize: 18 }}>💚</span>
           {toast}
         </div>
       )}
@@ -965,14 +1019,23 @@ export default function DiscoverPage() {
               </div>
             ) : currentCard ? (
               <TinderCard
-                key={currentCard.id}
+                key="formation-card"
                 onSwipe={(dir) => {
+                  console.log('📱 TinderCard onSwipe fired with direction:', dir, 'Card:', currentCard.name);
+                  // Don't call handleSwipe here - let onCardLeftScreen handle the state update
+                }}
+                onCardLeftScreen={(dir) => {
+                  console.log('🚀 Card left screen in direction:', dir, 'Card:', currentCard.name);
                   handleSwipe(dir, currentCard);
                 }}
                 preventSwipe={['up', 'down']}
                 className="swipe-card"
               >
                   <div
+                    onMouseDown={onCardMouseDown}
+                    onMouseMove={onCardMouseMove}
+                    onMouseUp={onCardMouseUp}
+                    onMouseLeave={onCardMouseUp}
                     style={{
                       height: 420,
                       borderRadius: 16,
@@ -980,7 +1043,9 @@ export default function DiscoverPage() {
                       position: 'relative',
                       overflow: 'hidden',
                       boxShadow: '0 8px 40px rgba(26,26,26,0.15)',
-                      cursor: 'grab',
+                      cursor: isDragging ? 'grabbing' : 'grab',
+                      touchAction: 'none',
+                      userSelect: 'none',
                     }}
                   >
                     {/* Flip container with 3D animation */}
@@ -1167,7 +1232,7 @@ export default function DiscoverPage() {
           </div>
 
           <p className="le-caption" style={{ textAlign: 'center', marginTop: 14 }}>
-            Swipez ou cliquez sur les boutons pour explorer
+            👈 Glissez à gauche pour passer • 💡 Cliquez pour plus d'infos • 👉 Glissez à droite pour enregistrer
           </p>
         </div>
       )}
