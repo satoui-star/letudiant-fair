@@ -970,7 +970,7 @@ export default function DiscoverPage() {
               </div>
             ) : currentCard ? (
               <TinderCard
-                key={formations.findIndex((c) => c.id === currentCard.id)}
+                key="formation-card"
                 onSwipe={(dir) => {
                   console.log('📱 TinderCard onSwipe fired with direction:', dir, 'Card:', currentCard.name);
                   // Don't call handleSwipe here - let onCardLeftScreen handle the state update
