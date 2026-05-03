@@ -147,7 +147,7 @@ export default function AdminSegmentsPage() {
             {error}
           </div>
         )}
-        
+
         <SegmentExplainer />
         {/* ── By Role ── */}
         <section style={{ marginBottom: 40 }}>
@@ -199,53 +199,56 @@ export default function AdminSegmentsPage() {
           </div>
         </section>
 
-        {/* ── Orientation Stage ── */}
-        <section>
-          <h2 style={{
-            fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase',
-            color: C.gray500, margin: '0 0 16px', paddingLeft: 4,
-          }}>
-            Stade d&apos;orientation (étudiants)
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
-            {ORIENTATION_CONFIG.map(cfg => {
-              const count = orientationBuckets[cfg.key] ?? 0
-              const pct = totalStudents > 0 ? Math.round((count / totalStudents) * 100) : 0
-              return (
-                <div key={cfg.key} style={{
-                  background: '#fff', border: `1px solid ${C.gray200}`,
-                  borderLeft: `4px solid ${cfg.color}`, padding: '18px 20px', borderRadius: 2,
-                }}>
-                  <div style={{
-                    fontSize: 10, fontWeight: 800, letterSpacing: '0.15em',
-                    textTransform: 'uppercase', color: cfg.fg, marginBottom: 8,
-                  }}>
-                    {cfg.label}
-                  </div>
-                  <div style={{
-                    fontSize: 28, fontWeight: 900, color: C.nuit,
-                    letterSpacing: '-0.02em', lineHeight: 1, marginBottom: 6,
-                  }}>
-                    {loading ? '…' : count}
-                  </div>
-                  {totalStudents > 0 && (
-                    <div style={{ fontSize: 12, color: C.gray500, marginBottom: 10 }}>
-                      {pct}% des étudiants
-                    </div>
-                  )}
-                  <div style={{
-                    height: 4, borderRadius: 2, background: cfg.light,
-                    position: 'relative', overflow: 'hidden',
+          {/* ── Orientation Stage ── */}
+          <section>
+            <h2 style={{
+              fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase',
+              color: C.gray500, margin: '0 0 16px', paddingLeft: 4,
+            }}>
+              Stade d&apos;orientation (étudiants)
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+              {ORIENTATION_CONFIG.map(cfg => {
+                const count = orientationBuckets[cfg.key] ?? 0
+                const pct = totalStudents > 0 ? Math.round((count / totalStudents) * 100) : 0
+                return (
+                  <a key={cfg.key} href={`/admin/students`} style={{
+                    background: '#fff', border: `1px solid ${C.gray200}`,
+                    borderLeft: `4px solid ${cfg.color}`, padding: '18px 20px', borderRadius: 2,
+                    textDecoration: 'none', color: 'inherit', cursor: 'pointer', display: 'block',
+                    transition: 'box-shadow 0.2s',
                   }}>
                     <div style={{
-                      position: 'absolute', inset: 0, width: `${pct}%`,
-                      background: cfg.color, opacity: 0.8,
-                    }} />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+                      fontSize: 10, fontWeight: 800, letterSpacing: '0.15em',
+                      textTransform: 'uppercase', color: cfg.fg, marginBottom: 8,
+                    }}>
+                      {cfg.label}
+                    </div>
+                    <div style={{
+                      fontSize: 28, fontWeight: 900, color: C.nuit,
+                      letterSpacing: '-0.02em', lineHeight: 1, marginBottom: 6,
+                    }}>
+                      {loading ? '…' : count}
+                    </div>
+                    {totalStudents > 0 && (
+                      <div style={{ fontSize: 12, color: C.gray500, marginBottom: 10 }}>
+                        {pct}% des étudiants
+                      </div>
+                    )}
+                    <div style={{
+                      height: 4, borderRadius: 2, background: cfg.light,
+                      position: 'relative', overflow: 'hidden',
+                    }}>
+                      <div style={{
+                        position: 'absolute', inset: 0, width: `${pct}%`,
+                        background: cfg.color, opacity: 0.8,
+                      }} />
+                    </div>
+                    <div style={{ fontSize: 10, color: cfg.fg, marginTop: 8, fontWeight: 600 }}>Voir les étudiants →</div>
+                  </a>
+                )
+              })}
+            </div>
         </section>
       </div>
     </div>

@@ -417,7 +417,7 @@ export default function UtilisateursPage() {
                             </span>
                           </td>
                           <td style={{ ...tdStyle, color: C.gray700, fontSize: 13 }}>{formatDate(user.created_at)}</td>
-                          <td style={{ ...tdStyle, color: C.gray700, fontSize: 13 }}>{formatDate(user.last_login)}</td>
+                          <td style={{ ...tdStyle, color: C.gray700, fontSize: 13 }}>{formatDate(user.last_login ?? user.created_at)}</td>
                           <td style={{ ...tdStyle, textAlign: 'center' }}>
                             <button
                               onClick={() => { setSelectedUserDetails(user); setShowDetailsModal(true) }}

@@ -54,16 +54,28 @@ interface FeedItem { time: string; text: string; color: string; id: string }
 // UI COMPONENTS
 // ═══════════════════════════════════════════════════════════════════════════
 
-/* Tooltip info bubble */
+/* Tooltip info bubble — FIXED: proper sizing, z-index, max-width */
 function Tip({ text, children, color }: { text: string; children: React.ReactNode; color?: string }) {
   const [show, setShow] = useState(false)
   return (
     <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 4 }}
       onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
       {children}
-      <span style={{ width: 14, height: 14, borderRadius: '50%', border: `1.5px solid ${color ?? 'currentColor'}`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, fontStyle: 'italic', opacity: 0.5, cursor: 'help', flexShrink: 0 }}>i</span>
+      <span style={{
+        width: 16, height: 16, borderRadius: '50%', border: `1.5px solid ${color ?? 'currentColor'}`,
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 9, fontWeight: 700, fontStyle: 'italic', opacity: 0.55, cursor: 'help',
+        flexShrink: 0, lineHeight: 1,
+      }}>i</span>
       {show && (
-        <span style={{ position: 'absolute', bottom: 'calc(100% + 10px)', left: '50%', transform: 'translateX(-50%)', background: C.nuit, color: '#fff', fontSize: 11, fontWeight: 400, letterSpacing: 0, textTransform: 'none' as const, padding: '10px 14px', borderRadius: 8, width: 240, lineHeight: 1.5, zIndex: 50, whiteSpace: 'normal' as const }}>
+        <span style={{
+          position: 'absolute', bottom: 'calc(100% + 10px)', left: '50%', transform: 'translateX(-50%)',
+          background: C.nuit, color: '#fff', fontSize: 11, fontWeight: 400, letterSpacing: 0,
+          textTransform: 'none' as const, padding: '10px 14px', borderRadius: 8,
+          width: 260, maxWidth: 260, lineHeight: 1.5, zIndex: 9999,
+          whiteSpace: 'normal' as const, boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+          pointerEvents: 'none' as const,
+        }}>
           {text}
           <span style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', border: '6px solid transparent', borderTopColor: C.nuit }} />
         </span>
@@ -72,10 +84,32 @@ function Tip({ text, children, color }: { text: string; children: React.ReactNod
   )
 }
 
+/* Tab-level question frame — Niveau 1 */
+function TabQuestion({ emoji, question, explanation, accentColor }: { emoji: string; question: string; explanation: string; accentColor: string }) {
+  return (
+    <div style={{
+      background: `${accentColor}08`, border: `1px solid ${accentColor}25`,
+      borderRadius: 14, padding: '18px 22px', marginBottom: 18,
+      display: 'flex', alignItems: 'flex-start', gap: 14,
+    }}>
+      <span style={{ fontSize: 24, lineHeight: 1, flexShrink: 0, marginTop: 1 }}>{emoji}</span>
+      <div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: C.nuit, lineHeight: 1.3, marginBottom: 4 }}>{question}</div>
+        <div style={{ fontSize: 12, color: C.g5, lineHeight: 1.5 }}>{explanation}</div>
+      </div>
+    </div>
+  )
+}
+
+/* Section subtitle — Niveau 2 */
+function SectionSub({ text }: { text: string }) {
+  return <div style={{ fontSize: 11, color: C.g5, lineHeight: 1.5, marginBottom: 14, marginTop: -4 }}>{text}</div>
+}
+
 /* Colored KPI card (Justinmind style) */
 function ColorCard({ label, value, sub, bg, textColor, tip, children }: { label: string; value: string | number; sub?: string; bg: string; textColor: string; tip?: string; children?: React.ReactNode }) {
   return (
-    <div style={{ background: bg, borderRadius: 16, padding: '20px 22px', position: 'relative', overflow: 'hidden', minHeight: 100 }}>
+    <div style={{ background: bg, borderRadius: 16, padding: '20px 22px', position: 'relative', overflow: 'hidden', minHeight: 100, boxShadow: '0 1px 4px rgba(0,0,0,0.03)' }}>
       <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: textColor, opacity: 0.7, marginBottom: 8 }}>
         {tip ? <Tip text={tip} color={textColor}>{label}</Tip> : label}
       </div>
@@ -94,7 +128,7 @@ function Insight({ children, color }: { children: React.ReactNode; color?: strin
 /* Why box — explains a recommendation */
 function WhyBox({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: C.g1, borderRadius: 10, padding: '16px 18px', fontSize: 12, color: C.g5, lineHeight: 1.6 }}>
+    <div style={{ background: C.g1, borderRadius: 12, padding: '16px 18px', fontSize: 12, color: C.g5, lineHeight: 1.6 }}>
       <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: C.g7, marginBottom: 6 }}>{title}</div>
       {children}
     </div>
@@ -117,7 +151,8 @@ function PBar({ label, value, max, color, tip }: { label: string; value: number;
   )
 }
 
-const ttS = { contentStyle: { background: '#fff', border: `1px solid ${C.g2}`, borderRadius: 6, fontSize: 13 }, labelStyle: { fontWeight: 700, color: C.nuit } }
+const card: React.CSSProperties = { background: '#fff', border: `1px solid ${C.g2}`, borderRadius: 16, padding: '22px 26px', marginBottom: 16 }
+const ttS = { contentStyle: { background: '#fff', border: `1px solid ${C.g2}`, borderRadius: 8, fontSize: 13 }, labelStyle: { fontWeight: 700, color: C.nuit } }
 
 // ═══════════════════════════════════════════════════════════════════════════
 // FLOW DIAGRAM
@@ -130,7 +165,7 @@ function FlowDiagram({ scansCount, studentsCount, avgScore }: { scansCount: numb
     { icon: '④', title: 'Dashboard', val: String(avgScore), sub: 'score moy.', color: C.tomate, bg: C.tomateLight },
   ]
   return (
-    <div style={{ ...card, background: C.nuit, border: 'none', padding: '28px 30px', borderRadius: 16 }}>
+    <div style={{ ...card, background: C.nuit, border: 'none', padding: '28px 30px', borderRadius: 16, boxShadow: heroShadow }}>
       <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.4)', marginBottom: 6 }}>Comment ça marche</div>
       <div style={{ fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 6 }}>Chaque interaction étudiant alimente le scoring en temps réel</div>
       <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 20, lineHeight: 1.6 }}>
@@ -148,9 +183,12 @@ function FlowDiagram({ scansCount, studentsCount, avgScore }: { scansCount: numb
           </div>
         ))}
       </div>
-      <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(255,255,255,0.05)', borderRadius: 8, fontFamily: 'monospace', fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
-        score = 3×stands + 5×conf + 10×rdv + 2×swipes + 3×wishlist + 0.1×min + bonus — décideur ≥66 · comparateur ≥33 · explorateur &lt;33
-      </div>
+      <details style={{ marginTop: 16 }}>
+        <summary style={{ cursor: 'pointer', fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Voir la formule technique ▾</summary>
+        <div style={{ marginTop: 8, padding: '10px 14px', background: 'rgba(255,255,255,0.05)', borderRadius: 8, fontFamily: 'monospace', fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
+          score = 3×stands + 5×conf + 10×rdv + 2×swipes + 3×wishlist + 0.1×min + bonus — décideur ≥66 · comparateur ≥33 · explorateur &lt;33
+        </div>
+      </details>
     </div>
   )
 }
@@ -417,7 +455,7 @@ export default function AdminDashboard() {
   return (
     <div style={{ minHeight: '100vh', background: C.blanc }}>
       <div style={{ height: 5, background: `linear-gradient(90deg, ${C.tomate} 0 17%, ${C.piscine} 17% 33%, ${C.citron} 33% 50%, ${C.spirit} 50% 67%, ${C.menthe} 67% 83%, ${C.pourpre} 83%)` }} />
-      <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
+      <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}} .tab-btn{transition:all 0.2s ease;} .tab-btn:hover{transform:translateY(-1px);}`}</style>
       <div style={{ padding: '32px 44px', maxWidth: 1360, margin: '0 auto' }}>
 
         {/* Header */}
@@ -460,7 +498,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Tabs */}
+        {/* Tabs — with transition animation */}
         {events.length > 0 && (
           <div style={{ display: 'flex', gap: 3, marginBottom: 22 }}>
             {([
@@ -470,11 +508,48 @@ export default function AdminDashboard() {
               { key: 'clusters' as Tab, label: 'Clusters' },
               { key: 'strategie' as Tab, label: 'Stratégie' },
             ]).map(t => (
-              <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '10px 20px', border: `1px solid ${tab === t.key ? C.nuit : C.g2}`, background: tab === t.key ? C.nuit : '#fff', color: tab === t.key ? '#fff' : C.g7, borderRadius: 8, fontWeight: 700, fontSize: 11, cursor: 'pointer', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>{t.label}</button>
+              <button className="tab-btn" key={t.key} onClick={() => setTab(t.key)} style={{
+                padding: '10px 20px', border: `1px solid ${tab === t.key ? C.nuit : C.g2}`,
+                background: tab === t.key ? C.nuit : '#fff', color: tab === t.key ? '#fff' : C.g7,
+                borderRadius: 8, fontWeight: 700, fontSize: 11, cursor: 'pointer',
+                textTransform: 'uppercase' as const, letterSpacing: '0.06em',
+                transition: 'all 0.2s ease',
+              }}>{t.label}</button>
             ))}
           </div>
         )}
-
+        {/* Stepper */}
+        {events.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 18 }}>
+            {([
+              { key: 'preparation' as Tab, label: '① Préparer' },
+              { key: 'jourj' as Tab, label: '② Piloter' },
+              { key: 'bilan' as Tab, label: '③ Analyser' },
+              { key: 'clusters' as Tab, label: '④ Comprendre' },
+              { key: 'strategie' as Tab, label: '⑤ Décider' },
+            ]).map((st, i) => {
+              const tabs: Tab[] = ['preparation', 'jourj', 'bilan', 'clusters', 'strategie']
+              const currentIdx = tabs.indexOf(tab)
+              const thisIdx = tabs.indexOf(st.key)
+              const isActive = tab === st.key
+              const isPast = thisIdx < currentIdx
+              return (
+                <div key={st.key} style={{ display: 'flex', alignItems: 'center' }}>
+                  <button onClick={() => setTab(st.key)} style={{
+                    padding: '6px 14px', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                    border: 'none', letterSpacing: '0.02em', transition: 'all 0.2s',
+                    background: isActive ? C.nuit : isPast ? '#D1FAE5' : C.g1,
+                    color: isActive ? '#fff' : isPast ? '#065F46' : C.g5,
+                  }}>
+                    {isPast ? '✓ ' : ''}{st.label}
+                  </button>
+                  {i < 4 && <div style={{ width: 20, height: 1, background: C.g3 }} />}
+                </div>
+              )
+            })}
+          </div>
+        )}
+  
         {loading && <div style={{ textAlign: 'center' as const, padding: 80, color: C.g5 }}>Chargement…</div>}
 
         {/* ═══════════════════════════════════════════════════════════════════ */}
@@ -482,16 +557,17 @@ export default function AdminDashboard() {
         {/* ═══════════════════════════════════════════════════════════════════ */}
         {!loading && tab === 'preparation' && (
           <div>
-            <Insight color={C.piscine}>Connaître ses visiteurs avant qu&apos;ils arrivent — chaque profil complété est un visiteur qualifié le jour J.</Insight>
+            <Insight color={C.piscine}>Avant le salon — qualifier les visiteurs en amont pour maximiser l&apos;engagement le Jour J →</Insight>
 
             {/* Hero row — big red card + dark card */}
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 14, marginBottom: 14 }}>
-              <div style={{ background: 'linear-gradient(135deg, #EC1F27 0%, #C41520 100%)', borderRadius: 16, padding: '28px 30px', color: '#fff', position: 'relative', overflow: 'hidden', minHeight: 170 }}>
+              <div style={{ background: 'linear-gradient(135deg, #EC1F27 0%, #C41520 100%)', borderRadius: 16, padding: '28px 30px', color: '#fff', position: 'relative', overflow: 'hidden', minHeight: 170, boxShadow: heroShadow }}>
                 <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.6)', marginBottom: 10 }}>
                   <Tip text="Nombre d'étudiants inscrits via EventMaker avant le salon. Source : table pre_registrations." color="rgba(255,255,255,0.6)">Pré-inscrits</Tip>
                 </div>
                 <div style={{ fontSize: 56, fontWeight: 800, lineHeight: 1 }}>{fmt(preregTotal)}</div>
                 <div style={{ fontSize: 13, marginTop: 8, opacity: 0.8 }}>dont <strong>{preregTotal > 0 ? Math.round(preregResolved / preregTotal * 100) : 0}%</strong> ont complété leur profil</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>Inscrits via EventMaker avant le salon</div>
                 <div style={{ display: 'flex', gap: 20, marginTop: 18 }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>Profils complets</div>
@@ -511,7 +587,7 @@ export default function AdminDashboard() {
                 </svg>
               </div>
 
-              <div style={{ background: C.nuit, borderRadius: 16, padding: '28px 24px', color: '#fff' }}>
+              <div style={{ background: C.nuit, borderRadius: 16, padding: '28px 24px', color: '#fff', boxShadow: heroShadow }}>
                 <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.4)', marginBottom: 10 }}>
                   <Tip text="Nombre de stands confirmés pour cet événement. Source : table stands." color="rgba(255,255,255,0.4)">Écoles</Tip>
                 </div>
@@ -525,34 +601,78 @@ export default function AdminDashboard() {
             </div>
 
             {/* 3 colored KPI cards */}
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 8 }}>Indicateurs de préparation</div>
+            <SectionSub text="Profils inscrits et niveau d'engagement avant le salon" />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 14 }}>
               <ColorCard label="Étudiants app" value={students.length} sub="inscrits via l'app" bg={C.piscineLight} textColor={C.piscineDark} tip="Étudiants inscrits dans l'app avec le rôle student. Source : table users WHERE role = student." />
               <ColorCard label="Filières moy." value={avgBranches} sub="par étudiant" bg={C.mentheLight} textColor={C.mentheDark} tip="Nombre moyen de filières d'intérêt cochées par étudiant. Plus c'est haut, plus le profil est complet." />
-              <ColorCard label="Score moyen" value={`${avgScore}/100`} bg={C.pourpreLight} textColor={C.pourpreDark} tip="Moyenne des scores d'engagement. Formule : 5×stands + 8×conf + 15×rdv + temps + profil. Calculé automatiquement par trigger PostgreSQL." />
+              <ColorCard label="Score moyen" value={`${avgScore}/100`} bg={C.pourpreLight} textColor={C.pourpreDark} tip="Moyenne des scores d'engagement. Formule : 3×stands + 5×conf + 10×rdv + 2×swipes + 3×wishlist + 0.1×min + bonus profil. Calculé automatiquement par trigger PostgreSQL." />
             </div>
 
-            {/* Two columns */}
+            {/* Provenance */}
+            <div style={{ ...card, marginBottom: 14 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 12 }}>
+                <Tip text="Répartition géographique des visiteurs inscrits, basée sur le code postal déclaré.">Provenance des visiteurs</Tip>
+              </div>
+              {(() => {
+                const zones: Record<string, number> = { 'Paris intra-muros': 0, 'Petite couronne': 0, 'Grande couronne': 0, 'Hors Île-de-France': 0 }
+                attendees.forEach(u => {
+                  const cp = (u as Record<string, unknown>).postal_code as string | null
+                  if (!cp) return
+                  if (cp.startsWith('75')) zones['Paris intra-muros']++
+                  else if (['92', '93', '94'].some(p => cp.startsWith(p))) zones['Petite couronne']++
+                  else if (['77', '78', '91', '95'].some(p => cp.startsWith(p))) zones['Grande couronne']++
+                  else zones['Hors Île-de-France']++
+                })
+                const total = Object.values(zones).reduce((a, b) => a + b, 0)
+                const colors = [C.tomate, C.piscine, C.menthe, C.g5]
+                return total > 0 ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+                    {Object.entries(zones).map(([zone, count], i) => (
+                      <div key={zone} style={{ textAlign: 'center' as const }}>
+                        <div style={{ fontSize: 22, fontWeight: 800, color: colors[i] }}>{total > 0 ? Math.round(count / total * 100) : 0}%</div>
+                        <div style={{ fontSize: 11, color: C.g5, marginTop: 2 }}>{zone}</div>
+                        <div style={{ fontSize: 10, color: C.g3 }}>{count} étud.</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : <div style={{ fontSize: 13, color: C.g5 }}>Aucun code postal renseigné</div>
+              })()}
+            </div>
+
+            {/* Two columns — improved bottom half */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <div style={card}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 12 }}>
+              <div style={{ ...card, border: `1px solid ${C.g2}` }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 4 }}>
                   <Tip text="L'entonnoir montre la conversion : combien de pré-inscrits ont complété leur profil et sont venus au salon.">Entonnoir d&apos;inscription</Tip>
                 </div>
+                <SectionSub text="Combien d'étudiants passent chaque étape du processus d'inscription" />
                 <PBar label="Pré-inscrits" value={preregTotal} max={preregTotal} color={C.g5} />
                 <PBar label="Profil complété" value={preregResolved} max={preregTotal} color={C.piscine} />
                 <PBar label="Confirmé au salon" value={preregs.filter(p => p.resolved_user_id && enteredIds.has(p.resolved_user_id)).length} max={preregTotal} color={C.menthe} />
-                <WhyBox title="Pourquoi c'est important">
-                  <span style={{ color: C.g7 }}>{preregTotal > 0 && preregResolved / preregTotal < 0.7 ? `${Math.round((1 - preregResolved / preregTotal) * 100)}% des pré-inscrits n'ont pas complété leur profil — un email de rappel 48h avant peut convertir 15-20% d'entre eux.` : 'Le taux de complétion est bon — les visiteurs arrivent préparés.'}</span>
-                </WhyBox>
+                <div style={{ marginTop: 12 }}>
+                  <WhyBox title="Pourquoi c'est important">
+                    <span style={{ color: C.g7 }}>{preregTotal > 0 && preregResolved / preregTotal < 0.7 ? `${Math.round((1 - preregResolved / preregTotal) * 100)}% des pré-inscrits n'ont pas complété leur profil — un email de rappel 48h avant peut convertir 15-20% d'entre eux.` : 'Le taux de complétion est bon — les visiteurs arrivent préparés.'}</span>
+                  </WhyBox>
+                </div>
               </div>
 
-              <div style={card}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 12 }}>Top filières recherchées</div>
-                {branches.slice(0, 6).map(([name, count], i) => (
-                  <div key={name} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: i < 5 ? `1px solid ${C.g1}` : 'none', fontSize: 13 }}>
-                    <span style={{ color: C.g7 }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: i < 2 ? C.tomate : i < 4 ? C.piscine : C.g3, display: 'inline-block', marginRight: 8 }} />{name}</span>
-                    <span style={{ fontWeight: 700 }}>{count}</span>
-                  </div>
-                ))}
+              <div style={{ ...card, border: `1px solid ${C.g2}` }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 4 }}>Top filières recherchées</div>
+                <SectionSub text="Domaines d'intérêt les plus populaires — guide le choix des écoles à inviter" />
+                {branches.slice(0, 6).map(([name, count], i) => {
+                  const maxBranch = branches[0]?.[1] ?? 1
+                  return (
+                    <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: i < 5 ? `1px solid ${C.g1}` : 'none', fontSize: 13 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: i < 2 ? C.tomate : i < 4 ? C.piscine : C.g3, flexShrink: 0 }} />
+                      <span style={{ flex: 1, color: C.g7 }}>{name}</span>
+                      <div style={{ width: 60, height: 6, background: C.g1, borderRadius: 3, marginRight: 8 }}>
+                        <div style={{ height: '100%', width: `${(count / maxBranch) * 100}%`, background: i < 2 ? C.tomate : i < 4 ? C.piscine : C.g3, borderRadius: 3 }} />
+                      </div>
+                      <span style={{ fontWeight: 700, minWidth: 24, textAlign: 'right' as const }}>{count}</span>
+                    </div>
+                  )
+                })}
                 <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap' as const }}>
                   {bacSeries.map(([n, c]) => <span key={n} style={{ padding: '4px 10px', background: n === 'Générale' ? C.piscineLight : C.g1, color: n === 'Générale' ? C.piscineDark : C.g7, borderRadius: 6, fontSize: 11, fontWeight: 600 }}>{n} {c}</span>)}
                 </div>
@@ -566,16 +686,17 @@ export default function AdminDashboard() {
         {/* ═══════════════════════════════════════════════════════════════════ */}
         {!loading && tab === 'jourj' && (
           <div>
-            <Insight color={C.tomate}>Chaque scan QR = +5 à +15 points de score. Le comportement des visiteurs se transforme en données actionnables.</Insight>
+            <Insight color={C.tomate}>← Les profils pré-qualifiés arrivent. Chaque scan enrichit leur score en temps réel →</Insight>
 
             {/* Hero dark */}
-            <div style={{ ...card, background: C.nuit, border: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' as const, gap: 20, borderRadius: 16 }}>
+            <div style={{ ...card, background: C.nuit, border: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' as const, gap: 20, borderRadius: 16, boxShadow: heroShadow }}>
               <div>
                 <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.45)' }}>
                   <Tip text="Nombre d'étudiants qui ont scanné le QR d'entrée. Source : table scans WHERE channel = entry." color="rgba(255,255,255,0.45)">Visiteurs tracés en direct</Tip>
                 </div>
                 <div style={{ fontSize: 52, fontWeight: 800, color: '#fff', lineHeight: 1, margin: '6px 0' }}>{fmt(enteredIds.size)}</div>
                 <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>{fmt(scans.length)} interactions · score moyen <span style={{ color: C.menthe, fontWeight: 700 }}>{avgScore}/100</span></div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>Étudiants ayant scanné le QR d&apos;entrée</div>
               </div>
               <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap' as const }}>
                 {[
@@ -595,7 +716,9 @@ export default function AdminDashboard() {
             </div>
 
             {/* 5 colored KPIs */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10, margin: '14px 0' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginTop: 14, marginBottom: 4 }}>Interactions en cours</div>
+            <SectionSub text="Interactions enregistrées pendant le salon" />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10, marginBottom: 14 }}>
               <ColorCard label="Scans stands" value={standScans.length} bg={C.piscineLight} textColor={C.piscineDark} tip="Nombre total de QR codes scannés sur les stands. Chaque scan ajoute +5 pts au score." />
               <ColorCard label="Conférences" value={confScans.length} bg={C.spiritLight} textColor={C.spiritDark} tip="Scans QR d'entrée en conférence. Chaque conférence ajoute +8 pts au score." />
               <ColorCard label="Swipes droits" value={swipeR} sub={swipeT > 0 ? `sur ${swipeT}` : undefined} bg={C.tomateLight} textColor={C.tomateDark} tip="Nombre d'écoles likées par les étudiants via le swipe. Indicateur d'intérêt." />
@@ -605,35 +728,69 @@ export default function AdminDashboard() {
 
             {/* Chart */}
             <div style={card}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 12 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 4 }}>
                 <Tip text="Distribution horaire des scans QR : entrées, stands et conférences.">Fréquentation horaire</Tip>
               </div>
+              <SectionSub text="Distribution des scans par heure — identifie les pics d'affluence" />
               {hourly.length > 0 ? (
                 <ResponsiveContainer width="100%" height={220}><AreaChart data={hourly} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}><CartesianGrid strokeDasharray="3 3" stroke={C.g2} /><XAxis dataKey="h" tick={{ fontSize: 11, fill: C.g5 }} /><YAxis tick={{ fontSize: 11, fill: C.g5 }} /><RTooltip {...ttS} /><Area type="monotone" dataKey="entry" name="Entrées" stackId="1" stroke={C.tomate} fill={C.tomate} fillOpacity={0.3} /><Area type="monotone" dataKey="stand" name="Stands" stackId="1" stroke={C.piscine} fill={C.piscine} fillOpacity={0.3} /><Area type="monotone" dataKey="conf" name="Conférences" stackId="1" stroke={C.citron} fill={C.citron} fillOpacity={0.3} /><Legend iconType="circle" wrapperStyle={{ fontSize: 11 }} /></AreaChart></ResponsiveContainer>
               ) : <div style={{ padding: 40, textAlign: 'center' as const, color: C.g5 }}>Aucun scan</div>}
             </div>
 
-            {/* Two columns */}
+            {/* Two columns — improved bottom half */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               <div style={card}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 12 }}>Top stands</div>
-                {standPerf.slice(0, 8).map((sp, i) => (
-                  <div key={sp.sid} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: `1px solid ${C.g1}` }}>
-                    <span style={{ width: 22, height: 22, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, background: i < 3 ? C.nuit : C.g1, color: i < 3 ? '#fff' : C.g5 }}>{i + 1}</span>
-                    <span style={{ flex: 1, fontSize: 13, fontWeight: i < 3 ? 700 : 400, color: C.nuit }}>{sp.name}</span>
-                    <span style={{ fontSize: 13, fontWeight: 800, color: C.tomate }}>{sp.scans}</span>
-                  </div>
-                ))}
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 4 }}>Top stands</div>
+                <SectionSub text="Les stands les plus visités — indicateur de notoriété et de positionnement dans le salon" />
+                {standPerf.slice(0, 8).map((sp, i) => {
+                  const maxSc = standPerf[0]?.scans ?? 1
+                  return (
+                    <div key={sp.sid} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: `1px solid ${C.g1}` }}>
+                      <span style={{ width: 22, height: 22, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, background: i < 3 ? C.nuit : C.g1, color: i < 3 ? '#fff' : C.g5 }}>{i + 1}</span>
+                      <span style={{ flex: 1, fontSize: 13, fontWeight: i < 3 ? 700 : 400, color: C.nuit }}>{sp.name}</span>
+                      <div style={{ width: 80, height: 6, background: C.g1, borderRadius: 3, marginRight: 8 }}>
+                        <div style={{ height: '100%', width: `${(sp.scans / maxSc) * 100}%`, background: i < 3 ? C.tomate : C.piscine, borderRadius: 3, transition: 'width 0.6s ease' }} />
+                      </div>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: C.tomate, minWidth: 28, textAlign: 'right' as const }}>{sp.scans}</span>
+                    </div>
+                  )
+                })}
               </div>
               <div style={card}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 12 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 4 }}>
                   <Tip text="L'entonnoir montre combien d'étudiants passent chaque étape : inscription → entrée → stand → swipe → RDV.">Entonnoir d&apos;engagement</Tip>
                 </div>
-                <PBar label="Inscrits" value={fR} max={fR} color={C.g5} />
-                <PBar label="Entrés au salon" value={fE} max={fR} color={C.piscine} />
-                <PBar label="Stand scanné" value={fSc} max={fR} color={C.spirit} />
-                <PBar label="Swipe droit" value={fSw} max={fR} color={C.tomate} />
-                <PBar label="RDV pris" value={fRDV} max={fR} color={C.menthe} />
+                <SectionSub text="Combien d'étudiants passent chaque étape du parcours" />
+                {/* Visual funnel with colored segments */}
+                {[
+                  { label: 'Inscrits', value: fR, color: C.g5 },
+                  { label: 'Entrés au salon', value: fE, color: C.piscine },
+                  { label: 'Stand scanné', value: fSc, color: C.spirit },
+                  { label: 'Swipe droit', value: fSw, color: C.tomate },
+                  { label: 'RDV pris', value: fRDV, color: C.menthe },
+                ].map((step, i) => {
+                  const widthPct = fR === 0 ? 0 : Math.max(8, (step.value / fR) * 100)
+                  return (
+                    <div key={step.label} style={{ marginBottom: 10 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 3 }}>
+                        <span style={{ color: C.g7, fontWeight: i === 0 ? 400 : 600 }}>{step.label}</span>
+                        <span style={{ fontWeight: 800, color: step.color }}>{fmt(step.value)}</span>
+                      </div>
+                      <div style={{ height: 10, background: C.g1, borderRadius: 5, overflow: 'hidden' }}>
+                        <div style={{
+                          height: '100%', width: `${widthPct}%`,
+                          background: `linear-gradient(90deg, ${step.color}, ${step.color}CC)`,
+                          borderRadius: 5, transition: 'width 0.6s ease',
+                        }} />
+                      </div>
+                      {i < 4 && fR > 0 && (
+                        <div style={{ fontSize: 9, color: C.g5, textAlign: 'right' as const, marginTop: 1 }}>
+                          {Math.round(step.value / fR * 100)}% du total
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </div>
           </div>
@@ -644,10 +801,10 @@ export default function AdminDashboard() {
         {/* ═══════════════════════════════════════════════════════════════════ */}
         {!loading && tab === 'bilan' && (
           <div>
-            <Insight color={C.menthe}>Est-ce que le salon a aidé les étudiants ? On mesure la progression réelle — pas juste le passage à l&apos;entrée.</Insight>
+            <Insight color={C.menthe}>← Le salon est terminé. Voici ce que les données révèlent sur l&apos;engagement et l&apos;orientation →</Insight>
 
             {/* Hero */}
-            <div style={{ ...card, display: 'flex', gap: 24, alignItems: 'center', borderRadius: 16 }}>
+            <div style={{ ...card, display: 'flex', gap: 24, alignItems: 'center', borderRadius: 16, boxShadow: heroShadow }}>
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'inline-block', fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, padding: '3px 10px', borderRadius: 6, background: C.mentheLight, color: C.mentheDark, marginBottom: 10 }}>Résultats</div>
                 <div style={{ fontSize: 14, color: C.g5, lineHeight: 1.6 }}>Le scoring segmente automatiquement les visiteurs en 3 profils comportementaux.</div>
@@ -656,6 +813,30 @@ export default function AdminDashboard() {
                 {[{ v: intentH, l: 'Décideurs', c: TIER.high }, { v: intentM, l: 'Comparateurs', c: TIER.medium }, { v: intentL, l: 'Explorateurs', c: TIER.low }].map(x => (
                   <div key={x.l}><div style={{ fontSize: 36, fontWeight: 800, color: x.c.color }}>{x.v}</div><div style={{ fontSize: 9, color: C.g5, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>{x.l}</div></div>
                 ))}
+              </div>
+            </div>
+          {/* Impact ROI */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 16 }}>
+              <div style={{ background: '#fff', border: `1px solid ${C.g2}`, borderRadius: 16, padding: '22px 24px', borderTop: `3px solid ${C.menthe}` }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.mentheDark, marginBottom: 8 }}>
+                  <Tip text="Proportion de pré-inscrits qui sont effectivement venus au salon et ont scanné leur QR d'entrée.">Conversion pré-inscription → visite</Tip>
+                </div>
+                <div style={{ fontSize: 32, fontWeight: 800, color: C.mentheDark }}>{preregTotal > 0 ? Math.round(enteredIds.size / preregTotal * 100) : 0}%</div>
+                <div style={{ fontSize: 11, color: C.g5, fontStyle: 'italic' as const, marginTop: 6 }}>Sans tracking digital, aucune visibilité sur ce taux</div>
+              </div>
+              <div style={{ background: '#fff', border: `1px solid ${C.g2}`, borderRadius: 16, padding: '22px 24px', borderTop: `3px solid ${C.piscine}` }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.piscineDark, marginBottom: 8 }}>
+                  <Tip text="Taux de visiteurs ayant pris au moins un rendez-vous avec une école — indicateur clé d'engagement.">Visiteurs avec RDV</Tip>
+                </div>
+                <div style={{ fontSize: 32, fontWeight: 800, color: C.piscineDark }}>{rdvRate}%</div>
+                <div style={{ fontSize: 11, color: C.g5, fontStyle: 'italic' as const, marginTop: 6 }}>Les salons classiques n&apos;ont aucun moyen de mesurer ce taux</div>
+              </div>
+              <div style={{ background: '#fff', border: `1px solid ${C.g2}`, borderRadius: 16, padding: '22px 24px', borderTop: `3px solid ${C.spirit}` }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: C.spiritDark, marginBottom: 8 }}>
+                  <Tip text="Nombre moyen de stands différents visités par étudiant — mesure la richesse du parcours d'orientation.">Stands visités en moy.</Tip>
+                </div>
+                <div style={{ fontSize: 32, fontWeight: 800, color: C.spiritDark }}>{avgStands}</div>
+                <div style={{ fontSize: 11, color: C.g5, fontStyle: 'italic' as const, marginTop: 6 }}>Chaque stand visité est une interaction mesurée et scorée</div>
               </div>
             </div>
 
@@ -667,30 +848,44 @@ export default function AdminDashboard() {
               <ColorCard label="Accompagnés" value={attendees.length} bg={C.piscineLight} textColor={C.piscineDark} tip="Nombre total d'étudiants dont on a tracé le parcours au salon." />
             </div>
 
-            {/* Recommendations with WHY */}
+            {/* Recommendations — McKinsey style */}
             {recommendations.length > 0 && (
               <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 12 }}>Recommandations</div>
-                {recommendations.map((r, i) => (
-                  <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, marginBottom: 12, borderRadius: 12, overflow: 'hidden', border: `1px solid ${C.g2}` }}>
-                    <div style={{ padding: '16px 20px', fontSize: 13, lineHeight: 1.6, background: r.type === 'success' ? C.mentheLight : r.type === 'warning' ? C.tomateLight : C.piscineLight, color: r.type === 'success' ? C.mentheDark : r.type === 'warning' ? C.tomateDark : C.piscineDark, display: 'flex', alignItems: 'center' }}>
-                      <div><div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, marginBottom: 4, opacity: 0.7 }}>{r.type === 'success' ? 'Opportunité' : r.type === 'warning' ? 'Action requise' : 'Suggestion'}</div>{r.text}</div>
-                    </div>
-                    <div style={{ padding: '16px 20px', fontSize: 12, lineHeight: 1.6, background: '#fff', color: C.g5 }}>
-                      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: C.g7, marginBottom: 4 }}>Pourquoi</div>
-                      {r.why}
-                    </div>
-                  </div>
-                ))}
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 4 }}>Recommandations</div>
+                <SectionSub text="Actions prioritaires basées sur les données du salon" />
+                <div style={{ display: 'grid', gridTemplateColumns: recommendations.length > 2 ? 'repeat(3, 1fr)' : `repeat(${recommendations.length}, 1fr)`, gap: 14 }}>
+                  {recommendations.map((r, i) => {
+                    const tagColors = r.type === 'warning'
+                      ? { bg: '#FEE2E2', text: '#991B1B', label: 'URGENT' }
+                      : r.type === 'success'
+                      ? { bg: '#D1FAE5', text: '#065F46', label: 'OPPORTUNITÉ' }
+                      : { bg: '#DBEAFE', text: '#1E40AF', label: 'À SURVEILLER' }
+                    return (
+                      <div key={i} style={{ background: '#fff', border: `1px solid ${C.g2}`, borderRadius: 16, padding: '24px 22px', position: 'relative', overflow: 'hidden' }}>
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: r.type === 'warning' ? C.tomate : r.type === 'success' ? TIER.high.color : C.piscine }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                          <span style={{ fontSize: 24, fontWeight: 800, color: C.g3, fontFamily: 'Georgia, serif', lineHeight: 1 }}>{String(i + 1).padStart(2, '0')}</span>
+                          <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', background: tagColors.bg, color: tagColors.text }}>{tagColors.label}</span>
+                        </div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: C.nuit, lineHeight: 1.4, marginBottom: 12 }}>{r.text}</div>
+                        <div style={{ fontSize: 12, color: C.g5, lineHeight: 1.6, padding: '12px 14px', background: C.g1, borderRadius: 8 }}>
+                          {r.why}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             )}
 
-            {/* Insights with data */}
+            {/* Insights with data — improved */}
             {insights.length > 0 && (
-              <div style={{ ...card, background: C.g1, border: 'none', borderRadius: 16 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 12 }}>Insights automatiques</div>
+              <div style={{ ...card, background: '#fff', borderRadius: 16 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 4 }}>Données clés</div>
+                <SectionSub text="Faits marquants extraits automatiquement des données du salon" />
                 {insights.map((ins, i) => (
-                  <div key={i} style={{ display: 'flex', gap: 16, padding: '10px 0', borderBottom: i < insights.length - 1 ? `1px solid ${C.g2}` : 'none' }}>
+                  <div key={i} style={{ display: 'flex', gap: 16, padding: '12px 14px', marginBottom: 6, background: i % 2 === 0 ? C.g1 : '#fff', borderRadius: 10, alignItems: 'center' }}>
+                    <span style={{ width: 28, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, background: C.nuit, color: '#fff', flexShrink: 0 }}>{i + 1}</span>
                     <div style={{ flex: 1, fontSize: 13, fontWeight: 600, color: C.nuit }}>{ins.text}</div>
                     <div style={{ fontSize: 12, color: C.g5, textAlign: 'right' as const, minWidth: 200 }}>{ins.data}</div>
                   </div>
@@ -698,22 +893,52 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {/* Performance par école */}
+            {/* Performance par école — improved */}
             {leadsBySchool.length > 0 && (
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 14 }}>
                 <div style={card}>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 12 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 4 }}>
                     <Tip text="Nombre de visiteurs par école, segmentés par profil comportemental. Les scores sont calculés automatiquement.">Performance par école</Tip>
                   </div>
-                  <div style={{ overflowX: 'auto' as const }}><table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 }}><thead><tr style={{ borderBottom: `2px solid ${C.g2}` }}>{['École', 'Leads', 'Décideurs', 'Score'].map(h => <th key={h} style={{ padding: '10px 12px', textAlign: h === 'École' ? 'left' as const : 'right' as const, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: C.g5 }}>{h}</th>)}</tr></thead><tbody>{leadsBySchool.slice(0, 10).map((l, i) => <tr key={l.id} style={{ borderBottom: `1px solid ${C.g1}`, background: i < 3 ? C.g1 : '#fff' }}><td style={{ padding: '11px 12px', fontWeight: i < 3 ? 700 : 400, color: C.nuit }}>{l.name}</td><td style={{ padding: '11px 12px', textAlign: 'right' as const, fontWeight: 800 }}>{l.total}</td><td style={{ padding: '11px 12px', textAlign: 'right' as const, fontWeight: 700, color: TIER.high.color }}>{l.high}</td><td style={{ padding: '11px 12px', textAlign: 'right' as const, fontWeight: 700 }}>{l.avg}/100</td></tr>)}</tbody></table></div>
-                </div>
-                <WhyBox title="Ce que ça signifie">
-                  <div style={{ color: C.g7, lineHeight: 1.8, fontSize: 12 }}>
-                    {standPerf[0] && <div><strong style={{ color: C.nuit }}>{standPerf[0].name}</strong> domine avec {standPerf[0].scans} scans — sa position dans le salon et sa notoriété attirent naturellement plus de visiteurs.</div>}
-                    {leadsBySchool.length > 3 && <div style={{ marginTop: 8 }}>Les écoles avec un score moyen élevé (&gt;80) ont des leads très qualifiés — elles peuvent contacter ces étudiants en priorité.</div>}
-                    <div style={{ marginTop: 8 }}>Les écoles en bas de tableau ne manquent pas de qualité — elles manquent de visibilité. Un meilleur placement pourrait changer la donne.</div>
+                  <div style={{ overflowX: 'auto' as const }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 }}>
+                      <thead>
+                        <tr style={{ borderBottom: `2px solid ${C.g2}` }}>
+                          {['École', 'Leads', 'Décideurs', 'Match %', 'Score'].map(h => (
+                            <th key={h} style={{ padding: '10px 12px', textAlign: h === 'École' ? 'left' as const : 'right' as const, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: C.g5 }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {leadsBySchool.slice(0, 10).map((l, i) => {
+                          const sm = matches.filter(m => m.school_id === l.id)
+                          const mt = sm.length
+                          const mr = sm.filter(m => m.student_swipe === 'right').length
+                          const mp = mt > 0 ? Math.round(mr / mt * 100) : 0
+                          return (
+                            <tr key={l.id} style={{ borderBottom: `1px solid ${C.g1}`, background: i < 3 ? C.g1 : '#fff' }}>
+                              <td style={{ padding: '11px 12px', fontWeight: i < 3 ? 700 : 400, color: C.nuit }}>{l.name}</td>
+                              <td style={{ padding: '11px 12px', textAlign: 'right' as const, fontWeight: 800 }}>{l.total}</td>
+                              <td style={{ padding: '11px 12px', textAlign: 'right' as const, fontWeight: 700, color: TIER.high.color }}>{l.high}</td>
+                              <td style={{ padding: '11px 12px', textAlign: 'right' as const }}>
+                                {mt > 0 ? <span style={{ fontWeight: 700, color: mp > 75 ? '#059669' : mp > 50 ? '#F59E0B' : '#EC1F27' }}>{mp}%</span> : '—'}
+                              </td>
+                              <td style={{ padding: '11px 12px', textAlign: 'right' as const, fontWeight: 700 }}>{l.avg}/100</td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
                   </div>
-                </WhyBox>
+                </div>
+                <div style={{ ...card, background: C.nuit, border: 'none', color: '#fff' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.5)', marginBottom: 10 }}>Ce que ça signifie</div>
+                  <div style={{ lineHeight: 1.8, fontSize: 12 }}>
+                    {standPerf[0] && <div style={{ marginBottom: 10 }}><strong style={{ color: C.menthe }}>{standPerf[0].name}</strong> domine avec {standPerf[0].scans} scans — sa position dans le salon et sa notoriété attirent naturellement plus de visiteurs.</div>}
+                    {leadsBySchool.length > 3 && <div style={{ marginBottom: 10, color: 'rgba(255,255,255,0.7)' }}>Les écoles avec un score moyen élevé (&gt;80) ont des leads très qualifiés — elles peuvent contacter ces étudiants en priorité.</div>}
+                    <div style={{ color: 'rgba(255,255,255,0.6)' }}>Les écoles en bas de tableau ne manquent pas de qualité — elles manquent de visibilité. Un meilleur placement pourrait changer la donne.</div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -724,15 +949,15 @@ export default function AdminDashboard() {
         {/* ═══════════════════════════════════════════════════════════════════ */}
         {!loading && tab === 'clusters' && (
           <div>
-            <Insight color={C.pourpre}>3 profils émergent du comportement réel — pas d&apos;un questionnaire déclaratif. Le scoring est recalculé à chaque scan QR.</Insight>
+            <Insight color={C.pourpre}>← Zoom sur les 3 profils comportementaux détectés automatiquement par le scoring →</Insight>
 
             {/* 3 cluster cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 16 }}>
               {clusters.map(c => {
                 const t = TIER[c.level] ?? TIER.low; const tot = clusters.reduce((s, x) => s + x.count, 0) || 1
                 return (
-                  <div key={c.level} style={{ background: t.bg, border: `1px solid ${t.border}`, borderRadius: 16, padding: '22px 24px', position: 'relative' as const, overflow: 'hidden' }}>
-                    <div style={{ position: 'absolute' as const, top: 0, left: 0, right: 0, height: 4, background: t.color }} />
+                  <div key={c.level} style={{ background: t.bg, border: `1.5px solid ${t.border}`, borderRadius: 16, padding: '22px 24px', position: 'relative' as const, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                    <div style={{ position: 'absolute' as const, top: 0, left: 0, right: 0, height: 4, background: t.gradient }} />
                     <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: t.text, marginBottom: 8 }}>{t.label}</div>
                     <div style={{ fontSize: 34, fontWeight: 800, color: t.text, lineHeight: 1 }}>{c.count} <span style={{ fontSize: 13, fontWeight: 500 }}>({pct(c.count, tot)}%)</span></div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 14px', marginTop: 16, fontSize: 11, color: t.text }}>
@@ -761,39 +986,66 @@ export default function AdminDashboard() {
                       ))}
                       {c.students.length > 3 && <div style={{ fontSize: 10, marginTop: 4, color: t.text, opacity: 0.6 }}>+ {c.students.length - 3} autres →</div>}
                     </div>
+                    {/* Parcours type */}
+                    <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${t.border}` }}>
+                      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: t.text, marginBottom: 6, opacity: 0.7 }}>Parcours type</div>
+                      <div style={{ fontSize: 11, color: t.text, opacity: 0.7, lineHeight: 1.6 }}>
+                        {c.level === 'high' && 'Inscription J-7 → profil complété → 4+ stands → 2 conférences → 2 RDV → 5+ swipes'}
+                        {c.level === 'medium' && 'Inscription J-2 → profil partiel → 2-3 stands → 1 conférence → 0-1 RDV → 3 swipes'}
+                        {c.level === 'low' && 'Inscription Jour J → pas de profil → 1-2 stands → 0 conférence → 0 RDV → 0-1 swipes'}
+                      </div>
+                    </div>
                   </div>
                 )
               })}
             </div>
 
-            {/* Behavior comparison */}
-            <div style={{ ...card, background: C.g1, border: 'none', borderRadius: 16 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 12 }}>Différences clés entre les segments</div>
+            {/* CTA for timeline if no student selected */}
+            {!selStudent && (
+              <div style={{ ...card, background: C.piscineLight, border: `1px dashed ${C.piscine}`, textAlign: 'center' as const, padding: '20px 24px', borderRadius: 16, marginBottom: 16 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: C.piscineDark }}>👆 Cliquez sur un étudiant ci-dessus pour voir son parcours détaillé</div>
+                <div style={{ fontSize: 12, color: C.g5, marginTop: 4 }}>La timeline montre chaque interaction dans l&apos;ordre chronologique</div>
+              </div>
+            )}
+
+            {/* Behavior comparison — enhanced with visual bars */}
+            <div style={{ ...card, background: '#fff', border: `1px solid ${C.g2}`, borderRadius: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 4 }}>Différences clés entre les segments</div>
+              <SectionSub text="Comparaison comportementale entre les 3 profils" />
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
                 {[
-                  { label: 'Stands visités', h: clusters[0]?.avgStands ?? 0, m: clusters[1]?.avgStands ?? 0, l: clusters[2]?.avgStands ?? 0 },
-                  { label: 'Durée au salon', h: fmtMin(clusters[0]?.avgDwell ?? 0), m: fmtMin(clusters[1]?.avgDwell ?? 0), l: fmtMin(clusters[2]?.avgDwell ?? 0) },
-                  { label: 'Taux de RDV', h: `${clusters[0]?.rdvPct ?? 0}%`, m: `${clusters[1]?.rdvPct ?? 0}%`, l: `${clusters[2]?.rdvPct ?? 0}%` },
-                ].map(row => (
-                  <div key={row.label} style={{ background: '#fff', borderRadius: 10, padding: '14px 16px' }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 10 }}>{row.label}</div>
-                    {[{ v: row.h, l: 'Décideurs', c: TIER.high }, { v: row.m, l: 'Comparateurs', c: TIER.medium }, { v: row.l, l: 'Explorateurs', c: TIER.low }].map(x => (
-                      <div key={x.l} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', fontSize: 12 }}>
-                        <span style={{ color: C.g5 }}>{x.l}</span>
-                        <span style={{ fontWeight: 700, color: x.c.color }}>{x.v}</span>
-                      </div>
-                    ))}
-                  </div>
-                ))}
+                  { label: 'Stands visités', h: clusters[0]?.avgStands ?? 0, m: clusters[1]?.avgStands ?? 0, l: clusters[2]?.avgStands ?? 0, maxVal: Math.max(clusters[0]?.avgStands ?? 1, clusters[1]?.avgStands ?? 1, clusters[2]?.avgStands ?? 1) },
+                  { label: 'Durée au salon', h: clusters[0]?.avgDwell ?? 0, m: clusters[1]?.avgDwell ?? 0, l: clusters[2]?.avgDwell ?? 0, maxVal: Math.max(clusters[0]?.avgDwell ?? 1, clusters[1]?.avgDwell ?? 1, clusters[2]?.avgDwell ?? 1), fmtFn: fmtMin },
+                  { label: 'Taux de RDV', h: clusters[0]?.rdvPct ?? 0, m: clusters[1]?.rdvPct ?? 0, l: clusters[2]?.rdvPct ?? 0, maxVal: 100, suffix: '%' },
+                ].map(row => {
+                  const fmtFn = (row as { fmtFn?: (n: number) => string }).fmtFn
+                  const suffix = (row as { suffix?: string }).suffix ?? ''
+                  return (
+                    <div key={row.label} style={{ background: C.g1, borderRadius: 12, padding: '16px 18px' }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 12 }}>{row.label}</div>
+                      {[{ v: row.h, l: 'Décideurs', c: TIER.high }, { v: row.m, l: 'Comparateurs', c: TIER.medium }, { v: row.l, l: 'Explorateurs', c: TIER.low }].map(x => (
+                        <div key={x.l} style={{ marginBottom: 8 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, marginBottom: 3 }}>
+                            <span style={{ color: C.g5 }}>{x.l}</span>
+                            <span style={{ fontWeight: 800, color: x.c.color, fontSize: 15 }}>{fmtFn ? fmtFn(x.v as number) : `${x.v}${suffix}`}</span>
+                          </div>
+                          <div style={{ height: 6, background: `${x.c.color}15`, borderRadius: 3 }}>
+                            <div style={{ height: '100%', width: `${row.maxVal > 0 ? ((x.v as number) / row.maxVal) * 100 : 0}%`, background: x.c.color, borderRadius: 3, transition: 'width 0.6s ease' }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })}
               </div>
-              <div style={{ marginTop: 14, padding: '12px 16px', background: '#fff', borderRadius: 8, fontSize: 12, color: C.g5, lineHeight: 1.6 }}>
-                <strong style={{ color: C.nuit }}>En résumé :</strong> Les décideurs visitent {clusters[0]?.avgStands ?? 0} stands vs {clusters[2]?.avgStands ?? 0} pour les explorateurs — ils sont {clusters[2]?.avgStands ? Math.round((clusters[0]?.avgStands ?? 0) / Math.max(clusters[2]?.avgStands ?? 1, 0.1) * 10) / 10 : 0}× plus actifs. Ils prennent aussi {clusters[0]?.rdvPct ?? 0}% de RDV vs {clusters[2]?.rdvPct ?? 0}% — un signal fort d&apos;intention.
+              <div style={{ marginTop: 14, padding: '14px 18px', background: C.nuit, borderRadius: 12, fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6 }}>
+                <strong style={{ color: '#fff' }}>En résumé :</strong> Les décideurs visitent {clusters[0]?.avgStands ?? 0} stands vs {clusters[2]?.avgStands ?? 0} pour les explorateurs — ils sont {clusters[2]?.avgStands ? Math.round((clusters[0]?.avgStands ?? 0) / Math.max(clusters[2]?.avgStands ?? 1, 0.1) * 10) / 10 : 0}× plus actifs. Ils prennent aussi {clusters[0]?.rdvPct ?? 0}% de RDV vs {clusters[2]?.rdvPct ?? 0}% — un signal fort d&apos;intention.
               </div>
             </div>
 
             {/* Selected student timeline */}
             {selStudent && (
-              <div style={{ ...card, border: `1px solid ${C.piscine}`, borderRadius: 16 }}>
+              <div style={{ ...card, border: `2px solid ${C.piscine}`, borderRadius: 16, boxShadow: `0 0 0 4px ${C.piscine}15` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                   <div>
                     <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 4 }}>Parcours — {selStudent.name ?? selStudent.email}</div>
@@ -809,7 +1061,8 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            <div style={{ padding: '12px 16px', background: C.g1, borderRadius: 8, fontSize: 11, color: C.g5, lineHeight: 1.6, marginTop: 8 }}><strong style={{ color: C.nuit }}>Données collectées :</strong> {fmt(scans.length)} scans · {fmt(swipeT)} swipes · {fmt(appointments.length)} RDV · {fmt(preregTotal)} pré-inscriptions · {fmt(stands.length)} stands · {fmt(students.length)} profils</div>
+            {/* Données collectées — made discreet */}
+            <div style={{ padding: '10px 14px', borderRadius: 8, fontSize: 10, color: C.g3, lineHeight: 1.6, marginTop: 8, textAlign: 'center' as const }}>{fmt(scans.length)} scans · {fmt(swipeT)} swipes · {fmt(appointments.length)} RDV · {fmt(preregTotal)} pré-inscriptions · {fmt(stands.length)} stands · {fmt(students.length)} profils</div>
           </div>
         )}
 
@@ -818,7 +1071,7 @@ export default function AdminDashboard() {
         {/* ═══════════════════════════════════════════════════════════════════ */}
         {!loading && tab === 'strategie' && (
           <div>
-            <Insight color={C.spirit}>Vue cross-salons — comparer les événements pour décider où investir, quels formats développer, quelles écoles inviter.</Insight>
+            <Insight color={C.spirit}>← Ces insights alimentent les décisions d&apos;investissement pour les prochains salons</Insight>
 
             {/* Hero */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, marginBottom: 16 }}>
@@ -827,52 +1080,100 @@ export default function AdminDashboard() {
               <ColorCard label="À venir" value={upcomingEvents} sub="en attente de données" bg={C.spiritLight} textColor={C.spiritDark} tip="Événements futurs sans données de visite." />
             </div>
 
-            {/* Table */}
+            {/* Table — with "À venir" labels */}
             <div style={card}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 12 }}>Comparaison des salons</div>
-              <div style={{ overflowX: 'auto' as const }}><table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 }}><thead><tr style={{ borderBottom: `2px solid ${C.g2}` }}>{['Salon', 'Ville', 'Date', 'Visiteurs', 'Scans', 'RDV', 'Score', 'Décideurs'].map(h => <th key={h} style={{ padding: '10px 10px', textAlign: ['Salon', 'Ville', 'Date'].includes(h) ? 'left' as const : 'right' as const, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: C.g5 }}>{h}</th>)}</tr></thead><tbody>{crossEvents.map(ev => <tr key={ev.id} style={{ borderBottom: `1px solid ${C.g1}`, background: ev.id === selEvent?.id ? C.piscineLight : '#fff' }}><td style={{ padding: '11px 10px', fontWeight: 700, color: C.nuit }}>{ev.name}</td><td style={{ padding: '11px 10px', color: C.g7 }}>{ev.city}</td><td style={{ padding: '11px 10px', color: C.g5, fontSize: 12 }}>{new Date(ev.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</td><td style={{ padding: '11px 10px', textAlign: 'right' as const, fontWeight: 700 }}>{ev.visitors || '—'}</td><td style={{ padding: '11px 10px', textAlign: 'right' as const }}>{ev.scans || '—'}</td><td style={{ padding: '11px 10px', textAlign: 'right' as const }}>{ev.rdv || '—'}</td><td style={{ padding: '11px 10px', textAlign: 'right' as const, fontWeight: 700, color: ev.avgScore > 50 ? C.menthe : C.g5 }}>{ev.avgScore > 0 ? `${ev.avgScore}/100` : '—'}</td><td style={{ padding: '11px 10px', textAlign: 'right' as const, fontWeight: 700, color: C.tomate }}>{ev.decideurs || '—'}</td></tr>)}</tbody></table></div>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 4 }}>Comparaison des salons</div>
+              <SectionSub text="Performance comparée de chaque événement du réseau" />
+              <div style={{ overflowX: 'auto' as const }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ borderBottom: `2px solid ${C.g2}` }}>
+                      {['Salon', 'Ville', 'Date', 'Visiteurs', 'Scans', 'RDV', 'Score', 'Décideurs'].map(h => (
+                        <th key={h} style={{ padding: '10px 10px', textAlign: ['Salon', 'Ville', 'Date'].includes(h) ? 'left' as const : 'right' as const, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: C.g5 }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {crossEvents.map(ev => {
+                      const isUpcoming = ev.visitors === 0
+                      return (
+                        <tr key={ev.id} style={{ borderBottom: `1px solid ${C.g1}`, background: ev.id === selEvent?.id ? C.piscineLight : '#fff', opacity: isUpcoming ? 0.6 : 1 }}>
+                          <td style={{ padding: '11px 10px', fontWeight: 700, color: C.nuit }}>
+                            {ev.name}
+                            {isUpcoming && <span style={{ display: 'inline-block', marginLeft: 8, fontSize: 9, fontWeight: 600, padding: '2px 6px', borderRadius: 4, background: C.g1, color: C.g5 }}>À venir</span>}
+                          </td>
+                          <td style={{ padding: '11px 10px', color: C.g7 }}>{ev.city}</td>
+                          <td style={{ padding: '11px 10px', color: C.g5, fontSize: 12 }}>{new Date(ev.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</td>
+                          <td style={{ padding: '11px 10px', textAlign: 'right' as const, fontWeight: 700 }}>{isUpcoming ? <span style={{ color: C.g3, fontWeight: 400, fontStyle: 'italic' as const }}>—</span> : ev.visitors}</td>
+                          <td style={{ padding: '11px 10px', textAlign: 'right' as const }}>{isUpcoming ? <span style={{ color: C.g3, fontWeight: 400, fontStyle: 'italic' as const }}>—</span> : ev.scans}</td>
+                          <td style={{ padding: '11px 10px', textAlign: 'right' as const }}>{isUpcoming ? <span style={{ color: C.g3, fontWeight: 400, fontStyle: 'italic' as const }}>—</span> : ev.rdv}</td>
+                          <td style={{ padding: '11px 10px', textAlign: 'right' as const, fontWeight: 700, color: ev.avgScore > 50 ? C.menthe : C.g5 }}>{isUpcoming ? <span style={{ color: C.g3, fontWeight: 400, fontStyle: 'italic' as const }}>—</span> : `${ev.avgScore}/100`}</td>
+                          <td style={{ padding: '11px 10px', textAlign: 'right' as const, fontWeight: 700, color: C.tomate }}>{isUpcoming ? <span style={{ color: C.g3, fontWeight: 400, fontStyle: 'italic' as const }}>—</span> : ev.decideurs}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* Recommendations + tendances */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               <div style={card}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 12 }}>Tendances filières</div>
-                <div style={{ fontSize: 13, color: C.nuit, lineHeight: 2 }}>{branches.slice(0, 5).map(([n, c]) => <div key={n}><strong>{n}</strong> — {c} étudiants ({pct(c, attendees.length)}%)</div>)}</div>
-                <WhyBox title="Ce que ça signifie">
-                  <span style={{ color: C.g7 }}>Les filières dominantes reflètent la demande étudiante. Utiliser ces données pour sélectionner les écoles à inviter dans les prochains salons.</span>
-                </WhyBox>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 4 }}>Tendances filières</div>
+                <SectionSub text="Les domaines les plus demandés — guide pour les invitations écoles" />
+                {branches.slice(0, 5).map(([n, c], i) => {
+                  const maxB = branches[0]?.[1] ?? 1
+                  return (
+                    <div key={n} style={{ marginBottom: 10 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 3 }}>
+                        <span style={{ color: C.nuit, fontWeight: 600 }}>{n}</span>
+                        <span style={{ fontSize: 12, color: C.g5 }}>{c} étudiants ({pct(c, attendees.length)}%)</span>
+                      </div>
+                      <div style={{ height: 6, background: C.g1, borderRadius: 3 }}>
+                        <div style={{ height: '100%', width: `${(c / maxB) * 100}%`, background: i < 2 ? C.tomate : C.piscine, borderRadius: 3 }} />
+                      </div>
+                    </div>
+                  )
+                })}
+                <div style={{ marginTop: 12 }}>
+                  <WhyBox title="Ce que ça signifie">
+                    <span style={{ color: C.g7 }}>Les filières dominantes reflètent la demande étudiante. Utiliser ces données pour sélectionner les écoles à inviter dans les prochains salons.</span>
+                  </WhyBox>
+                </div>
               </div>
               <div style={card}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 12 }}>Recommandations stratégiques</div>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: C.g5, marginBottom: 4 }}>Recommandations stratégiques</div>
+                <SectionSub text="Actions à prendre pour optimiser les prochains événements" />
                 {[
                   { tag: 'Opportunité', tagBg: C.mentheLight, tagColor: C.mentheDark, text: 'Sciences & Tech domine — conférences dédiées à Lyon et Bordeaux.', why: `${branches[0]?.[1] ?? 0} étudiants intéressés (${pct(branches[0]?.[1] ?? 0, attendees.length)}%) — une demande forte non couverte sur les autres villes.` },
                   { tag: 'Expansion', tagBg: C.piscineLight, tagColor: C.piscineDark, text: `${stands.length} stands à Paris — potentiel sur les autres villes.`, why: 'Les villes avec moins de stands mais une demande forte = opportunité d\'expansion à faible coût.' },
                   { tag: 'Rétention', tagBg: C.citronLight, tagColor: C.citronDark, text: 'Suivre les étudiants multi-salons pour mesurer la fidélité.', why: 'Un étudiant qui revient à plusieurs salons est un lead ultra-qualifié — il compare activement.' },
                 ].map((r, i) => (
-                  <div key={i} style={{ marginBottom: 14 }}>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 4 }}>
+                  <div key={i} style={{ marginBottom: 14, padding: '12px 14px', background: C.g1, borderRadius: 10 }}>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 6 }}>
                       <span style={{ display: 'inline-block', fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, padding: '3px 10px', borderRadius: 6, background: r.tagBg, color: r.tagColor, flexShrink: 0 }}>{r.tag}</span>
-                      <span style={{ fontSize: 13, color: C.nuit }}>{r.text}</span>
+                      <span style={{ fontSize: 13, color: C.nuit, fontWeight: 600 }}>{r.text}</span>
                     </div>
-                    <div style={{ fontSize: 11, color: C.g5, marginLeft: 78, lineHeight: 1.5 }}>{r.why}</div>
+                    <div style={{ fontSize: 11, color: C.g5, lineHeight: 1.5 }}>{r.why}</div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Prochaines actions */}
-            <div style={{ ...card, background: C.nuit, border: 'none', borderRadius: 16, marginTop: 14 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>Prochaines actions</div>
+            {/* Prochaines actions — improved with red deadlines and bigger icons */}
+            <div style={{ ...card, background: C.nuit, border: 'none', borderRadius: 16, marginTop: 14, boxShadow: heroShadow }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.4)', marginBottom: 14 }}>Prochaines actions</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
                 {[
                   { icon: '📧', text: 'Envoyer les leads qualifiés aux écoles de Paris', deadline: 'Cette semaine' },
                   { icon: '📊', text: 'Préparer le brief pour le salon de Lyon (9 mai)', deadline: 'Avant le 5 mai' },
                   { icon: '🎯', text: 'Optimiser le placement des stands par filière', deadline: 'Prochain salon' },
                 ].map((a, i) => (
-                  <div key={i} style={{ background: 'rgba(255,255,255,0.07)', borderRadius: 10, padding: '14px 16px' }}>
-                    <div style={{ fontSize: 18, marginBottom: 6 }}>{a.icon}</div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', lineHeight: 1.4, marginBottom: 6 }}>{a.text}</div>
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>{a.deadline}</div>
+                  <div key={i} style={{ background: 'rgba(255,255,255,0.07)', borderRadius: 12, padding: '18px 18px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div style={{ fontSize: 28, marginBottom: 10 }}>{a.icon}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', lineHeight: 1.4, marginBottom: 10 }}>{a.text}</div>
+                    <div style={{ fontSize: 10, color: a.deadline.includes('Avant') ? C.tomate : 'rgba(255,255,255,0.4)', textTransform: 'uppercase' as const, letterSpacing: '0.1em', fontWeight: a.deadline.includes('Avant') ? 700 : 400 }}>{a.deadline}</div>
                   </div>
                 ))}
               </div>
