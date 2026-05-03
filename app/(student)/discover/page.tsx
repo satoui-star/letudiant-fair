@@ -53,6 +53,7 @@ function typeVariant(type: string): 'red' | 'blue' | 'yellow' | 'gray' {
   if (type.toLowerCase().includes('université')) return 'blue';
   if (type.toLowerCase().includes('grande')) return 'red';
   return 'gray';
+}
 
 // Map article category to a Tag variant
 function mapCategoryToTag(category: string): 'red' | 'blue' | 'yellow' | 'gray' {
@@ -61,8 +62,6 @@ function mapCategoryToTag(category: string): 'red' | 'blue' | 'yellow' | 'gray' 
   if (cat.includes('emploi') || cat.includes('stage')) return 'blue';
   if (cat.includes('formation') || cat.includes('master') || cat.includes('école')) return 'yellow';
   return 'gray';
-}
-
 }
 
 // Generate a gradient from school type so cards still look nice
