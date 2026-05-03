@@ -8,6 +8,7 @@ import TinderCard from 'react-tinder-card';
 import Tag from '@/components/ui/Tag';
 import Button from '@/components/ui/Button';
 import StripeRule from '@/components/ui/StripeRule';
+import Icon from '@/components/ui/Icon';
 import { getSchools, upsertMatch, saveSchoolToWishlist, getSchoolFormations, saveFormationToWishlist, getAllReels, saveReelToWishlist, getSavedReels, deleteReelFromWishlist, trackArticleInteraction, getArticles, getPersonalizedArticles } from '@/lib/supabase/database';
 import { getSupabase } from '@/lib/supabase/client';
 import { rankSchoolsForStudent } from '@/lib/supabase/schoolRanking';
@@ -40,7 +41,7 @@ interface Article {
   tag: 'red' | 'blue' | 'yellow' | 'gray';
   description: string;
   url: string;
-  icon: string; // SVG path or icon name
+  icon: 'briefcase' | 'flask' | 'book' | 'trend' | 'graduation' | 'building' | 'heart' | 'sparkle' | 'lock'; // Stroke-style icon names
   size: 'normal' | 'large' | 'tall' | 'wide'; // Masonry size
   gradientClass: string; // e.g., 'gradient-1', 'gradient-2', etc.
 }
@@ -543,7 +544,7 @@ function ActualiteCard({ article, onClick, onInteraction }: ActualiteCardProps) 
           fontSize: 48,
         }}
       >
-        {article.icon}
+        <Icon name={article.icon} size={24} />
       </div>
 
       {/* Content */}
