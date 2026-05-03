@@ -1547,7 +1547,7 @@ export default function DiscoverPage() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gridTemplateColumns: 'repeat(4, 1fr)',
               gap: 24,
             }}
           >
