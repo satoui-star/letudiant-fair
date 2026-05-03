@@ -1258,6 +1258,11 @@ export default function SavedPage() {
   const [articleFilterDate, setArticleFilterDate] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const [selectedArticles, setSelectedArticles] = useState<Set<string>>(new Set());
 
+  // Reel filters and selection
+  const [reelFilterSort, setReelFilterSort] = useState<'recent' | 'oldest' | 'a-z' | 'z-a'>('recent');
+  const [reelFilterDate, setReelFilterDate] = useState<'all' | 'today' | 'week' | 'month'>('all');
+  const [selectedReels, setSelectedReels] = useState<Set<string>>(new Set());
+
   // Swipe filters and selection
   const [swipeFilterCity, setSwipeFilterCity] = useState<string>('');
   const [swipeFilterProgram, setSwipeFilterProgram] = useState<string>('');
@@ -1723,6 +1728,37 @@ export default function SavedPage() {
     } else if (articleFilterSort === 'a-z') {
       filtered.sort((a, b) => a.title.localeCompare(b.title));
     } else if (articleFilterSort === 'z-a') {
+      filtered.sort((a, b) => b.title.localeCompare(a.title));
+    }
+
+    return filtered;
+  };
+
+  // Filter and sort reels
+  const getFilteredReels = () => {
+    let filtered = [...savedReels];
+
+    // Apply date filter
+    const now = new Date();
+    if (reelFilterDate === 'today') {
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      filtered = filtered.filter((r) => new Date(r.saved_at) >= todayStart);
+    } else if (reelFilterDate === 'week') {
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      filtered = filtered.filter((r) => new Date(r.saved_at) >= weekAgo);
+    } else if (reelFilterDate === 'month') {
+      const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      filtered = filtered.filter((r) => new Date(r.saved_at) >= monthAgo);
+    }
+
+    // Apply sorting
+    if (reelFilterSort === 'recent') {
+      filtered.sort((a, b) => new Date(b.saved_at).getTime() - new Date(a.saved_at).getTime());
+    } else if (reelFilterSort === 'oldest') {
+      filtered.sort((a, b) => new Date(a.saved_at).getTime() - new Date(b.saved_at).getTime());
+    } else if (reelFilterSort === 'a-z') {
+      filtered.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (reelFilterSort === 'z-a') {
       filtered.sort((a, b) => b.title.localeCompare(a.title));
     }
 
@@ -2277,51 +2313,223 @@ export default function SavedPage() {
                     Aucun reel sauvegardé. Enregistrez des reels depuis la section Découvrir pour les retrouver ici.
                   </p>
                 ) : (
-                  <div
-                    style={{
-                      background: '#fff',
-                      borderRadius: 8,
-                      border: '1px solid var(--le-gray-200)',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    {savedReels.map((reel) => (
-                      <SavedReelCard key={reel.id} reel={reel} onDelete={handleDeleteReel} />
-                    ))}
-                  </div>
-                )}
-
-                {/* Back to Reels button */}
-                {savedReels.length > 0 && (
-                  <div style={{ marginTop: 20, textAlign: 'center' }}>
-                    <button
-                      onClick={() => router.push('/discover?tab=reels')}
+                  <>
+                    {/* Filters Section */}
+                    <div
                       style={{
-                        background: 'var(--le-red)',
-                        color: '#fff',
-                        borderRadius: 20,
-                        padding: '10px 18px',
-                        fontSize: 14,
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        border: 'none',
-                        transition: 'all 0.2s ease',
-                        boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLElement).style.background = 'var(--le-red-dark)';
-                        (e.currentTarget as HTMLElement).style.transform = 'scale(1.05)';
-                        (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 16px rgba(239, 68, 68, 0.4)';
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLElement).style.background = 'var(--le-red)';
-                        (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
-                        (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)';
+                        background: '#fff',
+                        padding: '12px 16px',
+                        borderRadius: 8,
+                        marginBottom: 16,
+                        border: '1px solid var(--le-gray-200)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 12,
                       }}
                     >
-                      ← Retour aux Reels
-                    </button>
-                  </div>
+                      {/* Filters Row */}
+                      <div style={{ display: 'flex', gap: 12 }}>
+                        {/* Sort Dropdown */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+                          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--le-gray-700)' }}>Trier par:</label>
+                          <select
+                            value={reelFilterSort}
+                            onChange={(e) => setReelFilterSort(e.target.value as any)}
+                            style={{
+                              padding: '8px 12px',
+                              borderRadius: 6,
+                              border: '1px solid var(--le-gray-300)',
+                              fontSize: 13,
+                              fontFamily: 'inherit',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <option value="recent">Plus récent</option>
+                            <option value="oldest">Plus ancien</option>
+                            <option value="a-z">A → Z</option>
+                            <option value="z-a">Z → A</option>
+                          </select>
+                        </div>
+
+                        {/* Date Filter Dropdown */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+                          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--le-gray-700)' }}>Date:</label>
+                          <select
+                            value={reelFilterDate}
+                            onChange={(e) => setReelFilterDate(e.target.value as any)}
+                            style={{
+                              padding: '8px 12px',
+                              borderRadius: 6,
+                              border: '1px solid var(--le-gray-300)',
+                              fontSize: 13,
+                              fontFamily: 'inherit',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <option value="all">Tous</option>
+                            <option value="today">Aujourd'hui</option>
+                            <option value="week">Cette semaine</option>
+                            <option value="month">Ce mois</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Select All Checkbox */}
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={selectedReels.size === getFilteredReels().length && getFilteredReels().length > 0}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedReels(new Set(getFilteredReels().map((r) => r.id)));
+                            } else {
+                              setSelectedReels(new Set());
+                            }
+                          }}
+                          style={{ cursor: 'pointer' }}
+                        />
+                        Tout sélectionner
+                        {selectedReels.size > 0 && (
+                          <span style={{ fontWeight: 600, color: 'var(--le-red)' }}>({selectedReels.size} sélectionné{selectedReels.size > 1 ? 's' : ''})</span>
+                        )}
+                      </label>
+                    </div>
+
+                    {/* Reels List */}
+                    <div
+                      style={{
+                        background: '#fff',
+                        borderRadius: 8,
+                        border: '1px solid var(--le-gray-200)',
+                        overflow: 'hidden',
+                        marginBottom: 16,
+                      }}
+                    >
+                      {getFilteredReels().map((reel) => (
+                        <div
+                          key={reel.id}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '12px 16px',
+                            borderBottom: '1px solid var(--le-gray-100)',
+                            gap: 12,
+                          }}
+                        >
+                          {/* Checkbox */}
+                          <input
+                            type="checkbox"
+                            checked={selectedReels.has(reel.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedReels((prev) => new Set(prev).add(reel.id));
+                              } else {
+                                setSelectedReels((prev) => {
+                                  const next = new Set(prev);
+                                  next.delete(reel.id);
+                                  return next;
+                                });
+                              }
+                            }}
+                            style={{ cursor: 'pointer' }}
+                          />
+
+                          {/* Reel Info */}
+                          <div style={{ flex: 1 }}>
+                            <h4 style={{ margin: '0 0 4px 0', fontSize: 14, fontWeight: 600, color: '#1a1a1a' }}>
+                              {reel.title}
+                            </h4>
+                            <div style={{ display: 'flex', gap: 8, fontSize: 12, color: 'var(--le-gray-500)' }}>
+                              <span>{reel.schools?.name || 'École'}</span>
+                              <span>•</span>
+                              <span>{new Date(reel.saved_at).toLocaleDateString('fr-FR')}</span>
+                            </div>
+                          </div>
+
+                          {/* View Button */}
+                          <button
+                            onClick={() => window.open(reel.video_url, '_blank')}
+                            style={{
+                              padding: '6px 12px',
+                              fontSize: 12,
+                              fontWeight: 600,
+                              color: 'var(--le-red)',
+                              textDecoration: 'none',
+                              border: '1px solid var(--le-red)',
+                              borderRadius: 4,
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              background: 'transparent',
+                            }}
+                            onMouseEnter={(e) => {
+                              (e.currentTarget as HTMLElement).style.background = 'var(--le-red)';
+                              (e.currentTarget as HTMLElement).style.color = '#fff';
+                            }}
+                            onMouseLeave={(e) => {
+                              (e.currentTarget as HTMLElement).style.background = 'transparent';
+                              (e.currentTarget as HTMLElement).style.color = 'var(--le-red)';
+                            }}
+                          >
+                            Voir
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Delete Selected Button */}
+                    {selectedReels.size > 0 && (
+                      <div style={{ display: 'flex', gap: 12, paddingBottom: 16 }}>
+                        <button
+                          onClick={() => {
+                            selectedReels.forEach((reelId) => handleDeleteReel(reelId));
+                            setSelectedReels(new Set());
+                          }}
+                          style={{
+                            marginLeft: 'auto',
+                            padding: '8px 14px',
+                            background: 'var(--le-red)',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: 6,
+                            cursor: 'pointer',
+                            fontSize: 13,
+                            fontWeight: 600,
+                          }}
+                        >
+                          🗑️ Supprimer ({selectedReels.size})
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Back to Reels button */}
+                    <div style={{ display: 'flex', gap: 12, borderTop: '1px solid var(--le-gray-200)', paddingTop: 16 }}>
+                      <button
+                        onClick={() => router.push('/discover?tab=reels')}
+                        style={{
+                          flex: 1,
+                          background: 'var(--le-red)',
+                          color: '#fff',
+                          borderRadius: 8,
+                          padding: '10px 18px',
+                          fontSize: 14,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          border: 'none',
+                          transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                          (e.currentTarget as HTMLElement).style.background = 'var(--le-red-dark)';
+                          (e.currentTarget as HTMLElement).style.transform = 'scale(1.05)';
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLElement).style.background = 'var(--le-red)';
+                          (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
+                        }}
+                      >
+                        ← Retour aux Reels
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
             )}

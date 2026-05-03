@@ -1,7 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import TinderCard from 'react-tinder-card';
@@ -288,19 +288,32 @@ function VideoModal({
   isSaved?: boolean;
   onSave?: (reelId: string, title: string) => void;
 }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
   if (!reel) return null;
 
-  // Detect if URL is YouTube embed
   const isYouTube = reel.video_url.includes('youtube.com');
+
+  const handlePlay = () => {
+    setIsPlaying(true);
+    if (!isYouTube && videoRef.current) {
+      videoRef.current.play();
+    } else if (isYouTube && iframeRef.current) {
+      // For YouTube, we can't directly control play, but we hide the overlay
+      // The iframe will handle autoplay
+    }
+  };
 
   return (
     <div
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0, 0, 0, 0.9)',
+        background: 'rgba(0, 0, 0, 0.7)',
+        backdropFilter: 'blur(6px)',
         display: 'flex',
-        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 9999,
@@ -308,122 +321,218 @@ function VideoModal({
       }}
       onClick={onClose}
     >
-      {/* Close button */}
-      <button
-        onClick={onClose}
-        style={{
-          position: 'absolute',
-          top: '20px',
-          right: '20px',
-          background: 'rgba(255, 255, 255, 0.2)',
-          border: 'none',
-          color: '#fff',
-          fontSize: '28px',
-          width: '44px',
-          height: '44px',
-          borderRadius: '50%',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'background 0.2s',
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)')}
-        onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)')}
-      >
-        ✕
-      </button>
-
-      {/* Save button */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          if (onSave && !isSaved) {
-            onSave(reel.id, reel.title);
-          }
-        }}
-        disabled={isSaved}
-        style={{
-          position: 'absolute',
-          top: '20px',
-          right: '80px',
-          background: isSaved ? 'rgba(100, 200, 100, 0.3)' : 'rgba(100, 150, 255, 0.2)',
-          border: '1px solid ' + (isSaved ? 'rgba(100, 200, 100, 0.5)' : 'rgba(100, 150, 255, 0.5)'),
-          color: '#fff',
-          fontSize: '14px',
-          fontWeight: '600',
-          padding: '8px 14px',
-          borderRadius: '6px',
-          cursor: isSaved ? 'default' : 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'all 0.2s',
-          opacity: isSaved ? 0.7 : 1,
-        }}
-        onMouseEnter={(e) => {
-          if (!isSaved) {
-            e.currentTarget.style.background = 'rgba(100, 150, 255, 0.3)';
-          }
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = isSaved ? 'rgba(100, 200, 100, 0.3)' : 'rgba(100, 150, 255, 0.2)';
-        }}
-      >
-        {isSaved ? '✅ Saved' : '💾 Save'}
-      </button>
-
-      {/* Modal content */}
+      {/* Modal content - 2/3 video, 1/3 info */}
       <div
         style={{
-          background: '#000',
+          background: 'white',
           borderRadius: '12px',
           overflow: 'hidden',
-          maxWidth: '90vw',
-          maxHeight: '90vh',
-          width: '100%',
-          aspectRatio: isYouTube ? '16 / 9' : 'auto',
+          width: '90%',
+          maxWidth: '1000px',
+          height: '80vh',
+          maxHeight: '600px',
           display: 'flex',
-          flexDirection: 'column',
+          flexDirection: 'row',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Video player */}
-        {isYouTube ? (
-          <iframe
-            width="100%"
-            height="100%"
-            src={reel.video_url}
-            title={reel.title}
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            style={{ flex: 1 }}
-          />
-        ) : (
-          <video
-            width="100%"
-            height="100%"
-            controls
-            autoPlay
-            style={{ flex: 1, background: '#000' }}
-          >
-            <source src={reel.video_url} type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-        )}
-
-        {/* Video info */}
-        <div style={{ padding: '16px', background: '#000', color: '#fff', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 8px' }}>{reel.title}</h3>
-          <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', margin: '0 0 8px' }}>
-            {reel.schoolName} · {reel.duration}
-          </p>
-          {reel.description && (
-            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', margin: 0, lineHeight: '1.5' }}>
-              {reel.description}
-            </p>
+        {/* Video Section - 2/3 */}
+        <div
+          style={{
+            flex: 2,
+            position: 'relative',
+            background: reel.thumbnail_color || '#000',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Snapshot/Video Preview */}
+          {isYouTube ? (
+            <iframe
+              ref={iframeRef}
+              width="100%"
+              height="100%"
+              src={isPlaying ? reel.video_url : reel.video_url.replace('autoplay=0', 'autoplay=1')}
+              title={reel.title}
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              style={{ flex: 1 }}
+            />
+          ) : (
+            <video
+              ref={videoRef}
+              width="100%"
+              height="100%"
+              controls
+              autoPlay={isPlaying}
+              onPlay={() => setIsPlaying(true)}
+              style={{ flex: 1, background: reel.thumbnail_color || '#000' }}
+            >
+              <source src={reel.video_url} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
           )}
+
+          {/* Play overlay button - Hide when playing */}
+          {!isPlaying && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePlay();
+              }}
+              style={{
+                position: 'absolute',
+                width: 100,
+                height: 100,
+                borderRadius: '50%',
+                background: 'rgba(255, 255, 255, 0.95)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                border: 'none',
+                zIndex: 10,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'white';
+                e.currentTarget.style.transform = 'scale(1.1)';
+                e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)';
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.3)';
+              }}
+            >
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#F5576C" strokeWidth="2">
+                <polygon points="5 3 19 12 5 21" />
+              </svg>
+            </button>
+          )}
+
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            style={{
+              position: 'absolute',
+              top: '16px',
+              right: '16px',
+              width: 40,
+              height: 40,
+              borderRadius: '50%',
+              background: 'rgba(0, 0, 0, 0.5)',
+              border: 'none',
+              color: 'white',
+              fontSize: '24px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s',
+              zIndex: 20,
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(0, 0, 0, 0.8)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(0, 0, 0, 0.5)')}
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Info Section - 1/3 */}
+        <div
+          style={{
+            flex: 1,
+            padding: '24px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            background: '#f9f9f9',
+            overflowY: 'auto',
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ fontSize: '11px', fontWeight: 800, color: '#F5576C', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+              {reel.schoolName}
+            </div>
+            <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#1a1a1a', lineHeight: 1.3, margin: 0 }}>
+              {reel.title}
+            </h3>
+            <div style={{ display: 'flex', gap: 12, fontSize: '12px', color: '#999', flexWrap: 'wrap' }}>
+              <span>📍 {reel.schoolName}</span>
+              <span>⏱️ {reel.duration}</span>
+              <span>👁️ {reel.views}</span>
+            </div>
+            {reel.description && (
+              <p style={{ fontSize: '13px', color: '#666', lineHeight: 1.5, margin: 0 }}>
+                {reel.description}
+              </p>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePlay();
+              }}
+              style={{
+                padding: '10px 16px',
+                borderRadius: '6px',
+                border: 'none',
+                fontSize: '13px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                background: '#EF4444',
+                color: 'white',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#DC2626')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = '#EF4444')}
+            >
+              Regarder en ligne
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onSave && !isSaved) {
+                  onSave(reel.id, reel.title);
+                }
+              }}
+              disabled={isSaved}
+              style={{
+                padding: '10px 16px',
+                borderRadius: '6px',
+                border: '2px solid #667eea',
+                fontSize: '13px',
+                fontWeight: 700,
+                cursor: isSaved ? 'default' : 'pointer',
+                background: isSaved ? '#667eea' : 'rgba(102, 126, 234, 0.1)',
+                color: isSaved ? 'white' : '#667eea',
+                transition: 'all 0.2s ease',
+                opacity: isSaved ? 0.7 : 1,
+              }}
+              onMouseEnter={(e) => {
+                if (!isSaved) {
+                  e.currentTarget.style.background = '#667eea';
+                  e.currentTarget.style.color = 'white';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isSaved) {
+                  e.currentTarget.style.background = 'rgba(102, 126, 234, 0.1)';
+                  e.currentTarget.style.color = '#667eea';
+                }
+              }}
+            >
+              {isSaved ? '✅ Enregistré' : 'Enregistrer'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -952,6 +1061,26 @@ export default function DiscoverPage() {
     loadSavedArticles();
   }, [user?.id]);
 
+  // Load saved reels on mount
+  useEffect(() => {
+    const loadSavedReels = async () => {
+      if (!user?.id) {
+        setSavedReelIds(new Set());
+        return;
+      }
+
+      try {
+        const saved = await getSavedReels(user.id);
+        const savedIds = new Set(saved.map(reel => reel.id));
+        setSavedReelIds(savedIds);
+      } catch (err) {
+        console.error('Failed to load saved reels:', err);
+      }
+    };
+
+    loadSavedReels();
+  }, [user?.id]);
+
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 2500);
@@ -1087,10 +1216,44 @@ export default function DiscoverPage() {
     }
   };
 
-  const TABS: { id: TabId; label: string }[] = [
-    { id: 'swipe', label: 'Swipe 🃏' },
-    { id: 'reels', label: 'Reels 🎬' },
-    { id: 'actualites', label: 'Actualités 📰' },
+  const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
+    {
+      id: 'swipe',
+      label: 'SWIPE',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M6 9h12M6 9l-3 3m3-3l3 3M18 15H6m12 0l3-3m-3 3l-3-3" />
+        </svg>
+      ),
+    },
+    {
+      id: 'reels',
+      label: 'REELS',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18" />
+          <line x1="7" y1="2" x2="7" y2="22" />
+          <line x1="17" y1="2" x2="17" y2="22" />
+          <line x1="2" y1="12" x2="22" y2="12" />
+          <line x1="2" y1="7" x2="7" y2="7" />
+          <line x1="2" y1="17" x2="7" y2="17" />
+          <line x1="17" y1="17" x2="22" y2="17" />
+          <line x1="17" y1="7" x2="22" y2="7" />
+        </svg>
+      ),
+    },
+    {
+      id: 'actualites',
+      label: 'ACTUALITÉS',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+          <line x1="7" y1="7" x2="17" y2="7" />
+          <line x1="7" y1="11" x2="17" y2="11" />
+          <line x1="7" y1="15" x2="17" y2="15" />
+        </svg>
+      ),
+    },
   ];
 
   return (
@@ -1194,7 +1357,40 @@ export default function DiscoverPage() {
                 (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)';
               }}
             >
-              🎥 {savedReelIds.size} {savedReelIds.size === 1 ? 'reel sauvegardé' : 'reels sauvegardés'}
+              {savedReelIds.size} {savedReelIds.size === 1 ? 'reel sauvegardé' : 'reels sauvegardés'}
+            </button>
+          )}
+          {activeTab === 'actualites' && savedArticlesCount > 0 && (
+            <button
+              onClick={() => router.push('/saved?tab=liens&subtab=actualites')}
+              style={{
+                background: 'var(--le-red)',
+                color: '#fff',
+                borderRadius: 20,
+                padding: '8px 16px',
+                fontSize: 14,
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                border: 'none',
+                fontFamily: 'inherit',
+                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = 'var(--le-red-dark)';
+                (e.currentTarget as HTMLElement).style.transform = 'scale(1.05)';
+                (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 16px rgba(239, 68, 68, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = 'var(--le-red)';
+                (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
+                (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)';
+              }}
+            >
+              {savedArticlesCount} {savedArticlesCount === 1 ? 'article enregistré' : 'articles enregistrés'}
             </button>
           )}
         </div>
@@ -1208,17 +1404,22 @@ export default function DiscoverPage() {
               style={{
                 flex: 1,
                 padding: '10px 8px',
-                fontSize: 13,
-                fontWeight: 600,
+                fontSize: 12,
+                fontWeight: 700,
                 color: activeTab === tab.id ? 'var(--le-red)' : 'var(--le-gray-500)',
                 background: 'none',
                 border: 'none',
                 borderBottom: activeTab === tab.id ? '2px solid var(--le-red)' : '2px solid transparent',
                 cursor: 'pointer',
-                transition: 'color 0.15s ease',
+                transition: 'all 0.15s ease',
                 whiteSpace: 'nowrap',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
               }}
             >
+              <span style={{ color: 'currentColor' }}>{tab.icon}</span>
               {tab.label}
             </button>
           ))}
@@ -1523,7 +1724,7 @@ export default function DiscoverPage() {
 
       {/* ── Reels tab ── */}
       {activeTab === 'reels' && (
-        <div style={{ padding: '16px 16px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ padding: '24px 16px 0', display: 'flex', flexDirection: 'column', gap: 24 }}>
           {reels.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--le-gray-500)' }}>
               <span style={{ fontSize: 44, display: 'block', marginBottom: 12 }}>🎬</span>
@@ -1536,71 +1737,125 @@ export default function DiscoverPage() {
             </div>
           ) : (
             <>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <p style={{ fontSize: 12, color: 'var(--le-gray-500)', margin: 0 }}>
-                  {reels.length} vidéos disponibles
-                </p>
-                <span
-                  style={{
-                    background: 'var(--le-red-light)',
-                    color: 'var(--le-red-dark)',
-                    fontSize: 10,
-                    fontWeight: 700,
-                    padding: '3px 8px',
-                    borderRadius: 20,
-                    letterSpacing: '0.06em',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Direct du salon
-                </span>
+              {/* Featured Section */}
+              <div style={{ maxWidth: '500px', margin: '0 auto', width: '100%' }}>
+                {reels.length > 0 && (
+                  <div
+                    onClick={() => setPlayingReelId(reels[0].id)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <ReelCard key={reels[0].id} reel={reels[0]} onPlay={() => setPlayingReelId(reels[0].id)} />
+                  </div>
+                )}
               </div>
-              {reels.map((reel) => (
-                <ReelCard key={reel.id} reel={reel} onPlay={(r) => setPlayingReelId(r.id)} />
-              ))}
-              <p className="le-caption" style={{ textAlign: 'center', paddingBottom: 16 }}>
-                Nouvelles vidéos ajoutées chaque semaine
-              </p>
+
+              {/* Queue Section */}
+              {reels.length > 1 && (
+                <div style={{ marginTop: 16 }}>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a', textAlign: 'center', marginBottom: 16, margin: '0 0 16px' }}>
+                    Suivants pour vous
+                  </h3>
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                      gap: 16,
+                      paddingBottom: 24,
+                    }}
+                  >
+                    {reels.slice(1).map((reel) => (
+                      <div
+                        key={reel.id}
+                        onClick={() => setPlayingReelId(reel.id)}
+                        style={{
+                          background: 'white',
+                          borderRadius: 12,
+                          overflow: 'hidden',
+                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.12)';
+                          e.currentTarget.style.transform = 'translateY(-4px)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08)';
+                          e.currentTarget.style.transform = 'translateY(0)';
+                        }}
+                      >
+                        {/* Thumbnail */}
+                        <div
+                          style={{
+                            width: '100%',
+                            aspectRatio: '16 / 9',
+                            background: reel.thumbnail_color || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            position: 'relative',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="2">
+                            <polygon points="5,3 19,12 5,21" />
+                          </svg>
+                          <div
+                            style={{
+                              position: 'absolute',
+                              bottom: 10,
+                              right: 12,
+                              background: 'rgba(0,0,0,0.55)',
+                              color: '#fff',
+                              fontSize: 11,
+                              fontWeight: 700,
+                              padding: '3px 8px',
+                              borderRadius: 6,
+                            }}
+                          >
+                            {reel.duration}
+                          </div>
+                        </div>
+
+                        {/* Info */}
+                        <div style={{ padding: 12 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: '#667eea', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>
+                            {reel.schoolName}
+                          </div>
+                          <h4 style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a', lineHeight: 1.3, margin: '4px 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                            {reel.title}
+                          </h4>
+                          <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#999', marginTop: 4 }}>
+                            <span>📍 {reel.schoolName}</span>
+                            <span>⏱️ {reel.duration}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
+      )}
+
+      {/* Video Modal */}
+      {playingReelId && (
+        <VideoModal
+          reel={reels.find(r => r.id === playingReelId) || null}
+          onClose={() => setPlayingReelId(null)}
+          isSaved={savedReelIds.has(playingReelId)}
+          onSave={handleSaveReel}
+        />
       )}
 
       {/* ── Actualités tab ── */}
       {activeTab === 'actualites' && (
         <div style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ marginBottom: 40, position: 'relative' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <h2 style={{ fontSize: 28, fontWeight: 700, color: '#1a1a1a', margin: 0 }}>
-                Actualités
-              </h2>
-              {savedArticlesCount > 0 && (
-                <button
-                  onClick={() => router.push('/saved?tab=liens&subtab=actualites')}
-                  style={{
-                    background: '#EF4444',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 6,
-                    padding: '10px 16px',
-                    fontSize: 14,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.background = '#DC2626';
-                    (e.currentTarget as HTMLElement).style.transform = 'scale(1.05)';
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.background = '#EF4444';
-                    (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
-                  }}
-                >
-                  {savedArticlesCount} enregistré{savedArticlesCount > 1 ? 's' : ''}
-                </button>
-              )}
-            </div>
+            <h2 style={{ fontSize: 28, fontWeight: 700, color: '#1a1a1a', margin: '0 0 8px 0' }}>
+              Actualités
+            </h2>
             <p style={{ color: '#666', fontSize: 14, margin: 0 }}>
               Les 10 meilleures actualités pour votre profil, mises à jour chaque semaine
             </p>
