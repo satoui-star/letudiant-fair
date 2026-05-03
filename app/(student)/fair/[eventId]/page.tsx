@@ -79,6 +79,7 @@ export default function FairPage({
   const [eventLoading, setEventLoading]     = useState(true);
   const [stands, setStands]                 = useState<StandData[]>([]);
   const [standsLoading, setStandsLoading]   = useState(true);
+  const [standsError, setStandsError]       = useState<string | null>(null);
   const [sessions, setSessions]             = useState<ProgramSession[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState(true);
 
@@ -101,8 +102,13 @@ export default function FairPage({
       try {
         const res = await fetch(`/api/events/${eventId}/stands`);
         const json = await res.json();
-        if (json.success) setStands(json.data || []);
+        if (json.success) {
+          setStands(json.data || []);
+        } else {
+          setStandsError(json.error ?? 'Erreur lors du chargement du plan');
+        }
       } catch (err) {
+        setStandsError('Impossible de charger le plan du salon');
         console.error('Failed to load stands', err);
       } finally {
         setStandsLoading(false);
@@ -236,6 +242,10 @@ export default function FairPage({
                 <div style={{ padding: 20 }}>
                   <Skeleton style={{ height: 320, borderRadius: 8 }} />
                 </div>
+              ) : standsError ? (
+                <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+                  <p className="le-caption" style={{ color: '#EC1F27' }}>⚠️ {standsError}</p>
+                </div>
               ) : stands.length === 0 ? (
                 <div style={{ padding: '40px 20px', textAlign: 'center' }}>
                   <p className="le-caption">Le plan du salon sera disponible prochainement.</p>
@@ -340,7 +350,7 @@ export default function FairPage({
                     <Button
                       variant="secondary"
                       size="sm"
-                      href={`/student/schools/${selectedStand.school_id}`}
+                      href={`/schools/${selectedStand.school_id}`}
                     >
                       Voir
                     </Button>
