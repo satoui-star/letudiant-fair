@@ -1,0 +1,8 @@
+-- appointment_slots.sql — NOT NEEDED
+--
+-- Student appointment booking uses a hardcoded time-slot grid on the school
+-- detail page (/schools/[schoolId]) and writes directly to the `appointments`
+-- table with a slot_time. There is no separate slots table required.
+--
+-- The exhibitor appointments page groups existing `appointments` rows by
+-- slot_time. No extra tables or migrations are required for this feature.

@@ -1,7 +1,7 @@
 "use client";
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import SectionLabel from "@/components/ui/SectionLabel";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
@@ -9,7 +9,6 @@ import Button from "@/components/ui/Button";
 import Tag from "@/components/ui/Tag";
 import { useAuth } from "@/hooks/useAuth";
 import { getSupabase } from "@/lib/supabase/client";
-import QRCode from 'qrcode';
 
 const ALL_LEVELS = ["Terminale", "Post-bac BTS", "Post-bac Licence", "Post-bac BUT", "Post-bac Bachelor", "Bac+3/4", "Bac+5"];
 const ALL_FIELDS = ["Business", "Finance", "Management", "Marketing", "Ingénierie", "Data / IA", "Design", "Santé", "Droit"];
@@ -29,7 +28,6 @@ const EMPTY_FORMATION: FormationDraft = { name: "", level: "", duration: "", cos
 
 export default function ExhibitorProfilePage() {
   const { user } = useAuth();
-  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const [schoolId, setSchoolId] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -74,8 +72,6 @@ export default function ExhibitorProfilePage() {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
-  const [qrProfileUrl, setQrProfileUrl] = useState<string | null>(null);
   const [originalValues, setOriginalValues] = useState<Record<string, unknown> | null>(null);
 
   // ── Hydrate ───────────────────────────────────────────────────────────────
@@ -143,22 +139,6 @@ export default function ExhibitorProfilePage() {
     })();
     return () => { cancelled = true; };
   }, [user?.id]);
-
-  // ── QR code ───────────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!schoolId) return;
-    (async () => {
-      const origin = typeof window !== 'undefined' ? window.location.origin : '';
-      const profileUrl = `${origin}/school-preview/${schoolId}`;
-      setQrProfileUrl(profileUrl);
-      try {
-        if (qrCanvasRef.current) {
-          await QRCode.toCanvas(qrCanvasRef.current, profileUrl, { width: 200 });
-          setQrDataUrl(qrCanvasRef.current.toDataURL('image/png'));
-        }
-      } catch (err) { console.error('QR error:', err); }
-    })();
-  }, [schoolId]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   function toggleLevel(l: string) {
@@ -519,23 +499,19 @@ export default function ExhibitorProfilePage() {
 
         {/* ── QR code ────────────────────────────────────────────────────── */}
         {schoolId && (
-          <div className="le-card le-card-padded">
-            <p style={sectionTitle}>Code QR du profil</p>
-            <p style={{ fontSize: "13px", color: "#6B6B6B", marginBottom: "16px" }}>
-              Affichez ce QR sur votre stand. Les étudiants accèdent directement à votre fiche et peuvent prendre rendez-vous.
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", width: "100%" }}>
-              <canvas ref={qrCanvasRef} style={{ border: "1px solid #E8E8E8", borderRadius: "8px", padding: "8px", background: "#fff" }} />
-              {qrProfileUrl && (
-                <div style={{ background: "#F4F4F4", border: "1px solid #E8E8E8", borderRadius: "6px", padding: "10px 14px", width: "100%", maxWidth: "360px", wordBreak: "break-all" }}>
-                  <p style={{ margin: "0 0 4px", fontSize: "11px", fontWeight: 700, color: "#6B6B6B", textTransform: "uppercase", letterSpacing: "0.08em" }}>URL encodée</p>
-                  <p style={{ margin: "0 0 8px", fontSize: "12px", color: "#3D3D3D", fontFamily: "monospace" }}>{qrProfileUrl}</p>
-                  <a href={qrProfileUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: "12px", color: "#0066CC", fontWeight: 600, textDecoration: "none" }}>🔗 Tester le lien →</a>
-                </div>
-              )}
-              {qrDataUrl && (
-                <a href={qrDataUrl} download={`qr-${schoolId}.png`} style={{ fontSize: "13px", color: "#0066CC", textDecoration: "none", fontWeight: 600 }}>⬇️ Télécharger le QR</a>
-              )}
+          <div className="le-card le-card-padded" style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <span style={{ fontSize: "32px", flexShrink: 0 }}>📱</span>
+            <div style={{ flex: 1 }}>
+              <p style={{ ...sectionTitle, marginBottom: "4px" }}>QR Code de stand</p>
+              <p style={{ fontSize: "13px", color: "#6B6B6B", margin: "0 0 12px" }}>
+                Générez et téléchargez votre QR code unique par salon depuis la page Statistiques.
+              </p>
+              <a
+                href="/exhibitor/leads"
+                style={{ display: "inline-block", fontSize: "13px", fontWeight: 700, color: "#fff", background: "#EC1F27", borderRadius: "8px", padding: "8px 16px", textDecoration: "none" }}
+              >
+                Gérer mon QR Code →
+              </a>
             </div>
           </div>
         )}

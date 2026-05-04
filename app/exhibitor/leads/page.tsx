@@ -87,7 +87,7 @@ export default function ExhibitorLeadsPage() {
       const { data: scanRows } = await supabase
         .from('scans')
         .select('user_id, channel, dwell_seconds')
-        .eq('stand_id', sid)
+        .eq('school_id', sid)
         .eq('channel', 'stand')
 
       const rows = scanRows ?? []

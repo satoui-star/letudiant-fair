@@ -51,6 +51,25 @@ function IconLeads() {
   );
 }
 
+function IconCalendar() {
+  return (
+    <svg
+      width={18}
+      height={18}
+      viewBox="0 0 18 18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="1.5" y="2.5" width="15" height="14" rx="1.5" />
+      <path d="M1.5 7h15M6 1v3M12 1v3M5 11h2M8.5 11h2M12 11h2M5 14h2M8.5 14h2" />
+    </svg>
+  )
+}
+
 function IconProfile() {
   return (
     <svg
@@ -76,7 +95,8 @@ const NAV_ITEMS: NavItem[] = [
     label: "Tableau de bord",
     icon: <IconDashboard />,
   },
-  { href: "/exhibitor/leads", label: "Statistiques", icon: <IconLeads /> },
+  { href: "/exhibitor/appointments", label: "Rendez-vous", icon: <IconLeads /> },
+  { href: "/exhibitor/salons", label: "Mes salons", icon: <IconCalendar /> },
   { href: "/exhibitor/profile", label: "Profil", icon: <IconProfile /> },
 ];
 

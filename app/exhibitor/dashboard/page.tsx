@@ -1,8 +1,7 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useRef, useState } from 'react'
-import QRCode from 'qrcode'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { getSupabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
@@ -73,10 +72,9 @@ export default function ExhibitorDashboard() {
   const [stats,     setStats]     = useState<DashboardStats | null>(null)
   const [eventName, setEventName] = useState('Salon en cours')
   const [loading,   setLoading]   = useState(true)
-  const [qrReady,   setQrReady]   = useState(false)
   const [scanCount, setScanCount] = useState(0)
-
-  const standQrRef = useRef<HTMLCanvasElement>(null)
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+  const [qrLoading, setQrLoading] = useState(false)
 
   // ── Load data ────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -178,23 +176,23 @@ export default function ExhibitorDashboard() {
     load()
   }, [user, profile])
 
-  // ── Generate stand QR once schoolId is known ─────────────────────────────────
+  // ── Fetch stand QR from DB once schoolId is known ────────────────────────────
   useEffect(() => {
-    if (!schoolId || !standQrRef.current) return
-    const payload = JSON.stringify({ schoolId, type: 'school_stand', app: 'letudiant-salons' })
-    QRCode.toCanvas(standQrRef.current, payload, {
-      width: 180, margin: 2,
-      color: { dark: '#1A1A1A', light: '#FFFFFF' },
-    }).then(() => setQrReady(true)).catch(console.error)
+    if (!schoolId) return
+    setQrLoading(true)
+    fetch('/api/exhibitor/qr')
+      .then(r => r.json())
+      .then(json => { if (json.qr) setQrDataUrl(json.qr) })
+      .catch(console.error)
+      .finally(() => setQrLoading(false))
   }, [schoolId])
 
   // ── Download stand QR ────────────────────────────────────────────────────────
   function downloadQR() {
-    const canvas = standQrRef.current
-    if (!canvas) return
+    if (!qrDataUrl) return
     const link = document.createElement('a')
     link.download = `qr-stand-${schoolName.replace(/\s+/g, '-').toLowerCase()}.png`
-    link.href = canvas.toDataURL('image/png')
+    link.href = qrDataUrl
     link.click()
   }
 
@@ -215,19 +213,18 @@ export default function ExhibitorDashboard() {
           Analysez l'engagement des visiteurs au salon
         </p>
 
-        {/* Feature pills */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12 }}>
-          {[
-            { icon: 'chart' as IconName, label: 'Scan analytics' },
-            { icon: 'users' as IconName, label: 'Profils visiteurs' },
-            { icon: 'calendar' as IconName, label: 'Rendez-vous' },
-            { icon: 'trend' as IconName, label: 'Tendances' },
-          ].map(pill => (
-            <div key={pill.label} className="le-feature-pill" style={{ padding: '10px 14px' }}>
-              <Icon name={pill.icon} size={16} style={{ color: '#EC1F27' }} />
-              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1A1A1A' }}>{pill.label}</span>
+        {/* Feature pill — Rendez-vous only */}
+        <div>
+          <Link
+            href="/exhibitor/appointments"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}
+          >
+            <div className="le-feature-pill" style={{ padding: '10px 18px' }}>
+              <Icon name={'calendar' as IconName} size={16} style={{ color: '#EC1F27' }} />
+              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1A1A1A' }}>Rendez-vous</span>
+              <span style={{ fontSize: '0.75rem', color: '#EC1F27', fontWeight: 700 }}>→</span>
             </div>
-          ))}
+          </Link>
         </div>
       </div>
 
@@ -283,15 +280,25 @@ export default function ExhibitorDashboard() {
                 border: '1px solid rgba(16,24,40,0.08)',
                 boxShadow: 'var(--shadow-sm)',
               }}>
-                <canvas
-                  ref={standQrRef}
-                  style={{ display: 'block', opacity: qrReady ? 1 : 0.2, transition: 'opacity 0.3s', borderRadius: 6 }}
-                />
+                {qrDataUrl ? (
+                  <img src={qrDataUrl} alt="QR stand" style={{ display: 'block', width: 180, height: 180, borderRadius: 6 }} />
+                ) : (
+                  <div style={{ width: 180, height: 180, borderRadius: 6, background: '#F4F4F4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: '#9CA3AF', flexDirection: 'column', gap: 6 }}>
+                    <span style={{ fontSize: 32 }}>📱</span>
+                    {qrLoading ? 'Chargement…' : 'QR non généré'}
+                  </div>
+                )}
               </div>
               <div>
-                <Button variant="primary" size="sm" onClick={downloadQR}>
-                  <Icon name="download" size={14} style={{ marginRight: 6 }} /> Télécharger le QR à imprimer
-                </Button>
+                {qrDataUrl ? (
+                  <Button variant="primary" size="sm" onClick={downloadQR}>
+                    <Icon name="download" size={14} style={{ marginRight: 6 }} /> Télécharger le QR à imprimer
+                  </Button>
+                ) : (
+                  <Link href="/exhibitor/leads" style={{ fontSize: '0.8125rem', color: '#EC1F27', fontWeight: 700, textDecoration: 'none' }}>
+                    Générer mon QR →
+                  </Link>
+                )}
               </div>
             </>
           )}
@@ -303,7 +310,9 @@ export default function ExhibitorDashboard() {
             <KpiCard label="Scans au stand" value={stats?.totalScans ?? 0} sub="total salon" color="#EC1F27" />
             <KpiCard label="Scans aujourd'hui" value={stats?.todayScans ?? 0} sub="journée en cours" color="#0066CC" />
             <KpiCard label="Intérêts confirmés" value={stats?.swipeRights ?? 0} sub="swipes droite dans l'app" color="#15803d" />
-            <KpiCard label="Rendez-vous" value={stats?.appointments ?? 0} sub="confirmés" color="#7C3AED" />
+            <Link href="/exhibitor/appointments" style={{ textDecoration: 'none' }}>
+              <KpiCard label="Rendez-vous" value={stats?.appointments ?? 0} sub="confirmés — voir →" color="#7C3AED" />
+            </Link>
           </div>
 
           {/* ── Charts + Stand QR (2-column) ──────────────────────────── */}
@@ -370,10 +379,14 @@ export default function ExhibitorDashboard() {
                   border: '1px solid rgba(16,24,40,0.08)',
                   marginBottom: 12, boxShadow: 'var(--shadow-sm)',
                 }}>
-                  <canvas
-                    ref={standQrRef}
-                    style={{ display: 'block', opacity: qrReady ? 1 : 0.2, transition: 'opacity 0.3s', borderRadius: 6 }}
-                  />
+                  {qrDataUrl ? (
+                    <img src={qrDataUrl} alt="QR stand" style={{ display: 'block', width: 180, height: 180, borderRadius: 6 }} />
+                  ) : (
+                    <div style={{ width: 180, height: 180, borderRadius: 6, background: '#F4F4F4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: '#9CA3AF', flexDirection: 'column', gap: 6 }}>
+                      <span style={{ fontSize: 32 }}>📱</span>
+                      {qrLoading ? 'Chargement…' : 'QR non généré'}
+                    </div>
+                  )}
                 </div>
 
                 <p style={{ margin: '0 0 4px', fontWeight: 700, fontSize: '0.875rem', color: '#1A1A1A' }}>
@@ -384,9 +397,15 @@ export default function ExhibitorDashboard() {
                 </p>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <Button variant="primary" size="sm" onClick={downloadQR} style={{ width: '100%' }}>
-                    <Icon name="download" size={14} style={{ marginRight: 6 }} /> Télécharger pour impression
-                  </Button>
+                  {qrDataUrl ? (
+                    <Button variant="primary" size="sm" onClick={downloadQR} style={{ width: '100%' }}>
+                      <Icon name="download" size={14} style={{ marginRight: 6 }} /> Télécharger pour impression
+                    </Button>
+                  ) : (
+                    <Link href="/exhibitor/leads" style={{ display: 'block', textAlign: 'center', fontSize: '0.8125rem', color: '#fff', background: '#16A34A', borderRadius: 8, padding: '10px 0', fontWeight: 700, textDecoration: 'none' }}>
+                      ✨ Générer mon QR →
+                    </Link>
+                  )}
                   <Link href="/exhibitor/leads" style={{ display: 'block', textAlign: 'center', fontSize: '0.8125rem', color: '#EC1F27', fontWeight: 600, textDecoration: 'none', padding: '8px 0' }}>
                     Voir les statistiques détaillées →
                   </Link>
