@@ -2,6 +2,7 @@
 export const dynamic = 'force-dynamic';
 import { useEffect, useRef, useState } from 'react'
 import { use } from 'react'
+import { useRouter } from 'next/navigation'
 import { Html5QrcodeScanner } from 'html5-qrcode'
 import { getSupabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
@@ -12,6 +13,7 @@ interface ScanResult {
   standId: string
   standName: string
   registered: boolean
+  isSchool: boolean // true when standId resolves to a school → redirect to /schools/[id]
 }
 
 export default function ScanPage({
@@ -20,11 +22,13 @@ export default function ScanPage({
   params: Promise<{ eventId: string }>
 }) {
   const { eventId } = use(params)
+  const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const scannerRef = useRef<Html5QrcodeScanner | null>(null)
   const [scanResult, setScanResult] = useState<ScanResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [scanning, setScanning] = useState(true)
+  const [redirectCountdown, setRedirectCountdown] = useState(3)
 
   useEffect(() => {
     if (!scanning || authLoading) return
@@ -54,27 +58,35 @@ export default function ScanPage({
         }
         setScanning(false)
 
-        // Parse QR payload — can be JSON { standId, type } or a raw standId string
+        // Parse QR payload — can be JSON { schoolId | standId, type } or a raw id string
         let standId = decodedText.trim()
         let channel: 'stand' | 'conference' = 'stand'
         try {
           const parsed = JSON.parse(decodedText)
-          if (parsed.standId) standId = parsed.standId
+          // Exhibitor dashboard generates { schoolId, type: 'school_stand' }
+          // Legacy format used { standId, type }
+          if (parsed.schoolId) standId = parsed.schoolId
+          else if (parsed.standId) standId = parsed.standId
           if (parsed.type === 'conference') channel = 'conference'
+          else if (parsed.type === 'school_stand') channel = 'stand'
         } catch {
-          // not JSON — treat raw string as standId
+          // not JSON — treat raw string as standId / schoolId
         }
 
         // Look up stand / school name from DB
         let standName = `Stand ${standId}`
+        let isSchool = false
         try {
           const supabase = getSupabase()
           const { data } = await supabase
             .from('schools')
-            .select('name')
+            .select('id, name')
             .eq('id', standId)
             .maybeSingle()
-          if (data?.name) standName = data.name
+          if (data?.name) {
+            standName = data.name
+            isSchool = true
+          }
         } catch {
           // non-fatal — use fallback name
         }
@@ -93,7 +105,7 @@ export default function ScanPage({
             }),
           })
 
-          setScanResult({ standId, standName, registered: res.ok })
+          setScanResult({ standId, standName, registered: res.ok, isSchool })
 
           if (!res.ok) {
             const body = await res.json().catch(() => ({}))
@@ -101,7 +113,7 @@ export default function ScanPage({
           }
         } catch {
           // Network error — still show success locally
-          setScanResult({ standId, standName, registered: false })
+          setScanResult({ standId, standName, registered: false, isSchool })
           setError('Connexion limitée — scan enregistré localement')
         }
       },
@@ -127,7 +139,25 @@ export default function ScanPage({
     setScanResult(null)
     setError(null)
     setScanning(true)
+    setRedirectCountdown(3)
   }
+
+  // Auto-redirect to school presentation page after successful scan
+  useEffect(() => {
+    if (!scanResult || !scanResult.isSchool || !scanResult.registered) return
+    setRedirectCountdown(3)
+    const interval = setInterval(() => {
+      setRedirectCountdown(c => {
+        if (c <= 1) {
+          clearInterval(interval)
+          router.push(`/schools/${scanResult.standId}`)
+          return 0
+        }
+        return c - 1
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [scanResult, router])
 
   return (
     <div style={{ minHeight: '100vh', background: '#1A1A1A', display: 'flex', flexDirection: 'column' }}>
@@ -255,8 +285,9 @@ export default function ScanPage({
             }}
           >
             <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, margin: 0, lineHeight: 1.6 }}>
-              Stand enregistré dans votre parcours.
-              Vous retrouverez ce stand dans votre récapitulatif.
+              {scanResult.isSchool && scanResult.registered
+                ? `Redirection vers la fiche de l'école dans ${redirectCountdown}s...`
+                : 'Stand enregistré dans votre parcours. Vous retrouverez ce stand dans votre récapitulatif.'}
             </p>
           </div>
 
@@ -267,10 +298,23 @@ export default function ScanPage({
           )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 360 }}>
+            {scanResult.isSchool && (
+              <Button
+                variant="primary"
+                onClick={() => router.push(`/schools/${scanResult.standId}`)}
+                style={{ justifyContent: 'center', background: '#16A34A', borderColor: '#16A34A' }}
+              >
+                <span style={{ fontSize: 16, marginRight: 6 }}>🏫</span>
+                Voir la fiche de l&apos;école
+              </Button>
+            )}
             <Button
-              variant="primary"
+              variant={scanResult.isSchool ? 'ghost' : 'primary'}
               onClick={handleRescan}
-              style={{ justifyContent: 'center' }}
+              style={{
+                justifyContent: 'center',
+                ...(scanResult.isSchool ? { color: 'rgba(255,255,255,0.7)', borderColor: 'rgba(255,255,255,0.2)' } : {}),
+              }}
             >
               <span style={{ fontSize: 16, marginRight: 6 }}>📷</span>
               Scanner un autre stand

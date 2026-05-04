@@ -13,6 +13,43 @@ export async function POST(request: Request) {
   const body = await request.json()
   const { eventId, standId, sessionId, channel } = body
 
+  // ── Resolve school_id from the scanned id ──
+  // The QR can carry either a stand UUID or a school UUID. The exhibitor
+  // dashboard generates QRs with schoolId, so we try to look that up and
+  // also keep a denormalized school_id on the scan row for the dashboard.
+  let resolvedSchoolId: string | null = null
+  let resolvedStandId: string | null = null
+  if (standId) {
+    // Try as a school UUID first (exhibitor dashboard payload)
+    const { data: school } = await supabase
+      .from('schools')
+      .select('id')
+      .eq('id', standId)
+      .maybeSingle()
+    if (school) {
+      resolvedSchoolId = school.id
+      // Find the matching stand for this school+event (if any)
+      const { data: stand } = await supabase
+        .from('stands')
+        .select('id')
+        .eq('school_id', school.id)
+        .eq('event_id', eventId)
+        .maybeSingle()
+      resolvedStandId = stand?.id ?? null
+    } else {
+      // Fallback: treat as stand UUID
+      const { data: stand } = await supabase
+        .from('stands')
+        .select('id, school_id')
+        .eq('id', standId)
+        .maybeSingle()
+      if (stand) {
+        resolvedStandId = stand.id
+        resolvedSchoolId = stand.school_id
+      }
+    }
+  }
+
   // ── Compute dwell for the previous scan (time between consecutive scans, capped at 20 min) ──
   const { data: prevScan } = await supabase
     .from('scans')
@@ -34,16 +71,20 @@ export async function POST(request: Request) {
   }
 
   // ── Insert new scan (dwell_seconds filled when next scan arrives) ────────────
+  const insertPayload: Record<string, unknown> = {
+    user_id:      user.id,
+    event_id:     eventId,
+    stand_id:     resolvedStandId,
+    session_id:   sessionId ?? null,
+    channel,
+    dwell_seconds: null,
+  }
+  // Add school_id column denormalized (used by exhibitor dashboard queries)
+  if (resolvedSchoolId) insertPayload.school_id = resolvedSchoolId
+
   const { data, error } = await supabase
     .from('scans')
-    .insert({
-      user_id:      user.id,
-      event_id:     eventId,
-      stand_id:     standId   ?? null,
-      session_id:   sessionId ?? null,
-      channel,
-      dwell_seconds: null,
-    })
+    .insert(insertPayload)
     .select('id')
     .single()
 

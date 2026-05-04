@@ -11,8 +11,7 @@ export const dynamic = 'force-dynamic';
  *
  * This page shows ONLY aggregated, non-identifying statistics.
  */
-import { useEffect, useRef, useState } from 'react'
-import QRCode from 'qrcode'
+import { useEffect, useState } from 'react'
 import { getSupabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -43,12 +42,19 @@ interface BoothCaptureStats {
 
 export default function ExhibitorLeadsPage() {
   const { user, profile } = useAuth()
-  const qrRef = useRef<HTMLCanvasElement>(null)
   const [stats, setStats] = useState<AggregateStats | null>(null)
   const [boothStats, setBoothStats] = useState<BoothCaptureStats | null>(null)
   const [schoolId, setSchoolId] = useState<string | null>(null)
   const [schoolName, setSchoolName] = useState('Votre établissement')
   const [loading, setLoading] = useState(true)
+
+  // QR state — fetched from /api/exhibitor/qr (one unique QR per school × salon)
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+  const [qrEvent, setQrEvent] = useState<{ id: string; name: string; event_date: string } | null>(null)
+  const [qrGeneratedAt, setQrGeneratedAt] = useState<string | null>(null)
+  const [qrLoading, setQrLoading] = useState(true)
+  const [qrGenerating, setQrGenerating] = useState(false)
+  const [qrError, setQrError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user?.id) return
@@ -171,15 +177,67 @@ export default function ExhibitorLeadsPage() {
     load()
   }, [user?.id, profile])
 
-  // Generate QR code for THIS school's stand — students scan it to learn more in their app
+  // Fetch existing QR from server (one unique QR per school × salon, persisted)
   useEffect(() => {
-    if (!schoolId || !qrRef.current) return
-    const payload = JSON.stringify({ schoolId, type: 'school_stand', app: 'letudiant-salons' })
-    QRCode.toCanvas(qrRef.current, payload, {
-      width: 180, margin: 2,
-      color: { dark: '#1A1A1A', light: '#FFFFFF' },
-    }).catch(console.error)
-  }, [schoolId])
+    if (!user?.id) return
+    let cancelled = false
+    async function loadQR() {
+      setQrLoading(true)
+      setQrError(null)
+      try {
+        const res = await fetch('/api/exhibitor/qr')
+        const json = await res.json()
+        if (cancelled) return
+        if (!res.ok) {
+          setQrError(json.error ?? 'Erreur lors du chargement')
+          setQrDataUrl(null)
+        } else {
+          setQrDataUrl(json.qr ?? null)
+          setQrEvent(json.event ?? null)
+          setQrGeneratedAt(json.generatedAt ?? null)
+        }
+      } catch (err) {
+        if (!cancelled) setQrError(err instanceof Error ? err.message : 'Network error')
+      } finally {
+        if (!cancelled) setQrLoading(false)
+      }
+    }
+    loadQR()
+    return () => { cancelled = true }
+  }, [user?.id, schoolId])
+
+  // Generate QR (one-time per school × salon — server enforces idempotency)
+  async function handleGenerateQR() {
+    setQrGenerating(true)
+    setQrError(null)
+    try {
+      const res = await fetch('/api/exhibitor/qr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        setQrError(json.error ?? 'Erreur lors de la génération')
+        return
+      }
+      setQrDataUrl(json.qr)
+      setQrEvent(json.event)
+      setQrGeneratedAt(json.generatedAt)
+    } catch (err) {
+      setQrError(err instanceof Error ? err.message : 'Network error')
+    } finally {
+      setQrGenerating(false)
+    }
+  }
+
+  function handleDownloadQR() {
+    if (!qrDataUrl) return
+    const a = document.createElement('a')
+    a.download = `QR_${schoolName.replace(/\s/g, '_')}_${qrEvent?.name?.replace(/\s/g, '_') ?? 'salon'}.png`
+    a.href = qrDataUrl
+    a.click()
+  }
 
   const BAR_COLOR: Record<string, string> = {
     decidingPct: '#16A34A', comparingPct: '#B45309', exploringPct: '#1D4ED8',
@@ -352,31 +410,88 @@ export default function ExhibitorLeadsPage() {
           <div style={{ position: 'sticky', top: 32 }}>
             <div style={{ background: '#fff', borderRadius: 16, padding: '20px', boxShadow: '0 1px 6px rgba(0,0,0,0.05)', textAlign: 'center' }}>
               <SectionLabel>QR Code de votre stand</SectionLabel>
+              {qrEvent && (
+                <p style={{ fontSize: '0.75rem', color: '#0066CC', fontWeight: 600, margin: '6px 0 4px' }}>
+                  📅 {qrEvent.name}
+                </p>
+              )}
               <p style={{ fontSize: '0.8125rem', color: '#6B6B6B', margin: '6px 0 16px', lineHeight: 1.5 }}>
-                Affichez ce QR code sur votre stand. Les étudiants le scannent pour accéder à votre fiche établissement et l'enregistrer dans leur parcours.
+                {qrDataUrl
+                  ? "Affichez ce QR sur votre stand. Les étudiants le scannent pour accéder à votre fiche dans leur app."
+                  : "Générez votre QR unique pour ce salon. Une fois créé, il est permanent et propre à votre établissement pour cet événement."}
               </p>
-              <canvas
-                ref={qrRef}
-                style={{ borderRadius: 10, border: '1px solid #E8E8E8', display: 'block', margin: '0 auto 12px' }}
-              />
-              <p style={{ margin: '0 0 4px', fontSize: '0.75rem', fontWeight: 700, color: '#1A1A1A' }}>
-                {schoolName}
-              </p>
-              <p style={{ margin: 0, fontSize: '0.6875rem', color: '#6B6B6B' }}>
-                À imprimer et afficher sur le stand
-              </p>
-              <button
-                onClick={() => {
-                  if (!qrRef.current) return
-                  const a = document.createElement('a')
-                  a.download = `QR_stand_${schoolName.replace(/\s/g,'_')}.png`
-                  a.href = qrRef.current.toDataURL('image/png')
-                  a.click()
-                }}
-                style={{ marginTop: 14, width: '100%', background: '#EC1F27', color: '#fff', border: 'none', borderRadius: 10, padding: '10px', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer' }}
-              >
-                ⬇ Télécharger le QR
-              </button>
+
+              {qrLoading ? (
+                <Skeleton height={200} borderRadius={10} />
+              ) : qrDataUrl ? (
+                <>
+                  {/* QR image from DB */}
+                  <img
+                    src={qrDataUrl}
+                    alt={`QR Code ${schoolName}`}
+                    style={{ width: '100%', maxWidth: 200, borderRadius: 10, border: '1px solid #E8E8E8', display: 'block', margin: '0 auto 12px' }}
+                  />
+                  <p style={{ margin: '0 0 4px', fontSize: '0.75rem', fontWeight: 700, color: '#1A1A1A' }}>
+                    {schoolName}
+                  </p>
+                  {qrGeneratedAt && (
+                    <p style={{ margin: '0 0 4px', fontSize: '0.6875rem', color: '#16A34A', fontWeight: 600 }}>
+                      ✓ Généré le {new Date(qrGeneratedAt).toLocaleDateString('fr-FR')}
+                    </p>
+                  )}
+                  <p style={{ margin: 0, fontSize: '0.6875rem', color: '#6B6B6B' }}>
+                    À imprimer et afficher sur le stand
+                  </p>
+                  <button
+                    onClick={handleDownloadQR}
+                    style={{ marginTop: 14, width: '100%', background: '#EC1F27', color: '#fff', border: 'none', borderRadius: 10, padding: '10px', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    ⬇ Télécharger le QR
+                  </button>
+                  <p style={{ margin: '10px 0 0', fontSize: '0.6875rem', color: '#9CA3AF', fontStyle: 'italic' }}>
+                    Ce QR est unique et permanent pour ce salon. Il ne peut pas être régénéré.
+                  </p>
+                </>
+              ) : (
+                <>
+                  {/* Empty state — show big "Generate" button */}
+                  <div style={{
+                    width: 180, height: 180, margin: '0 auto 16px',
+                    border: '2px dashed #E8E8E8', borderRadius: 12,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexDirection: 'column', gap: 8,
+                    background: '#FAFAFA',
+                  }}>
+                    <span style={{ fontSize: 40 }}>📱</span>
+                    <span style={{ fontSize: '0.75rem', color: '#9CA3AF', fontWeight: 600 }}>
+                      QR non généré
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleGenerateQR}
+                    disabled={qrGenerating}
+                    style={{
+                      width: '100%',
+                      background: qrGenerating ? '#9CA3AF' : '#16A34A',
+                      color: '#fff', border: 'none', borderRadius: 10,
+                      padding: '12px', fontSize: '0.875rem', fontWeight: 700,
+                      cursor: qrGenerating ? 'wait' : 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    {qrGenerating ? '⏳ Génération...' : '✨ Générer mon QR Code'}
+                  </button>
+                  <p style={{ margin: '10px 0 0', fontSize: '0.6875rem', color: '#9CA3AF', lineHeight: 1.4 }}>
+                    Un seul QR par salon. Une fois généré, il sera permanent et lié à votre établissement pour cet événement.
+                  </p>
+                </>
+              )}
+
+              {qrError && (
+                <p style={{ margin: '12px 0 0', fontSize: '0.75rem', color: '#DC2626', background: '#FEE2E2', padding: '8px 10px', borderRadius: 6 }}>
+                  ⚠ {qrError}
+                </p>
+              )}
             </div>
 
             {/* Scan count live */}
